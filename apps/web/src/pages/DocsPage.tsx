@@ -120,8 +120,7 @@ export const DocsPage: React.FC = () => {
       title: 'Developers',
       icon: Code2,
       subpages: [
-        { id: 'dev-quickstart', title: 'Quickstart', description: 'Clone, install, compile, test, and run locally' },
-        { id: 'dev-setup', title: 'Environment Setup', description: 'Node.js, Hardhat, and .env configuration' },
+        { id: 'dev-quickstart', title: 'Quickstart & Setup', description: 'Clone, configure, compile, and run with GitHub README' },
         { id: 'dev-contracts', title: 'Contract Development', description: 'Compiling with @zama-fhe/fhevm and Hardhat' },
         { id: 'dev-frontend', title: 'Frontend Integration', description: 'Interacting with FHE contracts from TypeScript' },
         { id: 'dev-fhe-guide', title: 'FHE Development Guide', description: 'Best practices for writing confidential Solidity' },
@@ -1863,75 +1862,58 @@ export const DocsPage: React.FC = () => {
             {activeAreaId === 'developers' && (
               <div className="space-y-16">
                 
-                {/* 06.1 Quickstart */}
+                {/* 06.1 Quickstart & Setup (Linked to README) */}
                 <ScrollReveal>
-  <section id="dev-quickstart" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                  <div>
-                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.1 · Quickstart</div>
-                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
-                      Developer Quickstart
-                    </h2>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      Clone, configure, compile, and run Ghost locally in under 3 minutes.
-                    </p>
-                  </div>
+                  <section id="dev-quickstart" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                    <div>
+                      <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.1 · Quickstart & Setup</div>
+                      <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+                        Developer Quickstart & Repository Setup
+                      </h2>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        Complete environment configuration, local deployment scripts, and test suite instructions.
+                      </p>
+                    </div>
 
-                  <div className="space-y-4 text-xs">
-                    <div className="space-y-1.5">
-                      <div className="font-bold text-zinc-900">1. Clone & Install Dependencies</div>
-                      <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px] relative">
-                        <code>
-                          git clone https://github.com/OpeyemiMoses/GHOST.git<br />
-                          cd GHOST<br />
-                          npm install<br />
-                          cd apps/web && npm install && cd ../..
-                        </code>
-                        <button
-                          onClick={() => copyToClipboard('git clone https://github.com/OpeyemiMoses/GHOST.git\ncd GHOST\nnpm install', 'c1')}
-                          className="absolute right-3 top-3 p-1 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
+                    <div className="p-6 sm:p-8 rounded-3xl bg-black text-white border border-zinc-800 space-y-5 shadow-xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-zinc-900 border border-zinc-700 flex items-center justify-center">
+                          <Code2 className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-bold text-white">Full Developer Guide & Environment Specs</h3>
+                          <p className="text-xs text-zinc-400">Maintained in the official Ghost Protocol GitHub repository.</p>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-zinc-300 leading-relaxed max-w-xl">
+                        Step-by-step instructions for cloning the monorepo, installing Hardhat & React dependencies, configuring environment RPCs (<code>.env.example</code>), running confidential FHE unit tests, and launching local dev servers are documented in the root README.
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <a
+                          href="https://github.com/OpeyemiMoses/GHOST#local-development--setup"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-pill-white text-xs font-semibold px-5 py-2.5 flex items-center gap-2 shadow-md hover:scale-102 transition-transform cursor-pointer"
                         >
-                          {copiedKey === 'c1' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
+                          <span>Open Local Setup Guide in README</span>
+                          <ExternalLink className="w-3.5 h-3.5 text-black" />
+                        </a>
+
+                        <a
+                          href="https://github.com/OpeyemiMoses/GHOST"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2.5 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-mono text-zinc-300 flex items-center gap-2 transition-colors cursor-pointer"
+                        >
+                          <span>GitHub Repository</span>
+                          <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+                        </a>
                       </div>
                     </div>
-
-                    <div className="space-y-1.5">
-                      <div className="font-bold text-zinc-900">2. Run Hardhat Tests</div>
-                      <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px]">
-                        <code>npx hardhat test</code>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <div className="font-bold text-zinc-900">3. Launch Frontend Development Server</div>
-                      <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px]">
-                        <code>cd apps/web && npm run dev</code>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-</ScrollReveal>
-
-                {/* 06.2 Setup */}
-                <ScrollReveal>
-  <section id="dev-setup" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                  <div>
-                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.2 · Setup</div>
-                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                      Environment Setup & Configuration
-                    </h2>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      Configure RPC endpoints, private keys, and Hardhat settings.
-                    </p>
-                  </div>
-
-                  <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px]">
-                    SEPOLIA_RPC_URL=https://rpc.sepolia.org<br />
-                    PRIVATE_KEY=your_private_key_here<br />
-                    ETHERSCAN_API_KEY=your_etherscan_api_key
-                  </div>
-                </section>
-</ScrollReveal>
+                  </section>
+                </ScrollReveal>
 
                 {/* 06.3 Contracts */}
                 <ScrollReveal>
