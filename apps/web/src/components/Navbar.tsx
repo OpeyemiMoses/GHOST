@@ -3,12 +3,20 @@ import { useGhost } from '../context/GhostContext';
 import { ArrowRight } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
-  const { currentView, setCurrentView } = useGhost();
+  const { currentView, setCurrentView, currentUser } = useGhost();
 
   // Top navbar only renders on the Landing page. In-app views use the Stylized Sidebar.
   if (currentView !== 'landing') {
     return null;
   }
+
+  const handleLaunch = () => {
+    if (!currentUser) {
+      setCurrentView('connect');
+    } else {
+      setCurrentView('vault');
+    }
+  };
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -71,7 +79,7 @@ export const Navbar: React.FC = () => {
         {/* Action Controls */}
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setCurrentView('vault')}
+            onClick={handleLaunch}
             className="btn-pill-primary text-xs font-semibold px-4 py-2 flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <span>Launch App</span>

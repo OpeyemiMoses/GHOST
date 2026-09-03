@@ -32,9 +32,11 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Protected Private Views: Require Email Login + Bound Wallet + Session Authorization
-  const isPrivateView = currentView === 'vault' || currentView === 'dashboard' || currentView === 'activity';
-  if (isPrivateView && (!currentUser || !currentUser.boundWalletAddress || !isWalletMatchingBound || !isSessionAuthorized)) {
+  // Public Informational Views: Always accessible without signing in
+  const isPublicView = currentView === 'landing' || currentView === 'docs' || currentView === 'help';
+
+  // All Other In-App Views: Require Email Login + Bound Wallet + Session Authorization
+  if (!isPublicView && (!currentUser || !currentUser.boundWalletAddress || !isWalletMatchingBound || !isSessionAuthorized)) {
     return (
       <div key="connect-gate" className="animate-page-enter w-full min-h-screen">
         <ConnectGatewayPage />
@@ -60,9 +62,9 @@ const AppContent: React.FC = () => {
   const isDocsView = currentView === 'docs';
 
   return (
-    <div className="min-h-screen bg-[#f4f4f5] text-zinc-900 selection:bg-zinc-200 p-2 sm:p-3 pt-15 md:pt-3 flex flex-col md:flex-row gap-2.5 sm:gap-3">
+    <div className="min-h-screen bg-[#f4f4f5] text-zinc-900 selection:bg-zinc-200 p-2 sm:p-3 pt-16 md:pt-3 flex flex-col md:flex-row gap-2.5 sm:gap-3">
       <Sidebar />
-      <main className={`flex-1 h-[calc(100vh-76px)] md:h-[calc(100vh-24px)] bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 flex flex-col justify-between shadow-xs ${
+      <main className={`flex-1 h-[calc(100dvh-80px)] md:h-[calc(100vh-24px)] bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 flex flex-col justify-between shadow-xs ${
         isDocsView ? 'overflow-hidden' : 'overflow-y-auto'
       }`}>
         <div key={currentView} className={`animate-page-enter flex-1 w-full ${isDocsView ? 'h-full overflow-hidden' : ''}`}>

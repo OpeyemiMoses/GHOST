@@ -43,10 +43,23 @@ export const Sidebar: React.FC = () => {
 
   const currentNav = navItems.find((n) => n.id === currentView || (n.id === 'vault' && currentView === 'dashboard')) || navItems[0];
 
+  const handleNavClick = (id: string) => {
+    // Protocol Docs and Help Centre are always publicly accessible
+    if (id === 'docs' || id === 'help') {
+      setCurrentView(id);
+    } else if (!currentUser) {
+      // If user is not logged in, all other buttons route to Email Sign In / Account creation
+      setCurrentView('connect');
+    } else {
+      setCurrentView(id);
+    }
+    setMobileMenuOpen(false);
+  };
+
   return (
     <>
-      {/* MOBILE TOP BAR (Visible on screens < md) */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[#0c0c0e] text-white px-4 py-3 flex items-center justify-between border-b border-zinc-800/90 shadow-md">
+      {/* MOBILE TOP BAR (Fixed height with clear spacing) */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 z-40 bg-[#0c0c0e] text-white px-4 flex items-center justify-between border-b border-zinc-800/90 shadow-md">
         <button
           onClick={() => setCurrentView('landing')}
           className="flex items-center gap-2 cursor-pointer"
@@ -110,10 +123,7 @@ export const Sidebar: React.FC = () => {
                   return (
                     <button
                       key={item.id}
-                      onClick={() => {
-                        setCurrentView(item.id);
-                        setMobileMenuOpen(false);
-                      }}
+                      onClick={() => handleNavClick(item.id)}
                       className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
                         isActive
                           ? 'bg-zinc-850 text-white font-semibold shadow-xs border border-zinc-750'
@@ -136,7 +146,7 @@ export const Sidebar: React.FC = () => {
 
             {/* Bottom Account & Connect Block */}
             <div className="pt-3 border-t border-zinc-800 space-y-2">
-              {currentUser && (
+              {currentUser ? (
                 <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs space-y-1">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-zinc-300 font-mono text-[11px] truncate max-w-[170px]">
@@ -161,44 +171,55 @@ export const Sidebar: React.FC = () => {
                     </div>
                   )}
                 </div>
-              )}
+              ) : null}
 
-              <ConnectButton.Custom>
-                {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
-                  const ready = mounted;
-                  const connected = ready && account && chain;
+              {!currentUser ? (
+                <button
+                  onClick={() => {
+                    setCurrentView('connect');
+                    setMobileMenuOpen(false);
+                  }}
+                  type="button"
+                  className="w-full py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 cursor-pointer"
+                >
+                  <Mail className="w-3.5 h-3.5 text-black shrink-0" />
+                  <span>Sign In to Account</span>
+                </button>
+              ) : (
+                <ConnectButton.Custom>
+                  {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
+                    const ready = mounted;
+                    const connected = ready && account && chain;
 
-                  if (!connected) {
+                    if (!connected) {
+                      return (
+                        <button
+                          onClick={openConnectModal}
+                          type="button"
+                          className="w-full py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 cursor-pointer"
+                        >
+                          <Wallet className="w-3.5 h-3.5 text-black shrink-0" />
+                          <span>Connect Wallet</span>
+                        </button>
+                      );
+                    }
+
                     return (
                       <button
-                        onClick={() => {
-                          setCurrentView('connect');
-                          setMobileMenuOpen(false);
-                        }}
+                        onClick={openAccountModal}
                         type="button"
-                        className="w-full py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 cursor-pointer"
+                        className="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono font-medium text-white flex items-center justify-between transition-colors shadow-xs"
                       >
-                        <Wallet className="w-3.5 h-3.5 text-black shrink-0" />
-                        <span>Connect Wallet</span>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                          <span className="truncate">{account.displayName}</span>
+                        </div>
+                        <span className="text-[10px] text-zinc-500 font-sans">Sepolia</span>
                       </button>
                     );
-                  }
-
-                  return (
-                    <button
-                      onClick={openAccountModal}
-                      type="button"
-                      className="w-full py-2 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs font-mono font-medium text-white flex items-center justify-between transition-colors shadow-xs"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                        <span className="truncate">{account.displayName}</span>
-                      </div>
-                      <span className="text-[10px] text-zinc-500 font-sans">Sepolia</span>
-                    </button>
-                  );
-                }}
-              </ConnectButton.Custom>
+                  }}
+                </ConnectButton.Custom>
+              )}
             </div>
           </div>
         </div>
@@ -254,7 +275,7 @@ export const Sidebar: React.FC = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setCurrentView(item.id)}
+                  onClick={() => handleNavClick(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
                     isActive
                       ? 'bg-zinc-850 text-white font-semibold shadow-xs border border-zinc-750'
@@ -304,84 +325,98 @@ export const Sidebar: React.FC = () => {
             </div>
           )}
 
-          <ConnectButton.Custom>
-            {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
-              const ready = mounted;
-              const connected = ready && account && chain;
+          {!currentUser ? (
+            <button
+              onClick={() => setCurrentView('connect')}
+              type="button"
+              className={`w-full py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 cursor-pointer ${
+                collapsed ? 'px-2' : 'px-4'
+              }`}
+              title="Sign In to Account"
+            >
+              <Mail className="w-3.5 h-3.5 text-black shrink-0" />
+              {!collapsed && <span>Sign In to Account</span>}
+            </button>
+          ) : (
+            <ConnectButton.Custom>
+              {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
+                const ready = mounted;
+                const connected = ready && account && chain;
 
-              return (
-                <div
-                  {...(!ready && {
-                    'aria-hidden': true,
-                    'style': {
-                      opacity: 0,
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                    },
-                  })}
-                >
-                  {(() => {
-                    if (!connected) {
+                return (
+                  <div
+                    {...(!ready && {
+                      'aria-hidden': true,
+                      'style': {
+                        opacity: 0,
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                      },
+                    })}
+                  >
+                    {(() => {
+                      if (!connected) {
+                        return (
+                          <button
+                            onClick={openConnectModal}
+                            type="button"
+                            className={`w-full py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 cursor-pointer ${
+                              collapsed ? 'px-2' : 'px-4'
+                            }`}
+                            title="Connect Wallet"
+                          >
+                            <Wallet className="w-3.5 h-3.5 text-black shrink-0" />
+                            {!collapsed && <span>Connect Wallet</span>}
+                          </button>
+                        );
+                      }
+
+                      if (chain.unsupported) {
+                        return (
+                          <button
+                            onClick={openChainModal}
+                            type="button"
+                            className="w-full py-2.5 px-2 rounded-xl bg-red-950/80 border border-red-800 text-red-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                          >
+                            {!collapsed ? <span>Switch to Sepolia</span> : <span>⚠️</span>}
+                          </button>
+                        );
+                      }
+
                       return (
-                        <button
-                          onClick={() => setCurrentView('connect')}
-                          type="button"
-                          className={`w-full py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 cursor-pointer ${
-                            collapsed ? 'px-2' : 'px-4'
-                          }`}
-                          title="Connect Wallet"
-                        >
-                          <Wallet className="w-3.5 h-3.5 text-black shrink-0" />
-                          {!collapsed && <span>Connect Wallet</span>}
-                        </button>
+                        <div className="flex flex-col gap-2 w-full">
+                          <button
+                            onClick={openAccountModal}
+                            type="button"
+                            className={`w-full py-2 px-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-xs font-mono font-medium text-white flex items-center justify-between transition-colors shadow-xs group ${
+                              collapsed ? 'justify-center' : ''
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                              {!collapsed && <span className="group-hover:text-zinc-200 truncate max-w-[90px]">{account.displayName}</span>}
+                            </div>
+                            {!collapsed && <span className="text-[10px] text-zinc-500 font-sans">Sepolia</span>}
+                          </button>
+
+                          {!collapsed && (
+                            <div className="flex items-center justify-between px-2 py-0.5 text-[10px] font-mono text-zinc-500">
+                              <span>Clearance:</span>
+                              {isDecrypted ? (
+                                <span className="text-emerald-400 font-semibold">🔓 Decrypted</span>
+                              ) : (
+                                <span className="text-amber-400">🔒 Encrypted</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       );
-                    }
-
-                    if (chain.unsupported) {
-                      return (
-                        <button
-                          onClick={openChainModal}
-                          type="button"
-                          className="w-full py-2.5 px-2 rounded-xl bg-red-950/80 border border-red-800 text-red-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
-                        >
-                          {!collapsed ? <span>Switch to Sepolia</span> : <span>⚠️</span>}
-                        </button>
-                      );
-                    }
-
-                    return (
-                      <div className="flex flex-col gap-2 w-full">
-                        <button
-                          onClick={openAccountModal}
-                          type="button"
-                          className={`w-full py-2 px-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-xs font-mono font-medium text-white flex items-center justify-between transition-colors shadow-xs group ${
-                            collapsed ? 'justify-center' : ''
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                            {!collapsed && <span className="group-hover:text-zinc-200 truncate max-w-[90px]">{account.displayName}</span>}
-                          </div>
-                          {!collapsed && <span className="text-[10px] text-zinc-500 font-sans">Sepolia</span>}
-                        </button>
-
-                        {!collapsed && (
-                          <div className="flex items-center justify-between px-2 py-0.5 text-[10px] font-mono text-zinc-500">
-                            <span>Clearance:</span>
-                            {isDecrypted ? (
-                              <span className="text-emerald-400 font-semibold">🔓 Decrypted</span>
-                            ) : (
-                              <span className="text-amber-400">🔒 Encrypted</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-              );
-            }}
-          </ConnectButton.Custom>
+                    })()}
+                  </div>
+                );
+              }}
+            </ConnectButton.Custom>
+          )}
         </div>
 
       </aside>
