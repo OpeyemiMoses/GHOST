@@ -43,11 +43,15 @@ const AppContent: React.FC = () => {
   }
 
   // In-App Experience with Left Floating Sidebar Navigation
+  const isDocsView = currentView === 'docs';
+
   return (
     <div className="min-h-screen bg-[#f4f4f5] text-zinc-900 selection:bg-zinc-200 p-2 sm:p-3 flex gap-2.5 sm:gap-3">
       <Sidebar />
-      <main className="flex-1 min-h-[calc(100vh-16px)] sm:min-h-[calc(100vh-24px)] overflow-y-auto bg-white rounded-3xl border border-zinc-200/80 flex flex-col justify-between shadow-xs">
-        <div key={currentView} className="animate-page-enter flex-1 w-full">
+      <main className={`flex-1 h-[calc(100vh-16px)] sm:h-[calc(100vh-24px)] bg-white rounded-3xl border border-zinc-200/80 flex flex-col justify-between shadow-xs ${
+        isDocsView ? 'overflow-hidden' : 'overflow-y-auto'
+      }`}>
+        <div key={currentView} className={`animate-page-enter flex-1 w-full ${isDocsView ? 'h-full overflow-hidden' : ''}`}>
           {(currentView === 'vault' || currentView === 'dashboard') && <VaultPage />}
           {currentView === 'activity' && <ActivityPage />}
           {(currentView === 'events' || currentView === 'draws') && <EventsPage />}

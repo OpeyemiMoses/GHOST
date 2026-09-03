@@ -238,7 +238,7 @@ export const DocsPage: React.FC = () => {
       setActiveSubPageId(subPageId);
     }
     if (viewportRef.current) {
-      viewportRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      viewportRef.current.scrollTo({ top: 0, behavior: 'instant' });
     }
   };
 
@@ -398,7 +398,7 @@ export const DocsPage: React.FC = () => {
         <main 
           ref={viewportRef}
           id="docs-content-viewport" 
-          className="flex-1 min-w-0 h-full overflow-y-auto p-6 sm:p-10 bg-white space-y-12 selection:bg-zinc-200 scroll-smooth"
+          className="flex-1 min-w-0 h-full overflow-y-auto p-6 sm:p-10 bg-white space-y-10 selection:bg-zinc-200 scroll-smooth"
         >
           
           {/* Top Dynamic Breadcrumbs */}
@@ -410,11 +410,14 @@ export const DocsPage: React.FC = () => {
             <span className="text-zinc-950 font-bold transition-all">{currentSubPage.title}</span>
           </div>
 
-          {/* ========================================================================= */}
-          {/* SECTION 01 — OVERVIEW (ALL SUBPAGES IN ONE FULL SCROLL PAGE) */}
-          {/* ========================================================================= */}
-          {activeAreaId === 'overview' && (
-            <div className="space-y-16">
+          {/* Keyed Section Content for Animated Rise-In */}
+          <div key={activeAreaId} className="animate-page-enter space-y-16">
+
+            {/* ========================================================================= */}
+            {/* SECTION 01 — OVERVIEW (ALL SUBPAGES IN ONE FULL SCROLL PAGE) */}
+            {/* ========================================================================= */}
+            {activeAreaId === 'overview' && (
+              <div className="space-y-16">
               
               {/* Subpage 1: Introduction */}
               <section id="intro" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
@@ -1688,6 +1691,8 @@ export const DocsPage: React.FC = () => {
 
             </div>
           )}
+
+          </div>
 
           {/* Pagination Navigation Footer: SWITCHES MAIN SECTIONS */}
           <div className="flex items-center justify-between pt-10 border-t border-zinc-200/80">
