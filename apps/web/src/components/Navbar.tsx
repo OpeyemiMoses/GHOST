@@ -54,13 +54,25 @@ export const Navbar: React.FC = () => {
               {link.label}
             </button>
           ))}
+          <button
+            onClick={() => setCurrentView('docs')}
+            className="px-3 py-1.5 rounded-full text-xs font-medium text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 transition-all cursor-pointer"
+          >
+            Docs
+          </button>
+          <button
+            onClick={() => setCurrentView('help')}
+            className="px-3 py-1.5 rounded-full text-xs font-medium text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 transition-all cursor-pointer"
+          >
+            Help
+          </button>
         </div>
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setCurrentView('vault')}
-            className="btn-pill-primary text-xs font-semibold px-4 py-2 flex items-center gap-1.5 shadow-xs"
+            className="btn-pill-primary text-xs font-semibold px-4 py-2 flex items-center gap-1.5 shadow-xs cursor-pointer"
           >
             <span>Launch App</span>
             <ArrowRight className="w-3.5 h-3.5" />

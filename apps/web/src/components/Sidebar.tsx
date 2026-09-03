@@ -17,7 +17,8 @@ import {
   Check,
   Settings,
   Flame,
-  Radio
+  Radio,
+  BookOpen
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -29,9 +30,10 @@ export const Sidebar: React.FC = () => {
     { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'events', label: 'Events & Draws', icon: Trophy },
     { id: 'verify', label: 'Verify State', icon: ShieldCheck },
+    { id: 'docs', label: 'Protocol Docs', icon: BookOpen },
+    { id: 'help', label: 'Help Centre', icon: HelpCircle },
     { id: 'contracts', label: 'Contracts', icon: FileCode },
     { id: 'security', label: 'Security', icon: Shield },
-    { id: 'how-it-works', label: 'Architecture', icon: HelpCircle },
   ];
 
   return (

@@ -18,6 +18,8 @@ import { HowItWorksPage } from './pages/HowItWorksPage';
 import { SecurityPage } from './pages/SecurityPage';
 import { ContractsPage } from './pages/ContractsPage';
 import { ConnectGatewayPage } from './pages/ConnectGatewayPage';
+import { DocsPage } from './pages/DocsPage';
+import { HelpPage } from './pages/HelpPage';
 
 const AppContent: React.FC = () => {
   const { currentView } = useGhost();
@@ -50,6 +52,8 @@ const AppContent: React.FC = () => {
           {currentView === 'activity' && <ActivityPage />}
           {(currentView === 'events' || currentView === 'draws') && <EventsPage />}
           {currentView === 'verify' && <VerifyPage />}
+          {currentView === 'docs' && <DocsPage />}
+          {currentView === 'help' && <HelpPage />}
           {currentView === 'how-it-works' && <HowItWorksPage />}
           {currentView === 'security' && <SecurityPage />}
           {currentView === 'contracts' && <ContractsPage />}

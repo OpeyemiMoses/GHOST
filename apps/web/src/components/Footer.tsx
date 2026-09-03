@@ -96,10 +96,32 @@ export const Footer: React.FC = () => {
                 <li>
                   <button
                     onClick={() => {
+                      setCurrentView('docs');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="hover:text-black transition-colors cursor-pointer"
+                  >
+                    Protocol Docs
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
+                      setCurrentView('help');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="hover:text-black transition-colors cursor-pointer"
+                  >
+                    Help Centre
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
                       setCurrentView('how-it-works');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="hover:text-black transition-colors"
+                    className="hover:text-black transition-colors cursor-pointer"
                   >
                     How Ghost Works
                   </button>
@@ -110,7 +132,7 @@ export const Footer: React.FC = () => {
                       setCurrentView('security');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="hover:text-black transition-colors"
+                    className="hover:text-black transition-colors cursor-pointer"
                   >
                     Security
                   </button>
@@ -121,7 +143,7 @@ export const Footer: React.FC = () => {
                       setCurrentView('contracts');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="hover:text-black transition-colors"
+                    className="hover:text-black transition-colors cursor-pointer"
                   >
                     Contracts
                   </button>
@@ -136,13 +158,13 @@ export const Footer: React.FC = () => {
               <ul className="space-y-2">
                 <li>
                   <a
-                    href="https://github.com/2tynm/ghost"
+                    href="https://github.com/OpeyemiMoses/GHOST"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-black transition-colors flex items-center gap-1"
+                    className="hover:text-black transition-colors inline-flex items-center gap-1 cursor-pointer"
                   >
-                    <span>GitHub</span>
-                    <ExternalLink className="w-3 h-3 opacity-60" />
+                    <span>GitHub Repository</span>
+                    <ExternalLink className="w-3 h-3 text-zinc-400" />
                   </a>
                 </li>
                 <li>
@@ -150,7 +172,7 @@ export const Footer: React.FC = () => {
                     href="https://docs.zama.ai/fhevm"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-black transition-colors flex items-center gap-1"
+                    className="hover:text-black transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <span>Zama fhEVM Docs</span>
                     <ExternalLink className="w-3 h-3 opacity-60" />
