@@ -5,6 +5,7 @@ import {
   ExternalLink, KeyRound, ArrowLeft
 } from 'lucide-react';
 import { useGhost } from '../context/GhostContext';
+import { ScrollReveal } from '../components/ScrollReveal';
 
 interface HelpArticle {
   id: string;
@@ -279,165 +280,173 @@ export const HelpPage: React.FC = () => {
   }, [selectedCategory, searchQuery]);
 
   return (
-    <div className="w-full min-h-screen bg-[#fafafa] text-zinc-900 pb-28 pt-20 px-4 sm:px-8 lg:px-12 selection:bg-zinc-200">
+    <div className="w-full min-h-screen bg-[#fafafa] text-zinc-900 pb-24 pt-6 sm:pt-8 px-4 sm:px-8 lg:px-12 selection:bg-zinc-200">
       <div className="max-w-5xl mx-auto space-y-10">
         
-        {/* Header */}
-        <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-xs font-mono text-zinc-600 font-semibold uppercase">
-            <HelpCircle className="w-3.5 h-3.5 text-zinc-900" />
-            <span>Ghost Help Centre</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-950">
-            What do you need help with?
-          </h1>
-          <p className="text-xs sm:text-sm text-zinc-500">
-            Practical troubleshooting guides, step-by-step solutions, and diagnostic workflows.
-          </p>
+        {/* Header with Scroll Animation */}
+        <ScrollReveal delay={0}>
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-xs font-mono text-zinc-600 font-semibold uppercase">
+              <HelpCircle className="w-3.5 h-3.5 text-zinc-900" />
+              <span>Ghost Help Centre</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-950">
+              What do you need help with?
+            </h1>
+            <p className="text-xs sm:text-sm text-zinc-500">
+              Practical troubleshooting guides, step-by-step solutions, and diagnostic workflows.
+            </p>
 
-          {/* Search Bar */}
-          <div className="pt-2 relative max-w-xl mx-auto">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search troubleshooting articles (e.g. 'deposit failed', 'why no hide button', 'wrong network')..."
-              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white border border-zinc-200 text-xs sm:text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 shadow-sm"
-            />
-            {searchQuery && (
+            {/* Search Bar */}
+            <div className="pt-2 relative max-w-xl mx-auto">
+              <Search className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search troubleshooting articles (e.g. 'deposit failed', 'why no hide button', 'wrong network')..."
+                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white border border-zinc-200 text-xs sm:text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 shadow-xs"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-400 hover:text-zinc-700 cursor-pointer"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        </ScrollReveal>
+
+        {/* Category Filter Chips with Scroll Animation */}
+        <ScrollReveal delay={50}>
+          <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2">
+            {categories.map((cat) => (
               <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-400 hover:text-zinc-700 cursor-pointer"
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`text-xs font-medium px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-zinc-900 text-white shadow-xs'
+                    : 'bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50'
+                }`}
               >
-                Clear
+                {cat}
               </button>
+            ))}
+          </div>
+        </ScrollReveal>
+
+        {/* Articles Accordion List with Scroll Animation */}
+        <ScrollReveal delay={100}>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs text-zinc-500 px-1 pb-1">
+              <span>Showing {filteredArticles.length} troubleshooting guides</span>
+              <span>Category: {selectedCategory}</span>
+            </div>
+
+            {filteredArticles.length === 0 ? (
+              <div className="p-12 text-center bg-white border border-zinc-200 rounded-3xl space-y-2 text-xs text-zinc-500">
+                <AlertCircle className="w-6 h-6 text-zinc-400 mx-auto" />
+                <div className="font-semibold text-zinc-900">No matching articles found</div>
+                <p>Try searching for different keywords or select "All" categories.</p>
+              </div>
+            ) : (
+              filteredArticles.map((art) => {
+                const isOpen = openArticleId === art.id;
+
+                return (
+                  <div
+                    key={art.id}
+                    className="bg-white border border-zinc-200/80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs transition-all mb-3"
+                  >
+                    <button
+                      onClick={() => setOpenArticleId(isOpen ? null : art.id)}
+                      className="w-full p-5 sm:p-6 text-left flex items-start justify-between gap-4 font-semibold text-zinc-900 text-xs sm:text-sm hover:bg-zinc-50/50 transition-colors cursor-pointer"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 border border-zinc-200/60 font-medium">
+                            {art.category}
+                          </span>
+                        </div>
+                        <div className="text-zinc-950 font-bold sm:text-base">{art.question}</div>
+                        <div className="text-zinc-500 text-xs font-normal">{art.summary}</div>
+                      </div>
+
+                      <span className="shrink-0 p-1.5 rounded-full bg-zinc-100 text-zinc-600 mt-1">
+                        {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </span>
+                    </button>
+
+                    {isOpen && (
+                      <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-zinc-100 text-xs text-zinc-600 space-y-4">
+                        {art.problem && (
+                          <div className="p-3.5 bg-red-50/60 border border-red-200/60 rounded-xl space-y-1 text-red-900">
+                            <div className="font-bold text-[11px] uppercase font-mono">Problem Diagnosis</div>
+                            <div>{art.problem}</div>
+                          </div>
+                        )}
+
+                        {art.why && (
+                          <div className="space-y-1">
+                            <div className="font-bold text-zinc-900">Why this happens:</div>
+                            <p className="leading-relaxed text-zinc-600">{art.why}</p>
+                          </div>
+                        )}
+
+                        {art.check && (
+                          <div className="space-y-1.5">
+                            <div className="font-bold text-zinc-900">What to check:</div>
+                            <ul className="list-disc pl-5 space-y-1 text-zinc-600">
+                              {art.check.map((c, i) => (
+                                <li key={i}>{c}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {art.resolve && (
+                          <div className="space-y-1.5 p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
+                            <div className="font-bold text-zinc-950 flex items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                              <span>How to resolve it:</span>
+                            </div>
+                            <ol className="list-decimal pl-5 space-y-1.5 text-zinc-700 font-medium">
+                              {art.resolve.map((r, i) => (
+                                <li key={i}>{r}</li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
-        </div>
+        </ScrollReveal>
 
-        {/* Category Filter Chips */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`text-xs font-medium px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
-                selectedCategory === cat
-                  ? 'bg-zinc-900 text-white shadow-xs'
-                  : 'bg-white border border-zinc-200 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Articles Accordion List */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs text-zinc-500 px-1 pb-1">
-            <span>Showing {filteredArticles.length} troubleshooting guides</span>
-            <span>Category: {selectedCategory}</span>
-          </div>
-
-          {filteredArticles.length === 0 ? (
-            <div className="p-12 text-center bg-white border border-zinc-200 rounded-3xl space-y-2 text-xs text-zinc-500">
-              <AlertCircle className="w-6 h-6 text-zinc-400 mx-auto" />
-              <div className="font-semibold text-zinc-900">No matching articles found</div>
-              <p>Try searching for different keywords or select "All" categories.</p>
+        {/* Cross-link to Technical Docs with Scroll Animation */}
+        <ScrollReveal delay={150}>
+          <div className="p-6 sm:p-8 bg-zinc-900 text-white rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div>
+              <h3 className="font-bold text-base text-white">Looking for technical protocol specifications?</h3>
+              <p className="text-xs text-zinc-400 mt-1">
+                Explore smart contract references, Zama FHE architecture, and developer quickstarts in the Docs.
+              </p>
             </div>
-          ) : (
-            filteredArticles.map((art) => {
-              const isOpen = openArticleId === art.id;
-
-              return (
-                <div
-                  key={art.id}
-                  className="bg-white border border-zinc-200/80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs transition-all"
-                >
-                  <button
-                    onClick={() => setOpenArticleId(isOpen ? null : art.id)}
-                    className="w-full p-5 sm:p-6 text-left flex items-start justify-between gap-4 font-semibold text-zinc-900 text-xs sm:text-sm hover:bg-zinc-50/50 transition-colors cursor-pointer"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 border border-zinc-200/60 font-medium">
-                          {art.category}
-                        </span>
-                      </div>
-                      <div className="text-zinc-950 font-bold sm:text-base">{art.question}</div>
-                      <div className="text-zinc-500 text-xs font-normal">{art.summary}</div>
-                    </div>
-
-                    <span className="shrink-0 p-1.5 rounded-full bg-zinc-100 text-zinc-600 mt-1">
-                      {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </span>
-                  </button>
-
-                  {isOpen && (
-                    <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-zinc-100 text-xs text-zinc-600 space-y-4">
-                      {art.problem && (
-                        <div className="p-3 bg-red-50/60 border border-red-200/60 rounded-xl space-y-1 text-red-900">
-                          <div className="font-bold text-[11px] uppercase">Problem Diagnosis</div>
-                          <div>{art.problem}</div>
-                        </div>
-                      )}
-
-                      {art.why && (
-                        <div className="space-y-1">
-                          <div className="font-bold text-zinc-900">Why this happens:</div>
-                          <p className="leading-relaxed text-zinc-600">{art.why}</p>
-                        </div>
-                      )}
-
-                      {art.check && (
-                        <div className="space-y-1.5">
-                          <div className="font-bold text-zinc-900">What to check:</div>
-                          <ul className="list-disc pl-5 space-y-1 text-zinc-600">
-                            {art.check.map((c, i) => (
-                              <li key={i}>{c}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {art.resolve && (
-                        <div className="space-y-1.5 p-4 rounded-xl bg-zinc-50 border border-zinc-200">
-                          <div className="font-bold text-zinc-950 flex items-center gap-1.5">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                            <span>How to resolve it:</span>
-                          </div>
-                          <ol className="list-decimal pl-5 space-y-1.5 text-zinc-700 font-medium">
-                            {art.resolve.map((r, i) => (
-                              <li key={i}>{r}</li>
-                            ))}
-                          </ol>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* Cross-link to Technical Docs */}
-        <div className="p-6 sm:p-8 bg-zinc-900 text-white rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div>
-            <h3 className="font-bold text-base text-white">Looking for technical protocol specifications?</h3>
-            <p className="text-xs text-zinc-400 mt-1">
-              Explore smart contract references, Zama FHE architecture, and developer quickstarts in the Docs.
-            </p>
+            <button
+              onClick={() => setCurrentView('docs')}
+              className="btn-pill-primary text-xs font-semibold px-5 py-2.5 flex items-center gap-2 shrink-0 cursor-pointer"
+            >
+              <span>Open Protocol Docs</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <button
-            onClick={() => setCurrentView('docs')}
-            className="btn-pill-primary text-xs font-semibold px-5 py-2.5 flex items-center gap-2 shrink-0 cursor-pointer"
-          >
-            <span>Open Protocol Docs</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        </ScrollReveal>
 
       </div>
     </div>
