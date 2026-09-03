@@ -194,7 +194,7 @@ export const DocsPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#fafafa] text-zinc-900 pb-28 pt-20 px-4 sm:px-8 lg:px-12 selection:bg-zinc-200">
+    <div className="w-full min-h-screen bg-[#fafafa] text-zinc-900 pb-24 pt-6 sm:pt-8 px-4 sm:px-8 lg:px-10 selection:bg-zinc-200">
       <div className="max-w-[1440px] mx-auto">
         
         {/* Top Header & Search Bar */}
@@ -247,8 +247,8 @@ export const DocsPage: React.FC = () => {
         {/* Main Grid: Sidebar & Content View */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* LEFT COLUMN (3/12): Navigation Sidebar */}
-          <div className="lg:col-span-3 space-y-4 sticky top-24">
+          {/* LEFT COLUMN (3/12): Fixed/Sticky Stationary Navigation Sidebar */}
+          <div className="lg:col-span-3 space-y-4 sticky top-6 self-start max-h-[calc(100vh-48px)] overflow-y-auto pr-1">
             
             {/* Search Results Dropdown */}
             {searchQuery && (
