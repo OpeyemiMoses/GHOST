@@ -6,7 +6,7 @@ export const ExplodingHeroVault: React.FC = () => {
 
   return (
     <div
-      className="relative w-full max-w-[560px] sm:max-w-[620px] aspect-square flex items-center justify-center select-none cursor-pointer group"
+      className="relative w-full max-w-[620px] sm:max-w-[700px] aspect-square flex items-center justify-center select-none cursor-pointer group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => setIsHovered((prev) => !prev)}
@@ -15,7 +15,7 @@ export const ExplodingHeroVault: React.FC = () => {
       <AudioWaveOrbitParticles isHovered={isHovered} />
 
       {/* 3D Perspective Stage */}
-      <div className="relative w-[280px] sm:w-[320px] h-[280px] sm:h-[320px] flex items-center justify-center [perspective:1200px] z-20">
+      <div className="relative w-[260px] sm:w-[300px] h-[260px] sm:h-[300px] flex items-center justify-center [perspective:1200px] z-20">
         
         {/* Layer 4: Titanium Base Chassis (GhostPool) */}
         <div

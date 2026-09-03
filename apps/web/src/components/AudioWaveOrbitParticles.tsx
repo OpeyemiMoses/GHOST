@@ -33,30 +33,30 @@ export const AudioWaveOrbitParticles: React.FC<AudioWaveOrbitParticlesProps> = (
     if (!ctx) return;
 
     let animationFrameId: number;
-    const width = (canvas.width = 640);
-    const height = (canvas.height = 640);
+    const width = (canvas.width = 720);
+    const height = (canvas.height = 720);
 
     const centerX = width / 2;
     const centerY = height / 2;
 
-    const SPOKES_COUNT = 84;
-    const MAX_SEGMENTS_PER_SPOKE = 10;
-    // Outer perimeter start radius (just outside the ~280-300px vault box)
-    const BASE_RADIUS = 162;
-    const SEGMENT_SPACING = 5.6;
+    const SPOKES_COUNT = 92;
+    const MAX_SEGMENTS_PER_SPOKE = 12;
+    // Outer perimeter start radius
+    const BASE_RADIUS = 182;
+    const SEGMENT_SPACING = 7.2;
 
     // Generate fixed rhythmic spectrum profile (peaks and valleys matching reference image)
     const baseSpectrumProfile: number[] = [];
     for (let s = 0; s < SPOKES_COUNT; s++) {
       const theta = (s / SPOKES_COUNT) * Math.PI * 2;
-      // Realistic equalizer frequency distribution
-      const p1 = Math.exp(-Math.pow((theta - 0.75) / 0.45, 2)) * 8.5;
-      const p2 = Math.exp(-Math.pow((theta - 2.15) / 0.5, 2)) * 9.5;
-      const p3 = Math.exp(-Math.pow((theta - 3.75) / 0.45, 2)) * 8.0;
-      const p4 = Math.exp(-Math.pow((theta - 5.05) / 0.55, 2)) * 10.0;
-      const base = 2.8 + Math.sin(theta * 6) * 1.3 + Math.cos(theta * 12) * 0.9;
+      // High-energy audio visualizer spectrum peaks
+      const p1 = Math.exp(-Math.pow((theta - 0.75) / 0.42, 2)) * 10.5;
+      const p2 = Math.exp(-Math.pow((theta - 2.15) / 0.48, 2)) * 11.5;
+      const p3 = Math.exp(-Math.pow((theta - 3.75) / 0.42, 2)) * 10.0;
+      const p4 = Math.exp(-Math.pow((theta - 5.05) / 0.52, 2)) * 12.0;
+      const base = 3.2 + Math.sin(theta * 6) * 1.6 + Math.cos(theta * 12) * 1.2;
       const rawCount = base + p1 + p2 + p3 + p4;
-      baseSpectrumProfile.push(Math.max(2, Math.min(MAX_SEGMENTS_PER_SPOKE, Math.round(rawCount))));
+      baseSpectrumProfile.push(Math.max(3, Math.min(MAX_SEGMENTS_PER_SPOKE, Math.round(rawCount))));
     }
 
     const particles: Particle[] = [];
@@ -68,15 +68,15 @@ export const AudioWaveOrbitParticles: React.FC<AudioWaveOrbitParticlesProps> = (
       for (let seg = 0; seg < MAX_SEGMENTS_PER_SPOKE; seg++) {
         const rand = Math.random();
         let colorType: 'gold' | 'emerald' | 'cyan' | 'carbon' = 'carbon';
-        if (rand < 0.4) colorType = 'gold';
-        else if (rand < 0.6) colorType = 'emerald';
-        else if (rand < 0.75) colorType = 'cyan';
+        if (rand < 0.42) colorType = 'gold';
+        else if (rand < 0.62) colorType = 'emerald';
+        else if (rand < 0.78) colorType = 'cyan';
 
-        const orbitRadius = BASE_RADIUS + 30 + Math.random() * 95;
+        const orbitRadius = BASE_RADIUS + 30 + Math.random() * 110;
         const orbitSpeed = (0.35 + Math.random() * 0.75) * (Math.random() > 0.5 ? 1 : -1);
-        const orbitInclination = (Math.random() - 0.5) * Math.PI * 0.75;
+        const orbitInclination = (Math.random() - 0.5) * Math.PI * 0.8;
         const orbitAzimuth = Math.random() * Math.PI * 2;
-        const orbitZOffset = (Math.random() - 0.5) * 160;
+        const orbitZOffset = (Math.random() - 0.5) * 180;
 
         particles.push({
           id: pId++,
@@ -91,7 +91,7 @@ export const AudioWaveOrbitParticles: React.FC<AudioWaveOrbitParticlesProps> = (
           orbitInclination,
           orbitAzimuth,
           orbitZOffset,
-          size: 2.4 + Math.random() * 2.5,
+          size: 3.0 + Math.random() * 3.0,
           colorType,
         });
       }
@@ -121,7 +121,7 @@ export const AudioWaveOrbitParticles: React.FC<AudioWaveOrbitParticlesProps> = (
       const activeMaxSpoke = Math.floor(sweepHead * SPOKES_COUNT);
 
       // Audio beat pulsing multiplier
-      const beatPulse = Math.sin(time * 8.5) * 0.22 + Math.sin(time * 17) * 0.12;
+      const beatPulse = Math.sin(time * 8.5) * 0.24 + Math.sin(time * 17) * 0.14;
 
       // Rendered particle buffer for sorting by Z-depth
       const renderedParticles: {
@@ -145,27 +145,27 @@ export const AudioWaveOrbitParticles: React.FC<AudioWaveOrbitParticlesProps> = (
         const baseHeight = baseSpectrumProfile[p.spokeIndex];
         const dynamicHeight = Math.max(1, Math.min(MAX_SEGMENTS_PER_SPOKE, Math.round(baseHeight + beatPulse * baseHeight)));
 
-        // Reveal animation as the sweep hits this spoke: popping outwards
+        // Reveal animation as the sweep hits this spoke
         const spokeRevealProgress = Math.max(0, Math.min(1, (activeMaxSpoke - p.spokeIndex) / 3.5));
         const effectiveSegments = Math.round(dynamicHeight * (progressInCycle > 0.72 ? 1 : spokeRevealProgress));
 
         const isSegmentVisibleInWave = isSpokeActivated && p.segmentIndex < effectiveSegments;
 
-        // --- 1. WAVE POSITION (Outer Radial Equalizer Segments) ---
+        // --- 1. WAVE POSITION (Prominent Radial Equalizer Segments) ---
         const waveX = centerX + Math.cos(p.angle) * p.restRadius;
         const waveY = centerY + Math.sin(p.angle) * p.restRadius;
         const waveZ = 0;
 
-        // Discrete rectangular block matching reference image
-        const segWidth = 4.2;
-        const segHeight = 2.4;
-        const waveAlpha = isSegmentVisibleInWave ? 0.96 : 0.0;
+        // Bold, prominent block dimensions
+        const segWidth = 6.2;
+        const segHeight = 3.6;
+        const waveAlpha = isSegmentVisibleInWave ? 1.0 : 0.0;
 
         // --- 2. 3D ORBITAL PARTICLE POSITION ---
         const orbitAngle = p.orbitPhase + time * p.orbitSpeed;
         
         const localX = Math.cos(orbitAngle) * p.orbitRadius;
-        const localY = Math.sin(orbitAngle) * p.orbitRadius * Math.sin(p.orbitInclination) + Math.sin(orbitAngle * 2 + p.id) * 18;
+        const localY = Math.sin(orbitAngle) * p.orbitRadius * Math.sin(p.orbitInclination) + Math.sin(orbitAngle * 2 + p.id) * 22;
         const localZ = Math.sin(orbitAngle) * p.orbitRadius * Math.cos(p.orbitInclination) + p.orbitZOffset;
 
         // 3D Orbital precession & continuous rotation
@@ -183,7 +183,7 @@ export const AudioWaveOrbitParticles: React.FC<AudioWaveOrbitParticlesProps> = (
         const rotZ2 = localY * sinX + rotZ1 * cosX;
 
         // Perspective Projection
-        const fov = 440;
+        const fov = 480;
         const perspective = fov / (fov + rotZ2);
         const orbitScreenX = centerX + rotX1 * perspective;
         const orbitScreenY = centerY + rotY2 * perspective;
@@ -194,7 +194,7 @@ export const AudioWaveOrbitParticles: React.FC<AudioWaveOrbitParticlesProps> = (
         const curY = waveY + (orbitScreenY - waveY) * hoverTransition;
         const curZ = waveZ + (orbitZ - waveZ) * hoverTransition;
 
-        const orbitAlpha = Math.max(0.3, Math.min(1.0, (curZ + 190) / 380));
+        const orbitAlpha = Math.max(0.35, Math.min(1.0, (curZ + 200) / 400));
         const finalAlpha = waveAlpha + (orbitAlpha - waveAlpha) * hoverTransition;
 
         if (finalAlpha <= 0.01) continue;
@@ -226,8 +226,8 @@ export const AudioWaveOrbitParticles: React.FC<AudioWaveOrbitParticlesProps> = (
           x: curX,
           y: curY,
           z: curZ,
-          w: Math.max(1.2, curW),
-          h: Math.max(1.2, curH),
+          w: Math.max(1.8, curW),
+          h: Math.max(1.8, curH),
           rot: curRot,
           alpha: finalAlpha,
           color,
@@ -247,17 +247,17 @@ export const AudioWaveOrbitParticles: React.FC<AudioWaveOrbitParticlesProps> = (
         
         // Ring 1 (Gold)
         ctx.beginPath();
-        ctx.ellipse(0, 0, 215, 88, -Math.PI / 6, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(245, 158, 11, ${0.14 * hoverTransition})`;
-        ctx.lineWidth = 1.2;
+        ctx.ellipse(0, 0, 245, 98, -Math.PI / 6, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(245, 158, 11, ${0.16 * hoverTransition})`;
+        ctx.lineWidth = 1.4;
         ctx.setLineDash([4, 6]);
         ctx.stroke();
 
         // Ring 2 (Emerald)
         ctx.beginPath();
-        ctx.ellipse(0, 0, 195, 75, Math.PI / 4, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(16, 185, 129, ${0.16 * hoverTransition})`;
-        ctx.lineWidth = 1.0;
+        ctx.ellipse(0, 0, 220, 85, Math.PI / 4, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(16, 185, 129, ${0.18 * hoverTransition})`;
+        ctx.lineWidth = 1.2;
         ctx.setLineDash([6, 8]);
         ctx.stroke();
 
@@ -270,14 +270,14 @@ export const AudioWaveOrbitParticles: React.FC<AudioWaveOrbitParticlesProps> = (
         ctx.translate(pt.x, pt.y);
 
         if (pt.glow) {
-          ctx.shadowBlur = 9 * hoverTransition;
-          ctx.shadowColor = pt.color + '0.85)';
+          ctx.shadowBlur = 10 * hoverTransition;
+          ctx.shadowColor = pt.color + '0.9)';
         }
 
         ctx.fillStyle = `${pt.color}${pt.alpha})`;
 
         if (pt.isSegment) {
-          // Discrete solid black rectangular audio equalizer segment block
+          // Bold, crisp solid black rectangular equalizer block
           ctx.rotate(pt.rot);
           ctx.fillRect(-pt.w / 2, -pt.h / 2, pt.w, pt.h);
         } else {
