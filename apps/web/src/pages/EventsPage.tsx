@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useGhost } from '../context/GhostContext';
-import { RefreshCw, Sparkles, ExternalLink, Clock, Lock, Wallet, AlertCircle, Users, Gift } from 'lucide-react';
+import { RefreshCw, Sparkles, ExternalLink, Clock, Lock, Wallet, AlertCircle, Users, Gift, Trophy } from 'lucide-react';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 
 export const EventsPage: React.FC = () => {
-  const { setCurrentView, walletConnected, activeEvent, pastEvents, isComputingEvent, executeEventDraw, participantCount, unclaimedPrizes } = useGhost();
+  const { 
+    setCurrentView, 
+    walletConnected, 
+    activeEvent, 
+    pastEvents, 
+    isComputingEvent, 
+    executeEventDraw, 
+    participantCount, 
+    unclaimedPrizes,
+    isDecrypted,
+    rawAddress
+  } = useGhost();
   const { openConnectModal } = useConnectModal();
 
   // Real-time Countdown Timer calculation
@@ -211,8 +222,28 @@ export const EventsPage: React.FC = () => {
                 {pastEvents.map((e) => (
                   <tr key={e.eventId} className="hover:bg-zinc-50 transition-colors">
                     <td className="py-3.5 font-semibold text-zinc-900">#{e.eventId}</td>
-                    <td className="py-3.5 font-semibold">${e.prizeAmount.toLocaleString()} cUSDC</td>
-                    <td className="py-3.5 font-mono text-zinc-600">{e.winnerAddress}</td>
+                    <td className="py-3.5 font-semibold text-zinc-900">
+                      {isDecrypted && rawAddress && e.winnerAddress.toLowerCase() === rawAddress.toLowerCase() ? (
+                        <span className="text-amber-600 font-bold">${e.prizeAmount.toLocaleString()} cUSDC</span>
+                      ) : isDecrypted ? (
+                        <span>${e.prizeAmount.toLocaleString()} cUSDC</span>
+                      ) : (
+                        <span className="font-mono text-zinc-400 tracking-wider">•••••••• cUSDC</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 font-mono">
+                      {isDecrypted && rawAddress && e.winnerAddress.toLowerCase() === rawAddress.toLowerCase() ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/30 font-semibold text-[11px]">
+                          <Trophy className="w-3 h-3 text-amber-600" />
+                          <span>Your Wallet (Decrypted Winner)</span>
+                        </span>
+                      ) : (
+                        <div className="inline-flex items-center gap-1.5 text-zinc-500 text-[11px] bg-zinc-100 px-2 py-0.5 rounded-md">
+                          <Lock className="w-3 h-3 text-zinc-400" />
+                          <span>{e.encryptedPrizeHandle ? `${e.encryptedPrizeHandle.slice(0, 10)}...${e.encryptedPrizeHandle.slice(-6)}` : '0x8f4c...3e1a (euint64)'}</span>
+                        </div>
+                      )}
+                    </td>
                     <td className="py-3.5 font-mono text-zinc-500">
                       <a
                         href={`https://sepolia.etherscan.io/tx/${e.txHash}`}
