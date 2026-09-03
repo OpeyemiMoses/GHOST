@@ -108,8 +108,8 @@ export const ConnectGatewayPage: React.FC = () => {
   return (
     <div className="min-h-screen w-full bg-white text-zinc-900 flex flex-col lg:flex-row selection:bg-zinc-200">
       
-      {/* LEFT HALF: Dark Cinematic Showcase */}
-      <div className="relative w-full lg:w-[48%] min-h-[520px] lg:min-h-screen bg-black text-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between overflow-hidden">
+      {/* LEFT HALF: Dark Cinematic Showcase (Bottom on mobile, Left on desktop) */}
+      <div className="order-2 lg:order-1 relative w-full lg:w-[48%] min-h-[480px] lg:min-h-screen bg-black text-white p-6 sm:p-12 lg:p-16 flex flex-col justify-between overflow-hidden">
         
         {/* Ambient Volumetric Lighting Effects */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[540px] h-[540px] bg-amber-600/15 rounded-full blur-[140px] pointer-events-none animate-ambient-pulse" />
@@ -201,8 +201,8 @@ export const ConnectGatewayPage: React.FC = () => {
 
       </div>
 
-      {/* RIGHT HALF: Clean Auth Gateway & Wallet Binding Portal */}
-      <div className="w-full lg:w-[52%] min-h-screen bg-white p-6 sm:p-10 lg:p-16 flex flex-col justify-between overflow-y-auto">
+      {/* RIGHT HALF: Clean Auth Gateway & Wallet Binding Portal (Top on mobile, Right on desktop) */}
+      <div className="order-1 lg:order-2 w-full lg:w-[52%] min-h-screen bg-white p-6 sm:p-10 lg:p-16 flex flex-col justify-between overflow-y-auto">
         
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-6">
