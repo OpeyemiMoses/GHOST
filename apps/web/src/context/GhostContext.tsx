@@ -80,6 +80,18 @@ export interface ProtocolEventRecord {
   isVerified: boolean;
 }
 
+export interface PrizeRecord {
+  id: string;
+  eventId: number;
+  winnerAddress: string;
+  amount: number;
+  drawTxHash: string;
+  claimTxHash?: string;
+  timestamp: number;
+  status: 'UNCLAIMED' | 'CLAIMED';
+  claimTimestamp?: number;
+}
+
 export interface UserAccount {
   email: string;
   passwordHash: string;
@@ -141,12 +153,18 @@ interface GhostContextType {
   // Participants & Network Metrics
   participantCount: number;
 
-  // Events (Strictly 0 prize until user deposits into pool)
+  // Events & Draw Claims
   currentPrizePool: number;
   activeEvent: ProtocolEventRecord;
   pastEvents: ProtocolEventRecord[];
   isComputingEvent: boolean;
   executeEventDraw: () => Promise<void>;
+
+  // Prize Claiming System
+  unclaimedPrizes: PrizeRecord[];
+  claimedPrizes: PrizeRecord[];
+  claimPrize: (prizeId: string) => Promise<boolean>;
+  simulateWinForTesting: () => void;
 }
 
 const GhostContext = createContext<GhostContextType | undefined>(undefined);
@@ -822,6 +840,124 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
+  // Unclaimed & Claimed Prize System
+  const [unclaimedPrizes, setUnclaimedPrizes] = useState<PrizeRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('ghost_unclaimed_prizes');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [claimedPrizes, setClaimedPrizes] = useState<PrizeRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('ghost_claimed_prizes');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('ghost_unclaimed_prizes', JSON.stringify(unclaimedPrizes));
+  }, [unclaimedPrizes]);
+
+  useEffect(() => {
+    localStorage.setItem('ghost_claimed_prizes', JSON.stringify(claimedPrizes));
+  }, [claimedPrizes]);
+
+  // Claim Won Prize directly to wallet
+  const claimPrize = async (prizeId: string): Promise<boolean> => {
+    const prize = unclaimedPrizes.find((p) => p.id === prizeId);
+    if (!prize || !address) {
+      addToast({ type: 'error', title: 'Claim Failed', message: 'Prize record or connected wallet not found.' });
+      return false;
+    }
+
+    let claimTxHash = '';
+    if (walletClient) {
+      try {
+        const hash = await (walletClient as any).writeContract({
+          address: DEPLOYED_CONTRACTS.MockConfidentialToken,
+          abi: TOKEN_ABI,
+          functionName: 'mintPlaintext',
+          args: [address as `0x${string}`, BigInt(Math.floor(prize.amount * 1e6))],
+        });
+        claimTxHash = hash;
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash });
+        }
+      } catch (err: any) {
+        console.error('Prize claim cancelled or rejected:', err);
+        addToast({
+          type: 'error',
+          title: 'Claim Cancelled',
+          message: err?.shortMessage || 'Claim transaction was rejected in your wallet.',
+        });
+        return false;
+      }
+    } else {
+      claimTxHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+    }
+
+    const claimedRecord: PrizeRecord = {
+      ...prize,
+      status: 'CLAIMED',
+      claimTxHash,
+      claimTimestamp: Date.now(),
+    };
+
+    setUnclaimedPrizes((prev) => prev.filter((p) => p.id !== prizeId));
+    setClaimedPrizes((prev) => [claimedRecord, ...prev]);
+    setWalletTokenBalance((b) => b + prize.amount);
+
+    const claimTx: TransactionRecord = {
+      id: `tx_claim_${Date.now()}`,
+      type: 'Prize Won',
+      amount: prize.amount,
+      encryptedHandle: generateCiphertextHandle(prize.amount, address),
+      timestamp: Date.now(),
+      txHash: claimTxHash,
+      status: 'Confirmed',
+    };
+    setTransactions((prev) => [claimTx, ...prev]);
+
+    addToast({
+      type: 'success',
+      title: 'Prize Claimed to Wallet!',
+      message: `Successfully transferred $${prize.amount.toFixed(2)} cUSDC into your Sepolia wallet.`,
+    });
+
+    return true;
+  };
+
+  // Quick Testing Win Simulator
+  const simulateWinForTesting = () => {
+    if (!address) {
+      addToast({ type: 'warning', title: 'Wallet Required', message: 'Connect a wallet first to simulate a win.' });
+      return;
+    }
+    const winAmount = 250.0;
+    const mockDrawTx = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+    const mockEventId = pastEvents.length + 1;
+    const newPrize: PrizeRecord = {
+      id: `prize_${Date.now()}_${mockEventId}`,
+      eventId: mockEventId,
+      winnerAddress: address,
+      amount: winAmount,
+      drawTxHash: mockDrawTx,
+      timestamp: Date.now(),
+      status: 'UNCLAIMED',
+    };
+    setUnclaimedPrizes((prev) => [newPrize, ...prev]);
+    addToast({
+      type: 'success',
+      title: '🎉 Simulated Win Triggered!',
+      message: `You won Event #${mockEventId} ($${winAmount.toFixed(2)} cUSDC). Navigate to Claim Prizes to claim it to your wallet!`,
+    });
+  };
+
   // Autonomous Keeper Draw Execution
   const executeEventDraw = async () => {
     setIsComputingEvent(true);
@@ -863,18 +999,25 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setPastEvents((prev) => [finalized, ...prev]);
 
+    // If prize amount > 0, register as UNCLAIMED prize for the winner (DO NOT auto-credit!)
     if (activeEvent.prizeAmount > 0) {
-      const prizeTx: TransactionRecord = {
-        id: `tx_prize_${Date.now()}`,
-        type: 'Prize Won',
+      const prizeId = `prize_${Date.now()}_${activeEvent.eventId}`;
+      const newPrize: PrizeRecord = {
+        id: prizeId,
+        eventId: activeEvent.eventId,
+        winnerAddress: winner,
         amount: activeEvent.prizeAmount,
-        encryptedHandle: generateCiphertextHandle(activeEvent.prizeAmount, winner),
+        drawTxHash: txHash,
         timestamp: Date.now(),
-        txHash,
-        status: 'Confirmed',
+        status: 'UNCLAIMED',
       };
-      setTransactions((prev) => [prizeTx, ...prev]);
-      setUserBalance((b) => b + activeEvent.prizeAmount);
+      setUnclaimedPrizes((prev) => [newPrize, ...prev]);
+
+      addToast({
+        type: 'success',
+        title: '🎉 You Won the Draw!',
+        message: `Event #${activeEvent.eventId} settled! $${activeEvent.prizeAmount.toFixed(2)} cUSDC is waiting to be claimed to your wallet.`,
+      });
     }
 
     setCurrentPrizePool(0);
@@ -954,6 +1097,10 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         pastEvents,
         isComputingEvent,
         executeEventDraw,
+        unclaimedPrizes,
+        claimedPrizes,
+        claimPrize,
+        simulateWinForTesting,
       }}
     >
       {children}

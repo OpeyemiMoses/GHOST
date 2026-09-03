@@ -22,16 +22,18 @@ import {
   Mail,
   LogOut,
   Menu,
-  X
+  X,
+  Gift
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
-  const { currentView, setCurrentView, isDecrypted, currentUser, logoutAccount } = useGhost();
+  const { currentView, setCurrentView, isDecrypted, currentUser, logoutAccount, unclaimedPrizes } = useGhost();
   const [collapsed, setCollapsed] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
   const navItems = [
     { id: 'vault', label: 'Overview', icon: LayoutDashboard },
+    { id: 'claim', label: 'Claim Prizes', icon: Gift, badge: unclaimedPrizes.length > 0 ? `${unclaimedPrizes.length}` : undefined },
     { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'events', label: 'Events & Draws', icon: Trophy },
     { id: 'verify', label: 'Verify State', icon: ShieldCheck },
@@ -135,9 +137,16 @@ export const Sidebar: React.FC = () => {
                         <span>{item.label}</span>
                       </div>
 
-                      {isActive && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                      )}
+                      <div className="flex items-center gap-2">
+                        {item.badge && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-bold font-mono shadow-xs">
+                            {item.badge}
+                          </span>
+                        )}
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                        )}
+                      </div>
                     </button>
                   );
                 })}
@@ -288,8 +297,17 @@ export const Sidebar: React.FC = () => {
                     {!collapsed && <span>{item.label}</span>}
                   </div>
 
-                  {!collapsed && isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                  {!collapsed && (
+                    <div className="flex items-center gap-1.5">
+                      {item.badge && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-bold font-mono">
+                          {item.badge}
+                        </span>
+                      )}
+                      {isActive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                      )}
+                    </div>
                   )}
                 </button>
               );

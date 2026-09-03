@@ -20,6 +20,7 @@ import { ContractsPage } from './pages/ContractsPage';
 import { ConnectGatewayPage } from './pages/ConnectGatewayPage';
 import { DocsPage } from './pages/DocsPage';
 import { HelpPage } from './pages/HelpPage';
+import { ClaimPage } from './pages/ClaimPage';
 
 import { ToastNotification } from './components/ToastNotification';
 
@@ -75,6 +76,7 @@ const AppContent: React.FC = () => {
       }`}>
         <div key={currentView} className={`animate-page-enter flex-1 w-full ${isDocsView ? 'h-full overflow-hidden' : ''}`}>
           {(currentView === 'vault' || currentView === 'dashboard') && <VaultPage />}
+          {currentView === 'claim' && <ClaimPage />}
           {currentView === 'activity' && <ActivityPage />}
           {(currentView === 'events' || currentView === 'draws') && <EventsPage />}
           {currentView === 'verify' && <VerifyPage />}

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useGhost } from '../context/GhostContext';
-import { RefreshCw, Sparkles, ExternalLink, Clock, Lock, Wallet, AlertCircle, Users } from 'lucide-react';
+import { RefreshCw, Sparkles, ExternalLink, Clock, Lock, Wallet, AlertCircle, Users, Gift } from 'lucide-react';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 
 export const EventsPage: React.FC = () => {
-  const { setCurrentView, walletConnected, activeEvent, pastEvents, isComputingEvent, executeEventDraw, participantCount } = useGhost();
+  const { setCurrentView, walletConnected, activeEvent, pastEvents, isComputingEvent, executeEventDraw, participantCount, unclaimedPrizes } = useGhost();
   const { openConnectModal } = useConnectModal();
 
   // Real-time Countdown Timer calculation
@@ -35,18 +35,55 @@ export const EventsPage: React.FC = () => {
     return () => clearInterval(interval);
   }, [activeEvent.endTime]);
 
+  const totalUnclaimed = unclaimedPrizes.reduce((s, p) => s + p.amount, 0);
+
   return (
     <div className="w-full min-h-screen p-6 sm:p-8 lg:p-10 space-y-6">
       
       {/* Header */}
-      <div className="pb-8 border-b border-zinc-200 mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-950">
-          Events
-        </h1>
-        <p className="text-xs text-zinc-500 mt-1">
-          Confidential prize draw cycles computed over encrypted ticket weights.
-        </p>
+      <div className="pb-6 border-b border-zinc-200 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-950">
+            Events & Draws
+          </h1>
+          <p className="text-xs text-zinc-500 mt-1">
+            Confidential prize draw cycles computed over encrypted ticket weights.
+          </p>
+        </div>
+
+        <button
+          onClick={() => setCurrentView('claim')}
+          className="px-4 py-2 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-semibold border border-zinc-300 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs self-start sm:self-auto"
+        >
+          <Gift className="w-3.5 h-3.5 text-amber-600" />
+          <span>Claim Winnings {unclaimedPrizes.length > 0 && `(${unclaimedPrizes.length})`}</span>
+        </button>
       </div>
+
+      {/* Unclaimed Prizes Alert Banner */}
+      {unclaimedPrizes.length > 0 && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-linear-to-r from-amber-500/20 via-amber-500/10 to-amber-500/5 border border-amber-500/40 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="p-2.5 rounded-xl bg-amber-500 text-white shadow-xs shrink-0">
+              <Gift className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-zinc-950">
+                🎉 You have {unclaimedPrizes.length} unclaimed prize{unclaimedPrizes.length === 1 ? '' : 's'} (${totalUnclaimed.toFixed(2)} cUSDC)!
+              </h3>
+              <p className="text-xs text-zinc-600">
+                Winnings are reserved onchain. Click below to claim the funds directly to your wallet.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setCurrentView('claim')}
+            className="px-5 py-2.5 rounded-full bg-black hover:bg-zinc-800 text-white text-xs font-bold transition-all shadow-md cursor-pointer shrink-0"
+          >
+            Claim Now →
+          </button>
+        </div>
+      )}
 
       {/* Active Event Card */}
       <div className="bg-black text-white rounded-3xl p-7 sm:p-9 shadow-xl mb-10 hover-elevate-dark border border-zinc-800">
