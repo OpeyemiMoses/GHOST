@@ -77,49 +77,22 @@ export const EventsPage: React.FC = () => {
               </span>
             </div>
 
-            {/* Execute Button with Wallet Connection Requirement & Smart Contract Time-Lock Protection */}
-            {!walletConnected ? (
-              <button
-                onClick={() => setCurrentView('connect')}
-                type="button"
-                className="btn-pill-white px-5 py-2.5 text-xs font-semibold flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <Wallet className="w-3.5 h-3.5 text-black" />
-                <span>Connect Wallet to Execute</span>
-              </button>
-            ) : activeEvent.prizeAmount <= 0 ? (
-              <button
-                disabled
-                className="px-5 py-2.5 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-500 flex items-center gap-2 cursor-not-allowed"
-                title="Zero yield in active prize pool"
-              >
-                <Lock className="w-3.5 h-3.5 text-zinc-600" />
-                <span>Prize Pool Empty ($0.00 cUSDC)</span>
-              </button>
-            ) : isComputingEvent ? (
-              <button
-                disabled
-                className="btn-pill-white px-5 py-2.5 text-xs font-semibold flex items-center gap-2 shadow-lg opacity-50 cursor-not-allowed"
-              >
-                <RefreshCw className="w-3.5 h-3.5 animate-spin text-black" />
-                <span>Evaluating FHE State...</span>
-              </button>
-            ) : !timeLeft.isExpired ? (
-              <button
-                disabled
-                className="px-5 py-2.5 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-400 flex items-center gap-2 cursor-not-allowed"
-              >
-                <Lock className="w-3.5 h-3.5 text-amber-500" />
-                <span>Cycle Active ({timeLeft.hours}h {timeLeft.minutes}m remaining)</span>
-              </button>
+            {/* Autonomous Network Keeper Status Indicator (Zero manual execution required) */}
+            {isComputingEvent ? (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs font-mono shadow-md animate-pulse">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                <span>Keeper Resolving Homomorphic Draw...</span>
+              </div>
             ) : (
-              <button
-                onClick={executeEventDraw}
-                className="btn-pill-white px-6 py-3 text-xs font-semibold flex items-center gap-2 shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 text-black animate-pulse" />
-                <span>Execute Event Draw</span>
-              </button>
+              <div className="flex flex-col sm:items-end gap-1.5">
+                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-emerald-500/30 text-emerald-300 text-xs font-mono shadow-md">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-semibold">Autonomous Keeper Active</span>
+                </div>
+                <span className="text-[10px] font-mono text-zinc-400">
+                  Executed automatically onchain · Zero user gas required
+                </span>
+              </div>
             )}
           </div>
         </div>

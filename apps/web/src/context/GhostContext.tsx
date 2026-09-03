@@ -755,6 +755,19 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsComputingEvent(false);
   };
 
+  // Autonomous Background Network Keeper Loop
+  useEffect(() => {
+    const keeperInterval = setInterval(() => {
+      const now = Date.now();
+      if (activeEvent.endTime <= now && activeEvent.status === 'OPEN' && !isComputingEvent) {
+        console.log('[Autonomous Keeper] 24h cycle threshold reached. Resolving onchain draw...');
+        executeEventDraw();
+      }
+    }, 4000);
+
+    return () => clearInterval(keeperInterval);
+  }, [activeEvent, isComputingEvent]);
+
   return (
     <GhostContext.Provider
       value={{
