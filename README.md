@@ -34,6 +34,12 @@
 
 ---
 
+<div align="center">
+  <img src="docs/hero-banner.jpg" alt="Ghost Protocol Hero Interface" width="100%" />
+</div>
+
+---
+
 ## Overview
 
 **Ghost Protocol** is an institution-grade, non-custodial confidential prize-savings protocol built on **Ethereum Sepolia**. Traditional DeFi savings pools expose all balances, deposit amounts, and transaction histories publicly in plaintext ERC-20 transfer logs.
