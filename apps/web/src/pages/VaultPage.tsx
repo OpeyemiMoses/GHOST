@@ -42,6 +42,7 @@ export const VaultPage: React.FC = () => {
     handleDeposit,
     handleWithdraw,
     currentPrizePool,
+    activeEvent,
     transactions,
     participantCount,
   } = useGhost();
@@ -217,7 +218,10 @@ export const VaultPage: React.FC = () => {
         <div className="p-4 sm:p-5 rounded-2xl bg-white border border-zinc-200/80 shadow-xs hover-elevate flex flex-col justify-between">
           <div className="flex items-center justify-between text-zinc-400 mb-2">
             <Trophy className="w-4 h-4 text-amber-500" />
-            <span className="text-[10px] font-mono uppercase text-amber-600 font-semibold">Blind Draw #12</span>
+            <span className="text-[10px] font-mono uppercase text-amber-600 font-semibold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Blind Draw #{activeEvent.eventId}
+            </span>
           </div>
           <div>
             <div className="text-2xl font-bold text-zinc-950 tracking-tight">
@@ -693,7 +697,7 @@ export const VaultPage: React.FC = () => {
                 <div>
                   <span className="font-medium text-zinc-800 block">Prize Draw Enrolled</span>
                   <span className="text-zinc-500 text-[11px]">
-                    {userBalance > 0 ? 'Weighted ticket chance entered in Blind Draw #12.' : 'Enter draw upon first deposit.'}
+                    {userBalance > 0 ? `Weighted ticket chance entered in Blind Draw #${activeEvent.eventId}.` : 'Enter draw upon first deposit.'}
                   </span>
                 </div>
               </div>
@@ -713,7 +717,7 @@ export const VaultPage: React.FC = () => {
               </button>
             </div>
             <p className="text-xs text-zinc-500 leading-relaxed">
-              Blind prize draw #{12} is accumulating yield. Winner is selected via encrypted weighted sampling without revealing any ticket sizes.
+              Blind prize draw #{activeEvent.eventId} is accumulating yield. Winner is selected via encrypted weighted sampling without revealing any ticket sizes.
             </p>
             <button
               onClick={() => setCurrentView('events')}
