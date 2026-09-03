@@ -166,6 +166,27 @@ async function hashPassword(password: string): Promise<string> {
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Clean state reset for fresh testing
+if (typeof window !== 'undefined') {
+  try {
+    const version = localStorage.getItem('ghost_storage_v7_clean_reset');
+    if (!version) {
+      // Clear all historical transaction records, balances, yields, and prize pool
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('ghost_balance_') || k.startsWith('ghost_yield_') || k.startsWith('ghost_txs_') || k.startsWith('ghost_wallet_tokens_') || k.startsWith('ghost_handle_') || k === 'ghost_prize_pool' || k === 'ghost_past_events')) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+      localStorage.setItem('ghost_storage_v7_clean_reset', 'active');
+    }
+  } catch (e) {
+    // Ignore
+  }
+}
+
 export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, setCurrentView] = useState<string>('landing');
 
