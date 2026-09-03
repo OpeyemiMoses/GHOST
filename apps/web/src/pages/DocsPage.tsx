@@ -311,20 +311,24 @@ export const DocsPage: React.FC = () => {
 
                     {/* Subpages List if Area Active */}
                     {isAreaActive && (
-                      <div className="pl-6 pr-1 py-1 space-y-0.5 border-l-2 border-zinc-200 ml-3.5">
-                        {area.subpages.map((sub) => (
-                          <button
-                            key={sub.id}
-                            onClick={() => setActiveSubPageId(sub.id)}
-                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-all cursor-pointer truncate block ${
-                              activeSubPageId === sub.id
-                                ? 'bg-zinc-100 text-zinc-950 font-bold border-l-2 border-zinc-950 pl-2'
-                                : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'
-                            }`}
-                          >
-                            {sub.title}
-                          </button>
-                        ))}
+                      <div className="pl-3 pr-1 py-1 space-y-0.5 border-l border-zinc-200 ml-3.5 my-1">
+                        {area.subpages.map((sub) => {
+                          const isSubActive = activeSubPageId === sub.id;
+                          return (
+                            <button
+                              key={sub.id}
+                              onClick={() => setActiveSubPageId(sub.id)}
+                              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-all cursor-pointer truncate flex items-center justify-between ${
+                                isSubActive
+                                  ? 'bg-zinc-100 text-zinc-950 font-bold'
+                                  : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'
+                              }`}
+                            >
+                              <span className="truncate">{sub.title}</span>
+                              {isSubActive && <div className="w-1.5 h-1.5 rounded-full bg-zinc-950 shrink-0 ml-1.5" />}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -333,9 +337,11 @@ export const DocsPage: React.FC = () => {
             </div>
 
             {/* Quick Context Card */}
-            <div className="p-4 bg-zinc-900 text-white rounded-2xl text-xs space-y-2">
-              <div className="font-semibold text-zinc-200 flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="p-4 bg-zinc-950 text-white rounded-2xl border border-zinc-800 shadow-xs text-xs space-y-2">
+              <div className="font-semibold text-zinc-100 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-md bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                  <Shield className="w-3 h-3 text-emerald-400" />
+                </div>
                 <span>Production Standard</span>
               </div>
               <p className="text-zinc-400 text-[11px] leading-relaxed">
