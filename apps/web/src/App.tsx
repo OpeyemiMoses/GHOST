@@ -21,12 +21,15 @@ import { ConnectGatewayPage } from './pages/ConnectGatewayPage';
 import { DocsPage } from './pages/DocsPage';
 import { HelpPage } from './pages/HelpPage';
 
+import { ToastNotification } from './components/ToastNotification';
+
 const AppContent: React.FC = () => {
-  const { currentView, currentUser, isWalletMatchingBound, isSessionAuthorized } = useGhost();
+  const { currentView, currentUser, isWalletMatchingBound, isSessionAuthorized, toasts, removeToast } = useGhost();
 
   if (currentView === 'connect') {
     return (
       <div key="connect" className="animate-page-enter w-full min-h-screen">
+        <ToastNotification toasts={toasts} removeToast={removeToast} />
         <ConnectGatewayPage />
       </div>
     );
@@ -39,6 +42,7 @@ const AppContent: React.FC = () => {
   if (!isPublicView && (!currentUser || !currentUser.boundWalletAddress || !isWalletMatchingBound || !isSessionAuthorized)) {
     return (
       <div key="connect-gate" className="animate-page-enter w-full min-h-screen">
+        <ToastNotification toasts={toasts} removeToast={removeToast} />
         <ConnectGatewayPage />
       </div>
     );
@@ -49,6 +53,7 @@ const AppContent: React.FC = () => {
   if (isHome) {
     return (
       <div key="landing" className="animate-page-enter min-h-screen flex flex-col bg-white text-zinc-900 selection:bg-zinc-200">
+        <ToastNotification toasts={toasts} removeToast={removeToast} />
         <Navbar />
         <main className="flex-1">
           <LandingPage />
@@ -63,6 +68,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f4f4f5] text-zinc-900 selection:bg-zinc-200 p-2 sm:p-3 pt-16 md:pt-3 flex flex-col md:flex-row gap-2.5 sm:gap-3">
+      <ToastNotification toasts={toasts} removeToast={removeToast} />
       <Sidebar />
       <main className={`flex-1 h-[calc(100dvh-80px)] md:h-[calc(100vh-24px)] bg-white rounded-2xl sm:rounded-3xl border border-zinc-200/80 flex flex-col justify-between shadow-xs ${
         isDocsView ? 'overflow-hidden' : 'overflow-y-auto'
