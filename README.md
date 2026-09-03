@@ -30,8 +30,7 @@
 11. [Environment Configuration (.env.example)](#environment-configuration-envexample)
 12. [Testing & Deployment](#testing--deployment)
 13. [Zero-Knowledge Verification](#zero-knowledge-verification)
-14. [Roadmap](#roadmap)
-15. [Contributing & License](#contributing--license)
+14. [Contributing & License](#contributing--license)
 
 ---
 
@@ -309,20 +308,6 @@ Ghost guarantees auditability without sacrificing confidentiality:
 1. **Deterministic Merkle Roots:** Every state transition computes a Merkle root over the set of ciphertext handles.
 2. **Randomness Proofs:** Torus FHE coprocessors publish a randomness commit hash alongside each winner selection.
 3. **Public Explorer Audit:** Anyone can audit transaction hashes and state commitments on [Sepolia Etherscan](https://sepolia.etherscan.io/) without wallet authentication.
-
----
-
-## Roadmap
-
-- [x] **Phase 1: Cryptographic Foundation** - Zama fhEVM integration and `euint64` confidential token.
-- [x] **Phase 2: Vault & Pool Smart Contracts** - Zero-loss vault and continuous homomorphic compounding.
-- [x] **Phase 3: Verifiable FHE Draw Engine** - Torus randomness evaluator and prize dispatcher.
-- [x] **Phase 4: Sepolia Testnet Deployment** - Full contract deployment on Sepolia (Chain ID `11155111`).
-- [x] **Phase 5: Web Application** - High-aesthetic React frontend with cryptographic session authorization.
-- [x] **Phase 6: Dual-Factor Auth & Wallet Binding** - Client-side SHA-256 account enclave + 1:1 Web3 address binding.
-- [x] **Phase 7: Mobile Responsiveness & Motion Engine** - Adaptive viewport sheets, touch area selectors, and rise-in blur-pop physics.
-- [ ] **Phase 8: Multi-Asset Expansion** - Confidential vault pools for cETH, cWBTC, and liquid staking tokens.
-- [ ] **Phase 9: Mainnet Formal Audit & Launch** - Production formal verification.
 
 ---
 
