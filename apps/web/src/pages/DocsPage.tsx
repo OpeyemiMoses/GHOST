@@ -152,6 +152,7 @@ export const DocsPage: React.FC = () => {
       subpages: [
         { id: 'glossary', title: 'Glossary', description: '20+ essential FHE and confidential DeFi definitions' },
         { id: 'faq', title: 'FAQ', description: 'Frequently asked technical questions' },
+        { id: 'zama-resources', title: 'Zama Official Resources', description: 'Complete mapping to official Zama docs, FHEVM guides, and ERC-7984' },
         { id: 'changelog', title: 'Changelog', description: 'Release history from v1.0.0-alpha on Sepolia' },
       ]
     }
@@ -2325,11 +2326,138 @@ export const DocsPage: React.FC = () => {
                 </section>
 </ScrollReveal>
 
-                {/* 08.3 Changelog */}
+                {/* 08.3 Zama Official Resources */}
                 <ScrollReveal>
-  <section id="changelog" className="space-y-6 pt-4 pb-8">
-                  <div>
-                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">08.3 · Changelog</div>
+                  <section id="zama-resources" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                    <div>
+                      <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">08.3 · Zama Developer Resources</div>
+                      <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                        Zama Protocol & Developer Specifications
+                      </h2>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        Official Zama libraries, guides, and standards integrated throughout Ghost Protocol.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      
+                      <a 
+                        href="https://docs.zama.org/protocol/solidity-guides" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-5 rounded-2xl bg-zinc-50 hover:bg-zinc-100/80 border border-zinc-200 transition-all space-y-2 group block"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-zinc-950 flex items-center gap-1.5">
+                            <span>FHEVM Solidity Guides</span>
+                          </span>
+                          <ExternalLink className="w-3.5 h-3.5 text-zinc-400 group-hover:text-black" />
+                        </div>
+                        <p className="text-zinc-600 text-[11px] leading-relaxed">
+                          Core documentation for <code>euint64</code>, <code>ebool</code>, encrypted arithmetic (<code>FHE.add</code>, <code>FHE.sub</code>), and access control (<code>FHE.allow</code>).
+                        </p>
+                        <span className="text-[10px] font-mono text-zinc-400">docs.zama.org/protocol/solidity-guides</span>
+                      </a>
+
+                      <a 
+                        href="https://docs.zama.org/protocol/solidity-guides/smart-contract/operations/random" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-5 rounded-2xl bg-zinc-50 hover:bg-zinc-100/80 border border-zinc-200 transition-all space-y-2 group block"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-zinc-950 flex items-center gap-1.5">
+                            <span>Encrypted Random Numbers</span>
+                          </span>
+                          <ExternalLink className="w-3.5 h-3.5 text-zinc-400 group-hover:text-black" />
+                        </div>
+                        <p className="text-zinc-600 text-[11px] leading-relaxed">
+                          Guide for <code>FHE.randEuint64()</code> used in <code>GhostDraw</code> for blind, provably fair winner selection over encrypted deposit weights.
+                        </p>
+                        <span className="text-[10px] font-mono text-zinc-400">docs.zama.org/protocol/.../random</span>
+                      </a>
+
+                      <a 
+                        href="https://docs.zama.org/protocol/sdk" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-5 rounded-2xl bg-zinc-50 hover:bg-zinc-100/80 border border-zinc-200 transition-all space-y-2 group block"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-zinc-950 flex items-center gap-1.5">
+                            <span>Zama TypeScript SDK</span>
+                          </span>
+                          <ExternalLink className="w-3.5 h-3.5 text-zinc-400 group-hover:text-black" />
+                        </div>
+                        <p className="text-zinc-600 text-[11px] leading-relaxed">
+                          Client-side encryption with zero-knowledge input proofs and EIP-712 user decryption clearance keys.
+                        </p>
+                        <span className="text-[10px] font-mono text-zinc-400">docs.zama.org/protocol/sdk</span>
+                      </a>
+
+                      <a 
+                        href="https://docs.zama.org/protocol/protocol-apps/confidential-tokens/confidential-wrapper" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-5 rounded-2xl bg-zinc-50 hover:bg-zinc-100/80 border border-zinc-200 transition-all space-y-2 group block"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-zinc-950 flex items-center gap-1.5">
+                            <span>ERC-7984 Confidential Wrapper</span>
+                          </span>
+                          <ExternalLink className="w-3.5 h-3.5 text-zinc-400 group-hover:text-black" />
+                        </div>
+                        <p className="text-zinc-600 text-[11px] leading-relaxed">
+                          Specification for wrapping ERC-20 tokens into confidential <code>euint64</code> balances implemented in <code>MockConfidentialToken</code>.
+                        </p>
+                        <span className="text-[10px] font-mono text-zinc-400">docs.zama.org/protocol/.../confidential-wrapper</span>
+                      </a>
+
+                      <a 
+                        href="https://github.com/OpenZeppelin/openzeppelin-confidential-contracts" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-5 rounded-2xl bg-zinc-50 hover:bg-zinc-100/80 border border-zinc-200 transition-all space-y-2 group block"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-zinc-950 flex items-center gap-1.5">
+                            <span>OpenZeppelin Confidential Contracts</span>
+                          </span>
+                          <ExternalLink className="w-3.5 h-3.5 text-zinc-400 group-hover:text-black" />
+                        </div>
+                        <p className="text-zinc-600 text-[11px] leading-relaxed">
+                          Standard templates for confidential vaults, zero-loss accounting, and reentrancy guards used in <code>GhostPool</code> and <code>GhostVault</code>.
+                        </p>
+                        <span className="text-[10px] font-mono text-zinc-400">github.com/OpenZeppelin/...</span>
+                      </a>
+
+                      <a 
+                        href="https://docs.zama.org/protocol/protocol-apps/addresses/testnet/sepolia" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="p-5 rounded-2xl bg-zinc-50 hover:bg-zinc-100/80 border border-zinc-200 transition-all space-y-2 group block"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-zinc-950 flex items-center gap-1.5">
+                            <span>Sepolia Testnet Infrastructure</span>
+                          </span>
+                          <ExternalLink className="w-3.5 h-3.5 text-zinc-400 group-hover:text-black" />
+                        </div>
+                        <p className="text-zinc-600 text-[11px] leading-relaxed">
+                          Official Zama Sepolia Gateway, KMS Verifier, and Coprocessor contracts configured in <code>SepoliaZamaFHEVMConfig</code>.
+                        </p>
+                        <span className="text-[10px] font-mono text-zinc-400">docs.zama.org/.../testnet/sepolia</span>
+                      </a>
+
+                    </div>
+                  </section>
+                </ScrollReveal>
+
+                {/* 08.4 Changelog */}
+                <ScrollReveal>
+                  <section id="changelog" className="space-y-6 pt-4 pb-8">
+                    <div>
+                      <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">08.4 · Changelog</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
                       Protocol Changelog
                     </h2>
