@@ -85,6 +85,7 @@ export interface PrizeRecord {
   eventId: number;
   winnerAddress: string;
   amount: number;
+  encryptedHandle?: string;
   drawTxHash: string;
   claimTxHash?: string;
   timestamp: number;
@@ -980,6 +981,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         eventId: activeEvent.eventId,
         winnerAddress: winner,
         amount: activeEvent.prizeAmount,
+        encryptedHandle: activeEvent.encryptedPrizeHandle || generateCiphertextHandle(activeEvent.prizeAmount, 'GhostDraw'),
         drawTxHash: txHash,
         timestamp: Date.now(),
         status: 'UNCLAIMED',
