@@ -4,7 +4,8 @@ import {
   ExternalLink, Search, Copy, Check, ChevronRight, Layers, Database, 
   ArrowRight, ArrowLeft, AlertTriangle, FileText, Terminal, HelpCircle, 
   CheckCircle2, RefreshCw, Eye, EyeOff, Hash, Clock, Coins, Wallet,
-  Zap, Server, GitBranch, ArrowDown, Network, ShieldCheck
+  Zap, Server, GitBranch, ArrowDown, Network, ShieldCheck,
+  ChevronDown, ChevronUp, X, Menu
 } from 'lucide-react';
 import { useGhost } from '../context/GhostContext';
 import { ScrollReveal } from '../components/ScrollReveal';
@@ -30,6 +31,7 @@ export const DocsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [activeDataFlowTab, setActiveDataFlowTab] = useState<'deposit' | 'withdraw' | 'draw' | 'decrypt'>('deposit');
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState<boolean>(false);
   
   const viewportRef = useRef<HTMLDivElement>(null);
   const isClickScrolling = useRef<boolean>(false);
@@ -247,26 +249,26 @@ export const DocsPage: React.FC = () => {
     <div className="w-full h-full min-h-[calc(100vh-16px)] sm:min-h-[calc(100vh-24px)] flex flex-col bg-white text-zinc-900 overflow-hidden">
       
       {/* Top Fixed Header & Search Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 px-6 sm:px-8 py-4 border-b border-zinc-200/80 bg-white shrink-0 z-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-8 py-3.5 sm:py-4 border-b border-zinc-200/80 bg-white shrink-0 z-10">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-zinc-500 uppercase tracking-wider mb-0.5">
+          <div className="flex items-center gap-2 text-[11px] sm:text-xs font-mono font-semibold text-zinc-500 uppercase tracking-wider mb-0.5">
             <BookOpen className="w-3.5 h-3.5 text-zinc-900" />
-            <span>Ghost Protocol · Technical Documentation System</span>
+            <span>Ghost Protocol · Technical Docs</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950">
+          <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-zinc-950">
             Protocol Specifications & Reference
           </h1>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Search Input */}
-          <div className="relative w-full sm:w-72">
+          <div className="relative flex-1 sm:w-72">
             <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search all 35+ topics..."
+              placeholder="Search 38+ topics..."
               className="w-full pl-9 pr-4 py-2 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-950 shadow-xs"
             />
             {searchQuery && (
@@ -282,19 +284,107 @@ export const DocsPage: React.FC = () => {
           {/* Help Centre Link Button */}
           <button
             onClick={() => setCurrentView('help')}
-            className="btn-pill-secondary text-xs font-semibold px-4 py-2 flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
+            className="btn-pill-secondary text-xs font-semibold px-3 sm:px-4 py-2 flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
           >
             <HelpCircle className="w-3.5 h-3.5 text-zinc-700" />
-            <span>Help Centre</span>
+            <span className="hidden sm:inline">Help Centre</span>
+            <span className="sm:hidden">Help</span>
           </button>
         </div>
       </div>
+
+      {/* Mobile Area Picker Bar (Visible on screens < lg) */}
+      <div className="lg:hidden px-4 py-2.5 bg-zinc-50 border-b border-zinc-200 flex items-center justify-between text-xs shrink-0 z-10">
+        <button
+          onClick={() => setMobileDrawerOpen(true)}
+          className="flex items-center gap-2 font-semibold text-zinc-900 bg-white border border-zinc-200/90 px-3 py-1.5 rounded-xl shadow-xs cursor-pointer"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-zinc-600" />
+          <span>{currentArea.number} {currentArea.title}</span>
+          <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+        </button>
+
+        <span className="text-[11px] font-mono text-zinc-500 truncate max-w-[140px]">
+          {currentSubPage.title}
+        </span>
+      </div>
+
+      {/* Mobile Area Drawer Modal */}
+      {mobileDrawerOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          <div 
+            onClick={() => setMobileDrawerOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs animate-fade-in"
+          />
+          <div className="relative w-4/5 max-w-xs bg-white h-full p-5 flex flex-col justify-between overflow-y-auto border-r border-zinc-200 z-10 animate-page-enter">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-200">
+                <div className="font-bold text-sm text-zinc-950">Documentation Areas</div>
+                <button
+                  onClick={() => setMobileDrawerOpen(false)}
+                  className="p-1.5 rounded-lg bg-zinc-100 text-zinc-500 hover:text-zinc-900"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {docAreas.map((area) => {
+                  const isCurrent = area.id === activeAreaId;
+                  const Icon = area.icon;
+
+                  return (
+                    <div key={area.id} className="space-y-1">
+                      <button
+                        onClick={() => {
+                          switchMainArea(area.id);
+                          setMobileDrawerOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                          isCurrent ? 'bg-zinc-900 text-white' : 'bg-zinc-50 text-zinc-700 hover:bg-zinc-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Icon className="w-3.5 h-3.5" />
+                          <span>{area.number} {area.title}</span>
+                        </div>
+                        <ChevronRight className="w-3 h-3 opacity-60" />
+                      </button>
+
+                      {isCurrent && (
+                        <div className="pl-4 space-y-1 pt-1 border-l-2 border-zinc-200 ml-3">
+                          {area.subpages.map((sub) => (
+                            <button
+                              key={sub.id}
+                              onClick={() => {
+                                scrollToSubPage(sub.id);
+                                setMobileDrawerOpen(false);
+                              }}
+                              className={`block w-full text-left text-[11px] py-1 px-2 rounded-lg transition-colors ${
+                                activeSubPageId === sub.id
+                                  ? 'text-zinc-950 font-bold bg-zinc-100'
+                                  : 'text-zinc-500 hover:text-zinc-900'
+                              }`}
+                            >
+                              {sub.title}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Dual-Panel Layout: Fixed Sub-Navbar on Left & Scrollable Viewport on Right */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
         
         {/* LEFT PANEL: Completely Fixed/Static Sub-Navigation Bar */}
-        <aside className="w-72 sm:w-80 shrink-0 h-full overflow-y-auto border-r border-zinc-200/80 p-4 sm:p-5 bg-[#fafafa] select-none space-y-4">
+        <aside className="hidden lg:block w-72 sm:w-80 shrink-0 h-full overflow-y-auto border-r border-zinc-200/80 p-4 sm:p-5 bg-[#fafafa] select-none space-y-4">
           
           {/* Search Results Dropdown */}
           {searchQuery && (
