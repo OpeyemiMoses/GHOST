@@ -37,8 +37,7 @@
 10. [Autonomous 24h Keeper Bot](#autonomous-24h-keeper-bot)
 11. [Local Development & Setup](#local-development--setup)
 12. [Testing & Verification](#testing--verification)
-13. [Submission Deliverables & Socials](#submission-deliverables--socials)
-14. [📖 Full Technical & Architectural Master Breakdown](docs/FULL_PRODUCT_BREAKDOWN.md)
+13. [📖 Full Technical & Architectural Master Breakdown](docs/FULL_PRODUCT_BREAKDOWN.md)
 
 ---
 

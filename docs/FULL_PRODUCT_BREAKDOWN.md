@@ -16,7 +16,6 @@
 11. [In-App 8-Area Technical Documentation System](#11-in-app-8-area-technical-documentation-system)
 12. [Help Centre & FAQ Directory](#12-help-centre--faq-directory)
 13. [Production Mainnet Roadmap: Morpho & Steakhouse Integration](#13-production-mainnet-roadmap-morpho--steakhouse-integration)
-14. [Video Pitch Script & Social Media Submission Kit](#14-video-pitch-script--social-media-submission-kit)
 
 ---
 
@@ -270,82 +269,3 @@ The in-app Help Centre (`/help`) features 6 dedicated support categories:
   2. Institutional-grade lending yield generates continuous cUSDC interest.
   3. Yield is harvested into `GhostPool` at each 24-hour draw boundary.
   4. User principal remains 100% liquid and redeemable on Morpho with zero slippage.
-
----
-
-## 14. VIDEO PITCH SCRIPT & SOCIAL MEDIA SUBMISSION KIT
-
-### 🎥 3-Minute Video Demo Script (Real-Person Pitch)
-
-```text
-[0:00 - 0:35] THE PROBLEM & HOOK
-"Hi everyone! Today I’m excited to present Ghost Protocol for the Zama Developer Program Season 4 Mainnet Bounty.
-On transparent blockchains, prize-savings protocols like PoolTogether suffer from a critical flaw: every deposit, every balance, every user's winning odds, and every payout are broadcasted publicly in plaintext. This leaks participants' financial net worth, makes high-net-worth savers targets, and discourages participation.
-Ghost Protocol solves this using Zama’s Fully Homomorphic Encryption (fhEVM), bringing complete privacy to no-loss prize savings on Ethereum Sepolia."
-
-[0:35 - 1:10] DEPOSIT & CLIENT-SIDE ENCLAVE AUTH
-"Let’s walk through the end-to-end user lifecycle live on our Sepolia deployment.
-First, we connect our wallet and sign in to our client-side zero-knowledge enclave.
-Next, using our built-in Faucet tab, we mint testnet cUSDC tokens.
-Now, we deposit 500 cUSDC into the Ghost Vault. 
-Notice what happens: onchain, the deposit is wrapped directly into a confidential euint64 ciphertext handle. No observer or blockchain indexer can ever see the size of our deposit or our pool share."
-
-[1:10 - 1:45] EIP-712 USER DECRYPTION
-"By default, our dashboard remains cryptographically sealed. 
-When we click 'Decrypt Position', we sign an EIP-712 clearance message with our private key.
-The plaintext values are unmasked client-side in our browser, allowing us to see our active principal and accrued yield, while onchain observers see only opaque ciphertext handles."
-
-[1:45 - 2:25] BLIND ONCHAIN DRAW & FHE RANDOMNESS
-"Now let’s look at the prize draw cycle.
-Ghost operates on a 24-hour cycle powered by an autonomous keeper.
-When the draw executes, the Torus FHE coprocessor uses onchain FHE randomness—FHE.randEuint—to sample a winning ticket weighted by each participant's encrypted balance.
-The winner is chosen blindly: no participant balances are ever decrypted, yet the outcome is publicly verifiable through the Merkle state roots recorded in GhostVerifier."
-
-[2:25 - 3:00] CLAIM PRIZES & ZERO-LOSS WITHDRAWAL
-"When our wallet wins, the funds are not silently auto-credited. Instead, they are reserved as an unclaimed prize.
-We navigate to our dedicated 'Claim Prizes' tab and claim our $250 prize directly to our Sepolia wallet with a verified onchain transaction.
-And finally, Ghost guarantees zero-loss: we can withdraw 100% of our deposited principal back to our wallet at any time without penalty.
-Thank you, and explore Ghost live at ghost-torus.vercel.app!"
-```
-
-### 🧵 X (Twitter) Submission Thread
-
-```markdown
-1/7 👻 Introducing @GhostProtocol — The Confidential Prize-Savings Protocol on Ethereum Sepolia, built for the @zama Developer Program Mainnet Season 4 Bounty!
-
-Lock principal with 0-loss, earn yield, and win confidential onchain draws powered by Zama fhEVM. 🧵👇
-
-#ZamaDeveloperProgram #FHE #DeFi
-
-2/7 🛑 The Problem:
-On transparent chains, prize savings leak everything:
-❌ How much you saved
-❌ Your exact odds of winning
-❌ Who won every prize draw
-
-This exposes users' net worth and makes savers vulnerable.
-
-3/7 🛡️ The Ghost Solution:
-With @zama FHE, confidentiality & verifiable fairness coexist:
-✅ Encrypted Deposits & Balances (euint64 ciphertext handles)
-✅ Blind Onchain Winner Selection (FHE.randEuint over encrypted weights)
-✅ Zero-Loss Guarantee: 100% principal withdrawable anytime
-
-4/7 🔑 EIP-712 User Decryption:
-Your positions remain sealed onchain. Only you can unseal your balances and winnings client-side through on-demand cryptographic wallet signature clearance.
-
-5/7 🏆 Onchain Prize Claiming:
-Winnings are reserved onchain as unclaimed prizes until winners decrypt and claim them directly to their Sepolia wallet via our dedicated Claim Portal.
-
-6/7 ⚙️ Production-Ready Architecture:
-• 5 verified contracts deployed on Sepolia (GhostPool, GhostVault, GhostDraw, GhostVerifier, MockConfidentialToken)
-• 24h Autonomous Keeper Loop
-• High-performance interactive UI
-
-7/7 🚀 Try Ghost Protocol live on Ethereum Sepolia today!
-
-🌐 Live dApp: https://ghost-torus.vercel.app
-📂 Open Source Repo: https://github.com/OpeyemiMoses/GHOST
-
-Built with ❤️ for the @zama Developer Program Season 4! 🛡️⚡
-```
