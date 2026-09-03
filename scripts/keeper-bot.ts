@@ -24,33 +24,39 @@ async function main() {
       if (!currentBlock) return;
 
       const currentTimestamp = currentBlock.timestamp;
-      console.log(`[${new Date().toLocaleTimeString()}] Polling block #${currentBlock.number} (Timestamp: ${currentTimestamp})...`);
+      const currentDrawId = await (ghostDraw as any).currentDrawId();
+      const draw = await (ghostDraw as any).getDraw(currentDrawId);
 
-      // Verify if draw cycle is ready for execution
-      try {
-        const canExecute = await (ghostDraw as any).canExecute();
-        if (canExecute) {
-          console.log("\n⚡ [KEEPER TRIGGER] 24-Hour Cycle Threshold Reached! Executing Homomorphic Draw...");
-          
-          const tx = await (ghostDraw.connect(keeperSigner) as any).executeDraw({
-            gasLimit: 600000,
-          });
-          
-          console.log(`🚀 [Keeper] Transaction Broadcasted: ${tx.hash}`);
-          console.log("⏳ Waiting for onchain block confirmation...");
-          
-          const receipt = await tx.wait(1);
-          console.log(`✔ [Keeper] Draw Successfully Executed in Block #${receipt?.blockNumber}!`);
-          console.log("🎉 Prize Awarded Homomorphically & Next 24-Hour Cycle Initialized.\n");
-        } else {
-          console.log("⏳ [Keeper] Cycle still active. Timer not yet expired.");
-        }
-      } catch (checkErr: any) {
-        // Fallback for mock/testnet interface
-        console.log(`ℹ [Keeper] Status check: ${checkErr.message || 'Standing by'}`);
+      const endTime = Number(draw.endTime);
+      const isExpired = currentTimestamp >= endTime && endTime > 0;
+      const isOpen = Number(draw.status) === 1; // DrawStatus.Open = 1
+
+      console.log(
+        `[${new Date().toLocaleTimeString()}] Polling Draw #${currentDrawId} | Status: ${draw.status} | End: ${new Date(endTime * 1000).toLocaleTimeString()} | Block Timestamp: ${currentTimestamp}`
+      );
+
+      if (isExpired && isOpen) {
+        console.log(`\n⚡ [KEEPER TRIGGER] 24-Hour Cycle Threshold Reached for Draw #${currentDrawId}! Executing Homomorphic Draw...`);
+        
+        const tx = await (ghostDraw.connect(keeperSigner) as any).executeDraw({
+          gasLimit: 600000,
+        });
+        
+        console.log(`🚀 [Keeper] Transaction Broadcasted: ${tx.hash}`);
+        console.log("⏳ Waiting for onchain block confirmation on Sepolia...");
+        
+        const receipt = await tx.wait(1);
+        console.log(`✔ [Keeper] Draw Successfully Executed in Block #${receipt?.blockNumber}!`);
+        console.log(`🎉 Winner Selected Homomorphically & Next 24-Hour Cycle Initialized.\n`);
+      } else {
+        const remainingSeconds = Math.max(0, endTime - currentTimestamp);
+        const remH = Math.floor(remainingSeconds / 3600);
+        const remM = Math.floor((remainingSeconds % 3600) / 60);
+        const remS = remainingSeconds % 60;
+        console.log(`⏳ [Keeper] Cycle active. Next draw in: ${remH}h ${remM}m ${remS}s.`);
       }
     } catch (err: any) {
-      console.error("❌ [Keeper Error]:", err.message || err);
+      console.error("ℹ [Keeper Observation]:", err.message || err);
     }
   }
 
