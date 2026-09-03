@@ -5,11 +5,19 @@
   <p>Powered by Torus Network Coprocessors & Zama fhEVM Homomorphic Computing</p>
 
   <p>
+    <a href="https://ghost-torus.vercel.app"><img src="https://img.shields.io/badge/Live%20App-ghost--torus.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo: Vercel"></a>
+  </p>
+
+  <p>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
     <a href="https://sepolia.etherscan.io/"><img src="https://img.shields.io/badge/Network-Sepolia%20Testnet-8C52FF" alt="Network: Sepolia"></a>
     <a href="https://zama.ai/fhevm"><img src="https://img.shields.io/badge/Cryptography-Zama%20fhEVM-111111" alt="FHE: Zama"></a>
     <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Frontend-Vite%20%2B%20React-646CFF" alt="Frontend: Vite"></a>
     <a href="https://github.com/OpeyemiMoses/GHOST/actions"><img src="https://img.shields.io/badge/Build-Passing-10B981" alt="Build Status"></a>
+  </p>
+
+  <p>
+    🌐 <strong>Live Production dApp:</strong> <a href="https://ghost-torus.vercel.app" target="_blank"><strong>https://ghost-torus.vercel.app</strong></a>
   </p>
 </div>
 
