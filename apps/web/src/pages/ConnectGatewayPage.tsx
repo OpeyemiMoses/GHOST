@@ -119,7 +119,7 @@ export const ConnectGatewayPage: React.FC = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(120,80,30,0.12),transparent_70%)] pointer-events-none" />
 
         {/* Top Header / Brand */}
-        <div className="relative z-20 flex items-center justify-between">
+        <div className="relative z-20 flex items-center justify-between pb-6 sm:pb-8">
           <button
             onClick={() => setCurrentView('landing')}
             className="flex items-center gap-2 group transition-transform hover:scale-102 cursor-pointer"
@@ -127,11 +127,11 @@ export const ConnectGatewayPage: React.FC = () => {
             <img
               src="/assets/ghost-logo-lockup-white.png"
               alt="Ghost"
-              className="h-8 w-auto object-contain"
+              className="h-5 sm:h-6 w-auto object-contain"
             />
           </button>
           
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-[11px] font-mono text-zinc-400 shadow-md">
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-[10px] sm:text-[11px] font-mono text-zinc-400 shadow-md">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>Sepolia Testnet</span>
           </div>
@@ -139,24 +139,24 @@ export const ConnectGatewayPage: React.FC = () => {
 
         {/* Center Visual Photograph / 3D Animated Vault Stage */}
         <div
-          className="relative z-10 my-auto py-6 flex flex-col items-center justify-center [perspective:1200px]"
+          className="relative z-10 my-auto py-8 sm:py-10 flex flex-col items-center justify-center [perspective:1200px]"
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         >
           {/* Floating Telemetry Badge 1 */}
-          <div className="absolute -top-3 left-4 sm:left-10 z-30 px-3.5 py-1.5 rounded-2xl bg-zinc-900/90 backdrop-blur-md border border-amber-500/30 text-amber-300 text-[11px] font-mono shadow-xl flex items-center gap-2 pointer-events-none">
-            <Lock className="w-3.5 h-3.5 text-amber-400" />
+          <div className="absolute top-1 left-2 sm:left-6 z-30 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-2xl bg-zinc-900/90 backdrop-blur-md border border-amber-500/30 text-amber-300 text-[10px] sm:text-[11px] font-mono shadow-xl flex items-center gap-1.5 pointer-events-none">
+            <Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
             <span>Dual-Key Account Lock</span>
           </div>
 
           {/* Floating Telemetry Badge 2 */}
-          <div className="absolute -bottom-3 right-4 sm:right-10 z-30 px-3.5 py-1.5 rounded-2xl bg-zinc-900/90 backdrop-blur-md border border-emerald-500/30 text-emerald-300 text-[11px] font-mono shadow-xl flex items-center gap-2 pointer-events-none">
-            <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="absolute bottom-1 right-2 sm:right-6 z-30 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-2xl bg-zinc-900/90 backdrop-blur-md border border-emerald-500/30 text-emerald-300 text-[10px] sm:text-[11px] font-mono shadow-xl flex items-center gap-1.5 pointer-events-none">
+            <Cpu className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" />
             <span>Zero Onchain Plaintext</span>
           </div>
 
           {/* Expanding Radar Wave Ring */}
-          <div className="absolute w-[320px] h-[320px] rounded-full border border-amber-500/20 animate-radar-wave pointer-events-none" />
+          <div className="absolute w-[300px] sm:w-[320px] h-[300px] sm:h-[320px] rounded-full border border-amber-500/20 animate-radar-wave pointer-events-none" />
 
           {/* 3D Interactive Card Container */}
           <div
