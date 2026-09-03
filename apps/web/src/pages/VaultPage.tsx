@@ -459,6 +459,19 @@ export const VaultPage: React.FC = () => {
                       Max
                     </button>
                   </div>
+
+                  {depositAmount && parseFloat(depositAmount) > walletTokenBalance && (
+                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] flex items-center justify-between mt-2">
+                      <span>Insufficient wallet balance (${walletTokenBalance.toFixed(2)} cUSDC).</span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveAction('faucet')}
+                        className="font-bold underline text-amber-900 cursor-pointer"
+                      >
+                        Mint in Faucet →
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -496,6 +509,12 @@ export const VaultPage: React.FC = () => {
                       cUSDC
                     </span>
                   </div>
+
+                  {withdrawAmount && parseFloat(withdrawAmount) > userBalance && (
+                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] flex items-center justify-between mt-2">
+                      <span>Exceeds active vault balance (${userBalance.toFixed(2)} cUSDC).</span>
+                    </div>
+                  )}
                 </div>
 
                 <button
