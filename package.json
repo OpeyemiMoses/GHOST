@@ -4,6 +4,8 @@
   "description": "Ghost: Confidential Prize-Savings Protocol powered by Zama FHE",
   "main": "index.js",
   "scripts": {
+    "build": "npm run build --prefix apps/web",
+    "keeper": "npx ts-node scripts/keeper-bot.ts",
     "compile": "hardhat compile",
     "test": "hardhat test",
     "test:privacy": "hardhat test test/PrivacyIntegrity.test.ts",
