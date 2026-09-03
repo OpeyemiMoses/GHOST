@@ -18,18 +18,19 @@
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [The Problem vs. Ghost Solution](#the-problem-vs-ghost-solution)
-3. [Key Features](#key-features)
-4. [Architecture & Pipeline](#architecture--pipeline)
-5. [Smart Contracts & Sepolia Deployments](#smart-contracts--sepolia-deployments)
-6. [Privacy & Security Model](#privacy--security-model)
-7. [MVP User Walkthrough](#mvp-user-walkthrough)
-8. [Local Development & Setup](#local-development--setup)
-9. [Environment Configuration (.env.example)](#environment-configuration-envexample)
-10. [Testing & Deployment](#testing--deployment)
-11. [Zero-Knowledge Verification](#zero-knowledge-verification)
-12. [Roadmap](#roadmap)
-13. [Contributing & License](#contributing--license)
+2. [What Ghost Sees vs. What Ghost Never Sees](#what-ghost-sees-vs-what-ghost-never-sees)
+3. [The Problem vs. Ghost Solution](#the-problem-vs-ghost-solution)
+4. [Key Features](#key-features)
+5. [Architecture & Pipeline](#architecture--pipeline)
+6. [Smart Contracts & Sepolia Deployments](#smart-contracts--sepolia-deployments)
+7. [Privacy & Security Model](#privacy--security-model)
+8. [MVP User Walkthrough](#mvp-user-walkthrough)
+9. [Local Development & Setup](#local-development--setup)
+10. [Environment Configuration (.env.example)](#environment-configuration-envexample)
+11. [Testing & Deployment](#testing--deployment)
+12. [Zero-Knowledge Verification](#zero-knowledge-verification)
+13. [Roadmap](#roadmap)
+14. [Contributing & License](#contributing--license)
 
 ---
 
@@ -40,6 +41,23 @@
 Ghost eliminates this privacy vulnerability by performing all balance accounting, yield compounding, and prize distributions **homomorphically over encrypted integers (`euint64`)** using Zama fhEVM and Torus Network coprocessors.
 
 Depositors benefit from a **zero-loss guarantee**: 100% of your initial deposited principal remains securely in the vault, while collective confidential yield is directed toward periodic, verifiable, zero-knowledge prize distributions.
+
+---
+
+## ??? What Ghost Sees vs. What Ghost Never Sees
+
+Ghost is architected on a zero-knowledge, zero-leakage security boundary. The table below delineates what the public Ethereum blockchain and Ghost smart contracts observe versus what remains strictly confidential to you:
+
+| Data Point | What Ghost & The Public Blockchain Sees | What Ghost NEVER Sees |
+| :--- | :--- | :--- |
+| **Account Balance** | ? Never visible onchain (stored as `euint64` ciphertext handle) | ?? **Only You (Decrypted client-side via wallet signature)** |
+| **Deposit & Withdraw Amounts** | ? Never emitted in plaintext logs or transaction inputs | ?? **Only You (Encrypted into FHE ciphertexts)** |
+| **Yield Accrual Rates** | ? Never calculated in plaintext | ?? **Evaluated homomorphically by Torus FHE coprocessor** |
+| **Prize Allocation Value** | ? Never exposed in plaintext event emissions | ?? **Sealed in ciphertext until winner decrypts** |
+| **Connected Wallet Address** | ? Visible as transaction sender (`0x...`) | � |
+| **Transaction Gas & Timestamps** | ? Visible standard EVM execution metadata | � |
+| **Contract Function Names** | ? Visible method invocations (`deposit`, `withdraw`, `executeDraw`) | � |
+| **State Roots & Random Commitments** | ? Visible cryptographic hashes for public auditability | � |
 
 ---
 
