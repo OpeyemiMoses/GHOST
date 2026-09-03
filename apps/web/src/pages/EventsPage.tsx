@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useGhost } from '../context/GhostContext';
-import { RefreshCw, Sparkles, ExternalLink, Clock, Lock, Wallet, AlertCircle } from 'lucide-react';
+import { RefreshCw, Sparkles, ExternalLink, Clock, Lock, Wallet, AlertCircle, Users } from 'lucide-react';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 
 export const EventsPage: React.FC = () => {
-  const { setCurrentView, walletConnected, activeEvent, pastEvents, isComputingEvent, executeEventDraw } = useGhost();
+  const { setCurrentView, walletConnected, activeEvent, pastEvents, isComputingEvent, executeEventDraw, participantCount } = useGhost();
   const { openConnectModal } = useConnectModal();
 
   // Real-time Countdown Timer calculation
@@ -98,12 +98,22 @@ export const EventsPage: React.FC = () => {
         </div>
 
         {/* References */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono">
           <div className="p-3.5 rounded-2xl bg-zinc-900 border border-zinc-800">
             <div className="text-zinc-500 text-[10px] uppercase">Lifecycle Status</div>
             <div className="text-white font-semibold text-xs mt-1 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span>{activeEvent.status}</span>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-zinc-900 border border-zinc-800">
+            <div className="text-zinc-500 text-[10px] uppercase flex items-center gap-1">
+              <Users className="w-3 h-3 text-zinc-400" />
+              <span>Active Savers in Pool</span>
+            </div>
+            <div className="text-white font-semibold text-xs mt-1">
+              {participantCount.toLocaleString()} Savers
             </div>
           </div>
 

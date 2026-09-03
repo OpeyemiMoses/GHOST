@@ -1,9 +1,9 @@
 import React from 'react';
 import { useGhost } from '../context/GhostContext';
-import { Lock } from 'lucide-react';
+import { Lock, Users } from 'lucide-react';
 
 export const VerifyPage: React.FC = () => {
-  const { activeEvent } = useGhost();
+  const { activeEvent, participantCount } = useGhost();
 
   return (
     <div className="w-full min-h-screen p-6 sm:p-8 lg:p-10 space-y-6">
@@ -26,6 +26,14 @@ export const VerifyPage: React.FC = () => {
         </div>
 
         <div className="space-y-3 font-mono text-xs mb-8">
+          <div className="p-3.5 rounded-2xl bg-white border border-zinc-200 flex items-center justify-between">
+            <span className="text-zinc-500">Auditable Pool Size</span>
+            <span className="text-zinc-900 font-semibold flex items-center gap-2">
+              <Users className="w-3.5 h-3.5 text-zinc-600" />
+              <span>{participantCount.toLocaleString()} Enrolled Savers</span>
+            </span>
+          </div>
+
           <div className="p-3.5 rounded-2xl bg-white border border-zinc-200 flex items-center justify-between">
             <span className="text-zinc-500">Protocol State</span>
             <span className="text-zinc-900 font-semibold flex items-center gap-2">

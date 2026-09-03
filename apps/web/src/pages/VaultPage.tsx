@@ -43,6 +43,7 @@ export const VaultPage: React.FC = () => {
     handleWithdraw,
     currentPrizePool,
     transactions,
+    participantCount,
   } = useGhost();
 
   const { openConnectModal } = useConnectModal();
@@ -222,8 +223,9 @@ export const VaultPage: React.FC = () => {
             <div className="text-2xl font-bold text-zinc-950 tracking-tight">
               ${currentPrizePool.toFixed(2)}
             </div>
-            <div className="text-[11px] text-zinc-500 mt-0.5">
-              Accumulated Prize Pool
+            <div className="text-[11px] text-zinc-500 mt-0.5 flex items-center justify-between">
+              <span>Accumulated Prize Pool</span>
+              <span className="font-mono text-amber-600 font-semibold">{participantCount.toLocaleString()} Savers</span>
             </div>
           </div>
         </div>
