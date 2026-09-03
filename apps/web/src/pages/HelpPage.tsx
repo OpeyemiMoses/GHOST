@@ -338,8 +338,6 @@ export const HelpPage: React.FC = () => {
           </div>
         </ScrollReveal>
 
-        {/* Articles Accordion List with Scroll Animation */}
-        <ScrollReveal delay={100}>
           <div className="space-y-3">
             <div className="flex items-center justify-between text-xs text-zinc-500 px-1 pb-1">
               <span>Showing {filteredArticles.length} troubleshooting guides</span>
@@ -353,81 +351,81 @@ export const HelpPage: React.FC = () => {
                 <p>Try searching for different keywords or select "All" categories.</p>
               </div>
             ) : (
-              filteredArticles.map((art) => {
+              filteredArticles.map((art, index) => {
                 const isOpen = openArticleId === art.id;
 
                 return (
-                  <div
-                    key={art.id}
-                    className="bg-white border border-zinc-200/80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs transition-all mb-3"
-                  >
-                    <button
-                      onClick={() => setOpenArticleId(isOpen ? null : art.id)}
-                      className="w-full p-5 sm:p-6 text-left flex items-start justify-between gap-4 font-semibold text-zinc-900 text-xs sm:text-sm hover:bg-zinc-50/50 transition-colors cursor-pointer"
+                  <ScrollReveal key={art.id} delay={Math.min(index * 30, 150)}>
+                    <div
+                      className="bg-white border border-zinc-200/80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs transition-all mb-3"
                     >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 border border-zinc-200/60 font-medium">
-                            {art.category}
-                          </span>
+                      <button
+                        onClick={() => setOpenArticleId(isOpen ? null : art.id)}
+                        className="w-full p-5 sm:p-6 text-left flex items-start justify-between gap-4 font-semibold text-zinc-900 text-xs sm:text-sm hover:bg-zinc-50/50 transition-colors cursor-pointer"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 text-zinc-600 border border-zinc-200/60 font-medium">
+                              {art.category}
+                            </span>
+                          </div>
+                          <div className="text-zinc-950 font-bold sm:text-base">{art.question}</div>
+                          <div className="text-zinc-500 text-xs font-normal">{art.summary}</div>
                         </div>
-                        <div className="text-zinc-950 font-bold sm:text-base">{art.question}</div>
-                        <div className="text-zinc-500 text-xs font-normal">{art.summary}</div>
-                      </div>
 
-                      <span className="shrink-0 p-1.5 rounded-full bg-zinc-100 text-zinc-600 mt-1">
-                        {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </span>
-                    </button>
+                        <span className="shrink-0 p-1.5 rounded-full bg-zinc-100 text-zinc-600 mt-1">
+                          {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </span>
+                      </button>
 
-                    {isOpen && (
-                      <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-zinc-100 text-xs text-zinc-600 space-y-4">
-                        {art.problem && (
-                          <div className="p-3.5 bg-red-50/60 border border-red-200/60 rounded-xl space-y-1 text-red-900">
-                            <div className="font-bold text-[11px] uppercase font-mono">Problem Diagnosis</div>
-                            <div>{art.problem}</div>
-                          </div>
-                        )}
-
-                        {art.why && (
-                          <div className="space-y-1">
-                            <div className="font-bold text-zinc-900">Why this happens:</div>
-                            <p className="leading-relaxed text-zinc-600">{art.why}</p>
-                          </div>
-                        )}
-
-                        {art.check && (
-                          <div className="space-y-1.5">
-                            <div className="font-bold text-zinc-900">What to check:</div>
-                            <ul className="list-disc pl-5 space-y-1 text-zinc-600">
-                              {art.check.map((c, i) => (
-                                <li key={i}>{c}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {art.resolve && (
-                          <div className="space-y-1.5 p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
-                            <div className="font-bold text-zinc-950 flex items-center gap-1.5">
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                              <span>How to resolve it:</span>
+                      {isOpen && (
+                        <div className="px-5 sm:px-6 pb-6 pt-2 border-t border-zinc-100 text-xs text-zinc-600 space-y-4">
+                          {art.problem && (
+                            <div className="p-3.5 bg-red-50/60 border border-red-200/60 rounded-xl space-y-1 text-red-900">
+                              <div className="font-bold text-[11px] uppercase font-mono">Problem Diagnosis</div>
+                              <div>{art.problem}</div>
                             </div>
-                            <ol className="list-decimal pl-5 space-y-1.5 text-zinc-700 font-medium">
-                              {art.resolve.map((r, i) => (
-                                <li key={i}>{r}</li>
-                              ))}
-                            </ol>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                          )}
+
+                          {art.why && (
+                            <div className="space-y-1">
+                              <div className="font-bold text-zinc-900">Why this happens:</div>
+                              <p className="leading-relaxed text-zinc-600">{art.why}</p>
+                            </div>
+                          )}
+
+                          {art.check && (
+                            <div className="space-y-1.5">
+                              <div className="font-bold text-zinc-900">What to check:</div>
+                              <ul className="list-disc pl-5 space-y-1 text-zinc-600">
+                                {art.check.map((c, i) => (
+                                  <li key={i}>{c}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {art.resolve && (
+                            <div className="space-y-1.5 p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
+                              <div className="font-bold text-zinc-950 flex items-center gap-1.5">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                <span>How to resolve it:</span>
+                              </div>
+                              <ol className="list-decimal pl-5 space-y-1.5 text-zinc-700 font-medium">
+                                {art.resolve.map((r, i) => (
+                                  <li key={i}>{r}</li>
+                                ))}
+                              </ol>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </ScrollReveal>
                 );
               })
             )}
           </div>
-        </ScrollReveal>
 
         {/* Cross-link to Technical Docs with Scroll Animation */}
         <ScrollReveal delay={150}>

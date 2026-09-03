@@ -11,12 +11,27 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
   children,
   className = '',
   delay = 0,
-  threshold = 0.15,
+  threshold = 0.08,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isRevealed, setIsRevealed] = useState(false);
 
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    // Find nearest scrollable parent or default to viewport
+    let scrollParent: Element | null = null;
+    let parent = el.parentElement;
+    while (parent) {
+      const overflowY = window.getComputedStyle(parent).overflowY;
+      if (overflowY === 'auto' || overflowY === 'scroll') {
+        scrollParent = parent;
+        break;
+      }
+      parent = parent.parentElement;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -25,14 +40,23 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
         }
       },
       {
+        root: scrollParent,
         threshold,
-        rootMargin: '0px 0px -40px 0px',
+        rootMargin: '0px 0px -20px 0px',
       }
     );
 
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
+    observer.observe(el);
+
+    // Fallback if already visible on mount
+    const checkImmediateVisibility = () => {
+      const rect = el.getBoundingClientRect();
+      const parentRect = scrollParent ? scrollParent.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+      if (rect.top < parentRect.bottom && rect.bottom > parentRect.top) {
+        setIsRevealed(true);
+      }
+    };
+    checkImmediateVisibility();
 
     return () => {
       observer.disconnect();
