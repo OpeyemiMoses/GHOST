@@ -238,8 +238,18 @@ export const DocsPage: React.FC = () => {
     if (subPageId) {
       setActiveSubPageId(subPageId);
     }
+    // Instantly reset scroll to top on all viewport references and windows
     if (viewportRef.current) {
+      viewportRef.current.scrollTop = 0;
       viewportRef.current.scrollTo({ top: 0, behavior: 'instant' });
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const mainParent = document.querySelector('main');
+    if (mainParent) {
+      mainParent.scrollTop = 0;
+      mainParent.scrollTo({ top: 0, behavior: 'instant' });
     }
   };
 
@@ -248,8 +258,8 @@ export const DocsPage: React.FC = () => {
   return (
     <div className="w-full h-full min-h-[calc(100vh-16px)] sm:min-h-[calc(100vh-24px)] flex flex-col bg-white text-zinc-900 overflow-hidden">
       
-      {/* Top Fixed Header & Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-8 py-3.5 sm:py-4 border-b border-zinc-200/80 bg-white shrink-0 z-10">
+      {/* Top Fixed Header & Search Bar (Sticky so it stays pinned) */}
+      <div className="sticky top-0 z-30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-8 py-3 sm:py-4 border-b border-zinc-200/80 bg-white shrink-0 shadow-2xs">
         <div>
           <div className="flex items-center gap-2 text-[11px] sm:text-xs font-mono font-semibold text-zinc-500 uppercase tracking-wider mb-0.5">
             <BookOpen className="w-3.5 h-3.5 text-zinc-900" />

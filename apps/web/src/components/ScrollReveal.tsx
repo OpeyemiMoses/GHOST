@@ -4,14 +4,12 @@ interface ScrollRevealProps {
   children: React.ReactNode;
   className?: string;
   delay?: number; // In milliseconds
-  threshold?: number;
 }
 
 export const ScrollReveal: React.FC<ScrollRevealProps> = ({
   children,
   className = '',
   delay = 0,
-  threshold = 0.05,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -20,10 +18,10 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
     const el = ref.current;
     if (!el) return;
 
-    // Detect nearest scrollable container or fall back to viewport
-    let scrollParent: Element | null = null;
+    // Detect nearest scroll container or fall back to window
+    let scrollParent: HTMLElement | Window = window;
     let parent = el.parentElement;
-    while (parent) {
+    while (parent && parent !== document.body) {
       const style = window.getComputedStyle(parent);
       if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
         scrollParent = parent;
@@ -32,28 +30,37 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
       parent = parent.parentElement;
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsRevealed(true);
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        root: scrollParent,
-        threshold: [0, 0.05, 0.1],
-        rootMargin: '0px 0px -40px 0px',
-      }
-    );
+    const checkVisibility = () => {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const parentRect =
+        scrollParent instanceof HTMLElement
+          ? scrollParent.getBoundingClientRect()
+          : { top: 0, bottom: window.innerHeight };
 
-    observer.observe(el);
+      // Element enters into view
+      const isVisible = rect.top < parentRect.bottom - 15 && rect.bottom > parentRect.top;
+      if (isVisible) {
+        setIsRevealed(true);
+      }
+    };
+
+    // Immediate check + short raf timer for layout stabilization
+    checkVisibility();
+    const rafId = requestAnimationFrame(checkVisibility);
+    const timer = setTimeout(checkVisibility, 60);
+
+    const target = scrollParent instanceof HTMLElement ? scrollParent : window;
+    target.addEventListener('scroll', checkVisibility, { passive: true });
+    window.addEventListener('resize', checkVisibility, { passive: true });
 
     return () => {
-      observer.disconnect();
+      cancelAnimationFrame(rafId);
+      clearTimeout(timer);
+      target.removeEventListener('scroll', checkVisibility);
+      window.removeEventListener('resize', checkVisibility);
     };
-  }, [threshold]);
+  }, []);
 
   return (
     <div

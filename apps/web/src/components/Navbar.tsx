@@ -34,8 +34,8 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="fixed top-5 left-0 w-full z-40 flex justify-center px-4 pointer-events-none">
-      <nav className="pointer-events-auto flex items-center justify-between gap-4 sm:gap-6 px-4 py-2 rounded-full nav-pill-container max-w-4xl w-full shadow-md bg-white/90 backdrop-blur-md border border-zinc-200/80">
+    <header className="fixed top-2 sm:top-5 left-0 right-0 w-full z-50 flex justify-center px-3 sm:px-4 pointer-events-none">
+      <nav className="pointer-events-auto flex items-center justify-between gap-3 sm:gap-6 px-3.5 sm:px-5 py-2 rounded-2xl sm:rounded-full nav-pill-container max-w-4xl w-full shadow-lg bg-white/95 backdrop-blur-md border border-zinc-200/90">
         
         {/* Brand */}
         <button
