@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
+import { AudioWaveOrbitParticles } from './AudioWaveOrbitParticles';
 
 export const ExplodingHeroVault: React.FC = () => {
   const [isHovered, setIsHovered] = useState<boolean>(false);
 
   return (
     <div
-      className="relative w-full max-w-[460px] aspect-square flex items-center justify-center select-none cursor-pointer group"
+      className="relative w-full max-w-[520px] aspect-square flex items-center justify-center select-none cursor-pointer group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => setIsHovered((prev) => !prev)}
     >
-      
+      {/* 3D Audio Waveform & Orbital Space Particles */}
+      <AudioWaveOrbitParticles isHovered={isHovered} />
+
       {/* 3D Perspective Stage */}
-      <div className="relative w-[320px] sm:w-[380px] h-[320px] sm:h-[380px] flex items-center justify-center [perspective:1200px]">
+      <div className="relative w-[320px] sm:w-[380px] h-[320px] sm:h-[380px] flex items-center justify-center [perspective:1200px] z-20">
         
         {/* Layer 4: Titanium Base Chassis (GhostPool) */}
         <div
