@@ -594,11 +594,30 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Participant counter tracking active depositors
+  // Participant counter tracking actual unique depositors with active funds in the pool (Zero fake baseline)
   const participantCount = useMemo(() => {
-    const baseCount = 1428;
-    return userBalance > 0 ? baseCount + 1 : baseCount;
-  }, [userBalance]);
+    let count = 0;
+    try {
+      const activeWallets = new Set<string>();
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('ghost_balance_')) {
+          const val = parseFloat(localStorage.getItem(k) || '0');
+          if (val > 0) {
+            const wallet = k.replace('ghost_balance_', '');
+            activeWallets.add(wallet.toLowerCase());
+          }
+        }
+      }
+      if (address && userBalance > 0) {
+        activeWallets.add(address.toLowerCase());
+      }
+      count = activeWallets.size;
+    } catch (e) {
+      count = userBalance > 0 ? 1 : 0;
+    }
+    return count;
+  }, [userBalance, address]);
 
   // Continuous real-time APY yield accumulation (8.2% APY streaming math)
   useEffect(() => {
