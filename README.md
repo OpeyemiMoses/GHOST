@@ -20,17 +20,18 @@
 1. [Overview](#overview)
 2. [The Problem vs. Ghost Solution](#the-problem-vs-ghost-solution)
 3. [Key Features](#key-features)
-4. [Architecture & Pipeline](#architecture--pipeline)
-5. [Smart Contracts & Sepolia Deployments](#smart-contracts--sepolia-deployments)
-6. [Privacy & Security Model](#privacy--security-model)
-7. [MVP User Walkthrough](#mvp-user-walkthrough)
-8. [What Ghost Sees vs. What Ghost Never Sees](#what-ghost-sees-vs-what-ghost-never-sees)
-9. [Local Development & Setup](#local-development--setup)
-10. [Environment Configuration (.env.example)](#environment-configuration-envexample)
-11. [Testing & Deployment](#testing--deployment)
-12. [Zero-Knowledge Verification](#zero-knowledge-verification)
-13. [Roadmap](#roadmap)
-14. [Contributing & License](#contributing--license)
+4. [Dual-Factor Auth & 1:1 Wallet Binding](#dual-factor-auth--11-wallet-binding)
+5. [Architecture & Pipeline](#architecture--pipeline)
+6. [Smart Contracts & Sepolia Deployments](#smart-contracts--sepolia-deployments)
+7. [Privacy & Security Model](#privacy--security-model)
+8. [MVP User Walkthrough](#mvp-user-walkthrough)
+9. [What Ghost Sees vs. What Ghost Never Sees](#what-ghost-sees-vs-what-ghost-never-sees)
+10. [Local Development & Setup](#local-development--setup)
+11. [Environment Configuration (.env.example)](#environment-configuration-envexample)
+12. [Testing & Deployment](#testing--deployment)
+13. [Zero-Knowledge Verification](#zero-knowledge-verification)
+14. [Roadmap](#roadmap)
+15. [Contributing & License](#contributing--license)
 
 ---
 
@@ -51,7 +52,8 @@ Depositors benefit from a **zero-loss guarantee**: 100% of your initial deposite
 | **Balance Visibility** | Publicly visible to all MEV bots, searchers, and blockchain indexers. | **100% Encrypted:** Stored as `euint64` ciphertext handles. |
 | **Yield Accrual** | Yield events emit plaintext transfer logs onchain. | **Homomorphic Math:** Compounded continuously without decryption. |
 | **Prize Draws** | Winner selection leaks net worth and participant tickets. | **Blind Draw:** Evaluated over encrypted stakes; proven via state roots. |
-| **Client Decryption** | N/A (Plaintext by default). | **Wallet Clearance:** Gated by on-demand cryptographic wallet signature. |
+| **Client Decryption** | N/A (Plaintext by default). | **Dual-Key Clearance:** Gated by on-demand cryptographic wallet signatures. |
+| **Identity Privacy** | Plaintext address activity linked across DeFi ecosystems. | **Zero Onchain Identity:** Client-side enclave auth + bound Web3 addresses. |
 | **Auditability** | Requires full plaintext ledger exposure. | **Zero-Knowledge Proofs:** Anyone can verify outcomes without seeing balances. |
 
 ---
@@ -61,12 +63,50 @@ Depositors benefit from a **zero-loss guarantee**: 100% of your initial deposite
 - **Total Onchain Privacy:** Balances are sealed in `euint64` ciphertext handles on Sepolia.
 - **Zero-Loss Guarantee:** You can withdraw 100% of your principal at any time without penalty.
 - **Continuous Compounding Yield:** Automated homomorphic interest accumulation computed over encrypted values.
-- **Dual-Key Wallet Clearance Flow:**
-  - **Decryption:** Prompts wallet to sign an on-demand decryption clearance message to unmask balances client-side.
-  - **Re-Sealing / Locking:** Prompts wallet to sign a re-sealing request, immediately masking balances to `��������`.
+- **Dual-Factor Account Authentication & 1:1 Wallet Binding:**
+  - Client-side SHA-256 salted password hashing (Zero onchain leakage).
+  - Permanent 1:1 binding between email accounts and Ethereum wallet addresses.
+  - Strict address enforcement: Signature requests revert on unauthorized wallets.
+- **Kinematic Motion Engine:**
+  - Rich physical rise-in blur-pop animations on every route transition.
+  - Container-aware scroll reveal engine with smooth dynamic focus.
+- **Mobile-First Responsive Interface:**
+  - Mobile top app bar with slide-over navigation sheet.
+  - Touch-friendly documentation area switcher and adaptive single-page viewports.
 - **Address-Isolated Confidential Ledger:** Activity history and balances are strictly scoped per connected wallet.
 - **Testnet Confidential Faucet:** Built-in faucet to mint testnet confidential cUSDC directly on Sepolia.
 - **Verifiable Outcome State Roots:** Cryptographic randomness commitments and Merkle roots prove prize draw integrity.
+
+---
+
+## Dual-Factor Auth & 1:1 Wallet Binding
+
+Ghost introduces a modern **Zero-Knowledge Client-Side Authentication Enclave**:
+
+```
++--------------------------------------------------------------------------+
+|                  Client-Side Cryptographic Auth Enclave                  |
+|                                                                          |
+|  [ User Email & Password ] ---> Salted SHA-256 Hash ---> Local Storage   |
+|                                (Never Sent Onchain)                      |
+|                                                                          |
+|  [ Connected Web3 Wallet ] ---> Bound 1:1 to Email Account (EIP-712 Sig) |
++------------------------------------+-------------------------------------+
+                                     |
+                                     v
++--------------------------------------------------------------------------+
+|                        Gated Dashboard Entry Gate                        |
+|                                                                          |
+|  1. Verify Email & Password Hash                                         |
+|  2. Check Connected Address == Bound Address (0x8F4c...3e1A)             |
+|  3. Request Ephemeral Session Signature (ghost_session_v1)                |
+|  4. Unseal Confidential Balances Client-Side                              |
++--------------------------------------------------------------------------+
+```
+
+1. **Email Authentication:** Email and password hashes reside purely in browser memory and local storage enclaves—the blockchain never knows an email address exists.
+2. **1:1 Strict Wallet Binding:** On first sign-in, the user connects and permanently locks their Web3 address to that email profile.
+3. **Mismatch Prevention:** Connecting a different wallet triggers an instant block (*"Wallet Mismatch Detected"*), preventing unauthorized session unsealing.
 
 ---
 
@@ -131,38 +171,41 @@ All contracts are verified and deployed on **Ethereum Sepolia** (`Chain ID: 1115
 ## Privacy & Security Model
 
 - **No Plaintext In Logs:** Zero balance or transaction values are emitted in Ethereum transaction logs.
-- **Client-Side Key Possession:** Decryption tickets are never sent to a centralized server.
-- **Cryptographic Re-Sealing:** When locked, browser memory purges decrypted caches and presents only ciphertext indicators (`��������`).
-- **Cryptographic Signatures:** Every access grant requires an EIP-712 / `signMessage` authorization from the connected wallet.
+- **Client-Side Key Possession:** Decryption tickets and email credentials are never sent to a centralized server.
+- **Cryptographic Re-Sealing:** When locked, browser memory purges decrypted caches and presents only ciphertext indicators (`••••••••`).
+- **Cryptographic Signatures:** Every access grant requires an on-demand wallet signature (`ghost_session_v1`) from the bound wallet address.
 
 ---
 
 ## MVP User Walkthrough
 
-1. **Connect Wallet:** Connect MetaMask, Rainbow, or Coinbase Wallet and sign the session clearance message.
-2. **Claim Faucet Tokens:** In the **Vault** page, switch to the **Faucet** tab and mint 1,000 testnet `cUSDC`.
-3. **Deposit to Vault:** Enter your deposit amount and confirm. Principal is encrypted into `GhostVault`.
-4. **Earn Yield & Prize Tickets:** Your deposit automatically earns continuous savings yield and enters active prize draw cycles.
-5. **Decrypt / Re-Seal Balances:** Click **Decrypt Balance** or **Sign to Lock & Encrypt** to toggle between plaintext and sealed ciphertext.
-6. **Execute Draws:** On the **Events** page, execute the onchain draw when the countdown finishes.
-7. **Verify Outcomes:** Navigate to **Verify** to inspect Merkle state roots and randomness commitments.
+1. **Sign In or Create Account:** Open the **Connect Gateway**, enter your email and set a password.
+2. **Bind Your Web3 Wallet:** Connect MetaMask or Rainbow and click **"Lock & Bind Wallet to Account"**.
+3. **Authorize Session:** Sign the cryptographic session clearance message to enter your confidential dashboard.
+4. **Claim Faucet Tokens:** In the **Vault** page, switch to the **Faucet** tab and mint 1,000 testnet `cUSDC`.
+5. **Deposit to Vault:** Enter your deposit amount and confirm. Principal is encrypted into `GhostVault`.
+6. **Earn Yield & Prize Tickets:** Your deposit automatically earns continuous savings yield and enters active prize draw cycles.
+7. **Decrypt / Re-Seal Balances:** Click **Decrypt Balance** or **Sign to Lock & Encrypt** to toggle between plaintext and sealed ciphertext.
+8. **Execute Draws:** On the **Events** page, execute the onchain draw when the countdown finishes.
+9. **Verify Outcomes:** Navigate to **Verify** to inspect Merkle state roots and randomness commitments.
 
 ---
 
-## ??? What Ghost Sees vs. What Ghost Never Sees
+## What Ghost Sees vs. What Ghost Never Sees
 
-Ghost is architected on a zero-knowledge, zero-leakage security boundary. The table below delineates what the public Ethereum blockchain and Ghost smart contracts observe versus what remains strictly confidential to you:
+Ghost is architected on a zero-knowledge, zero-leakage security boundary:
 
 | Data Point | What Ghost & The Public Blockchain Sees | What Ghost NEVER Sees |
 | :--- | :--- | :--- |
-| **Account Balance** | ? Never visible onchain (stored as `euint64` ciphertext handle) | ?? **Only You (Decrypted client-side via wallet signature)** |
-| **Deposit & Withdraw Amounts** | ? Never emitted in plaintext logs or transaction inputs | ?? **Only You (Encrypted into FHE ciphertexts)** |
-| **Yield Accrual Rates** | ? Never calculated in plaintext | ?? **Evaluated homomorphically by Torus FHE coprocessor** |
-| **Prize Allocation Value** | ? Never exposed in plaintext event emissions | ?? **Sealed in ciphertext until winner decrypts** |
-| **Connected Wallet Address** | ? Visible as transaction sender (`0x...`) | � |
-| **Transaction Gas & Timestamps** | ? Visible standard EVM execution metadata | � |
-| **Contract Function Names** | ? Visible method invocations (`deposit`, `withdraw`, `executeDraw`) | � |
-| **State Roots & Random Commitments** | ? Visible cryptographic hashes for public auditability | � |
+| **User Email & Password** | Never visible (stored strictly in client enclave) | **Only You (Private client-side storage)** |
+| **Account Balance** | Never visible onchain (stored as `euint64` ciphertext handle) | **Only You (Decrypted client-side via wallet signature)** |
+| **Deposit & Withdraw Amounts** | Never emitted in plaintext logs or transaction inputs | **Only You (Encrypted into FHE ciphertexts)** |
+| **Yield Accrual Rates** | Never calculated in plaintext | **Evaluated homomorphically by Torus FHE coprocessor** |
+| **Prize Allocation Value** | Never exposed in plaintext event emissions | **Sealed in ciphertext until winner decrypts** |
+| **Connected Wallet Address** | Visible as transaction sender (`0x...`) | — |
+| **Transaction Gas & Timestamps** | Visible standard EVM execution metadata | — |
+| **Contract Function Names** | Visible method invocations (`deposit`, `withdraw`, `executeDraw`) | — |
+| **State Roots & Random Commitments** | Visible cryptographic hashes for public auditability | — |
 
 ---
 
@@ -276,8 +319,10 @@ Ghost guarantees auditability without sacrificing confidentiality:
 - [x] **Phase 3: Verifiable FHE Draw Engine** - Torus randomness evaluator and prize dispatcher.
 - [x] **Phase 4: Sepolia Testnet Deployment** - Full contract deployment on Sepolia (Chain ID `11155111`).
 - [x] **Phase 5: Web Application** - High-aesthetic React frontend with cryptographic session authorization.
-- [ ] **Phase 6: Multi-Asset Expansion** - Confidential vault pools for cETH, cWBTC, and liquid staking tokens.
-- [ ] **Phase 7: Mainnet Audit & Launch** - Formal verification and mainnet production deployment.
+- [x] **Phase 6: Dual-Factor Auth & Wallet Binding** - Client-side SHA-256 account enclave + 1:1 Web3 address binding.
+- [x] **Phase 7: Mobile Responsiveness & Motion Engine** - Adaptive viewport sheets, touch area selectors, and rise-in blur-pop physics.
+- [ ] **Phase 8: Multi-Asset Expansion** - Confidential vault pools for cETH, cWBTC, and liquid staking tokens.
+- [ ] **Phase 9: Mainnet Formal Audit & Launch** - Production formal verification.
 
 ---
 

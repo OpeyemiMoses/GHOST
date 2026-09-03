@@ -265,6 +265,42 @@ export const HelpPage: React.FC = () => {
       question: 'How does Ghost isolate data when I switch between multiple wallets?',
       summary: 'Address-isolated ledger architecture.',
       why: 'Ghost scopes all balances, decrypted session keys, and transaction ledgers strictly to the active lowercase wallet address (0x...). Switching wallets immediately unloads the previous account state and prompts fresh authentication for the newly connected address.'
+    },
+    {
+      id: 'acc-2',
+      category: 'Account & Access',
+      question: 'How does Email Authentication & 1:1 Wallet Binding work?',
+      summary: 'Understanding Ghost’s Zero-Knowledge Dual-Factor Authentication system.',
+      why: 'Ghost utilizes client-side SHA-256 salted password hashing to store your credentials in an isolated local enclave. Your email address is never published or broadcasted to Ethereum Sepolia. Once signed in, you bind your Web3 wallet (1:1 lock) so only your authorized address can unseal your confidential session.',
+      resolve: [
+        'Sign in or create an account with your email and password at the Connect Gateway.',
+        'Connect your Web3 wallet (MetaMask / Rainbow) and click "Lock & Bind Wallet to Account".',
+        'Sign the on-demand session authorization message to enter your confidential dashboard.'
+      ]
+    },
+    {
+      id: 'acc-3',
+      category: 'Account & Access',
+      question: 'What does "Wallet Mismatch Detected" mean and how do I resolve it?',
+      summary: 'Why Ghost prevents login when a connected wallet does not match your bound address.',
+      problem: 'Warning showing "Wallet Mismatch Detected" and access to vault is blocked.',
+      why: 'Ghost enforces strict 1:1 binding between your email profile and your Web3 wallet address. If your active wallet in MetaMask does not match the bound address for this account, Ghost blocks access to protect your confidential state.',
+      resolve: [
+        'Open your MetaMask or Rainbow wallet extension.',
+        'Switch your active wallet account to the bound address displayed on the screen.',
+        'Click "Authorize Session & Enter Vault" to proceed.'
+      ]
+    },
+    {
+      id: 'acc-4',
+      category: 'Account & Access',
+      question: 'How do I use Ghost on Mobile devices (iOS / Android)?',
+      summary: 'Guide for accessing Ghost on smartphones and tablets.',
+      resolve: [
+        'Open Ghost inside the in-app Web3 browser of MetaMask Mobile or Rainbow Wallet.',
+        'Or open Ghost in Chrome/Safari on mobile and connect using WalletConnect.',
+        'Use the top mobile header menu to switch between Vault, Activity, Events, and Docs with full touch support.'
+      ]
     }
   ];
 

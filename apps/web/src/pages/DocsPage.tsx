@@ -582,41 +582,51 @@ export const DocsPage: React.FC = () => {
                     <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
                       <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
                         <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">1</span>
-                        <span>Network & Wallet Requirements</span>
+                        <span>Zero-Knowledge Email Profile Creation</span>
                       </h3>
                       <p>
-                        Ghost operates on the <strong>Ethereum Sepolia Testnet (Chain ID: 11155111)</strong>. You can connect using MetaMask, Rainbow, Coinbase Wallet, or any standard injected Web3 wallet.
+                        Open the <strong>Connect Gateway</strong> and enter your email address to create an account with a password. Ghost creates a client-side SHA-256 salted hash in your browser’s private enclave. <strong>Your email is never broadcasted to the public Ethereum Sepolia blockchain.</strong>
                       </p>
-                      <div className="p-3 bg-white rounded-xl border border-zinc-200 font-mono text-[11px] text-zinc-700">
-                        Network: Ethereum Sepolia<br />
-                        Chain ID: 11155111<br />
-                        Currency: Sepolia ETH (Gas)
-                      </div>
                     </div>
 
                     <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
                       <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
                         <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">2</span>
-                        <span>Connecting & Session Authorization</span>
+                        <span>1:1 Web3 Wallet Binding & Network Selection</span>
                       </h3>
                       <p>
-                        When you connect your wallet, Ghost's gateway prompts for an on-demand cryptographic signature. This establishes an ephemeral, client-side session key to interact with your confidential contracts.
+                        Connect your Web3 wallet (MetaMask, Rainbow, Coinbase Wallet) on <strong>Ethereum Sepolia (Chain ID: 11155111)</strong> and click <strong>"Lock & Bind Wallet to Account"</strong>. This establishes a strict 1:1 bond between your email account and that wallet address.
                       </p>
+                      <div className="p-3 bg-white rounded-xl border border-zinc-200 font-mono text-[11px] text-zinc-700">
+                        Network: Ethereum Sepolia<br />
+                        Chain ID: 11155111<br />
+                        Security: Dual-Key Client Enclave + EIP-712 Signature
+                      </div>
                     </div>
 
                     <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
                       <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
                         <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">3</span>
-                        <span>Minting Testnet cUSDC & Depositing</span>
+                        <span>Cryptographic Session Authorization</span>
                       </h3>
                       <p>
-                        Navigate to the <strong>Vault</strong> page, switch to the <strong>Faucet</strong> tab, and sign the transaction to mint 1,000 testnet <code>cUSDC</code>. Then enter a deposit amount and click <strong>Deposit Encrypted cUSDC</strong>.
+                        Click <strong>"Authorize Session & Enter Vault"</strong> to sign an on-demand cryptographic verification message. If your connected wallet does not match your bound address, Ghost blocks the request with a <em>Wallet Mismatch</em> alert to keep your encrypted assets safe.
                       </p>
                     </div>
 
                     <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
                       <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
                         <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">4</span>
+                        <span>Minting Testnet cUSDC & Depositing</span>
+                      </h3>
+                      <p>
+                        Navigate to the <strong>Vault</strong> page, switch to the <strong>Faucet</strong> tab, and mint 1,000 testnet <code>cUSDC</code>. Enter your deposit amount and confirm. Your deposit is sealed into <code>euint64</code> ciphertext handles onchain.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
+                      <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">5</span>
                         <span>Decrypting & Re-Sealing Your Position</span>
                       </h3>
                       <p>
@@ -2336,9 +2346,22 @@ export const DocsPage: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="space-y-3 font-mono text-xs text-zinc-600">
-                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
-                      <div className="font-bold text-zinc-900">v1.0.0-sepolia (September 2026)</div>
+                  <div className="space-y-4 font-mono text-xs text-zinc-600">
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-zinc-900">v1.1.0-sepolia (Latest Release)</span>
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">Active</span>
+                      </div>
+                      <ul className="list-disc pl-5 text-[11px] text-zinc-600 font-sans space-y-1">
+                        <li><strong>Dual-Factor Zero-Knowledge Authentication:</strong> Client-side SHA-256 salted account profile creation without leaking emails onchain.</li>
+                        <li><strong>1:1 Strict Web3 Wallet Binding:</strong> Permanent address locking with automatic session signature revert on wallet mismatch.</li>
+                        <li><strong>Mobile-First Responsive Interface:</strong> Slide-over navigation drawer, touch documentation area switcher, and full-width responsive viewports.</li>
+                        <li><strong>Kinematic Motion System:</strong> Route-level rise-in blur-pop page transitions and container-aware scroll reveal observers.</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-zinc-50/60 border border-zinc-200 space-y-2">
+                      <div className="font-bold text-zinc-900">v1.0.0-sepolia (Genesis Deployment)</div>
                       <ul className="list-disc pl-5 text-[11px] text-zinc-600 font-sans space-y-1">
                         <li>Deployment of MockConfidentialToken, GhostVault, GhostPool, and GhostDraw contracts.</li>
                         <li>Dual-key cryptographic session clearance for unmasking and re-sealing state.</li>
