@@ -1,0 +1,83 @@
+import React from 'react';
+import { WagmiProvider } from 'wagmi';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { RainbowKitProvider, lightTheme } from '@rainbow-me/rainbowkit';
+import { config, queryClient } from './lib/wagmi';
+import { GhostProvider, useGhost } from './context/GhostContext';
+import { Navbar } from './components/Navbar';
+import { Sidebar } from './components/Sidebar';
+import { Footer } from './components/Footer';
+
+// Pages
+import { LandingPage } from './pages/LandingPage';
+import { VaultPage } from './pages/VaultPage';
+import { ActivityPage } from './pages/ActivityPage';
+import { EventsPage } from './pages/EventsPage';
+import { VerifyPage } from './pages/VerifyPage';
+import { HowItWorksPage } from './pages/HowItWorksPage';
+import { SecurityPage } from './pages/SecurityPage';
+import { ContractsPage } from './pages/ContractsPage';
+import { ConnectGatewayPage } from './pages/ConnectGatewayPage';
+
+const AppContent: React.FC = () => {
+  const { currentView } = useGhost();
+
+  if (currentView === 'connect') {
+    return <ConnectGatewayPage />;
+  }
+
+  const isHome = currentView === 'landing';
+
+  if (isHome) {
+    return (
+      <div className="min-h-screen flex flex-col bg-white text-zinc-900 selection:bg-zinc-200">
+        <Navbar />
+        <main className="flex-1">
+          <LandingPage />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // In-App Experience with Left Floating Sidebar Navigation
+  return (
+    <div className="min-h-screen bg-[#f4f4f5] text-zinc-900 selection:bg-zinc-200 p-2 sm:p-3 flex gap-2.5 sm:gap-3">
+      <Sidebar />
+      <main className="flex-1 min-h-[calc(100vh-16px)] sm:min-h-[calc(100vh-24px)] overflow-y-auto bg-white rounded-3xl border border-zinc-200/80 flex flex-col justify-between shadow-xs">
+        <div key={currentView} className="animate-page-enter flex-1 w-full">
+          {(currentView === 'vault' || currentView === 'dashboard') && <VaultPage />}
+          {currentView === 'activity' && <ActivityPage />}
+          {(currentView === 'events' || currentView === 'draws') && <EventsPage />}
+          {currentView === 'verify' && <VerifyPage />}
+          {currentView === 'how-it-works' && <HowItWorksPage />}
+          {currentView === 'security' && <SecurityPage />}
+          {currentView === 'contracts' && <ContractsPage />}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider
+          theme={lightTheme({
+            accentColor: '#000000',
+            accentColorForeground: '#ffffff',
+            borderRadius: 'large',
+            fontStack: 'system',
+          })}
+        >
+          <GhostProvider>
+            <AppContent />
+          </GhostProvider>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+};
+
+export default App;

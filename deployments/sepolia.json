@@ -1,0 +1,12 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployedAt": "2026-09-03T00:30:38.507Z",
+  "contracts": {
+    "MockConfidentialToken": "0x65C9020961f4fdF5E0a1fE01dC1225A096408B03",
+    "GhostVerifier": "0xf41C61D972615D5a8E08b574326B1258013B2B3C",
+    "GhostVault": "0xA83889ff7D4D78c53A05e050DaE596c9F3058b96",
+    "GhostPool": "0x96e5946A0aa82656EBEA8f5Da5d998e211a10b06",
+    "GhostDraw": "0xFFDA136c18fdb7C0f74eE60f002f5fFfaCD9957F"
+  }
+}

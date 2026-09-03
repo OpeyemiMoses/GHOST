@@ -1,0 +1,49 @@
+﻿# Environment and secrets (CRITICAL)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Hardhat & Smart Contracts build artifacts
+artifacts/
+cache/
+typechain/
+typechain-types/
+coverage/
+coverage.json
+
+# Web & Node build artifacts
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# AI / IDE workspace caches
+.gemini/
+.system_generated/
+.tempmediaStorage/
+scratch/
