@@ -1,4 +1,6 @@
-<div align="center">
+const fs = require("fs");
+
+const content = `<div align="center">
   <img src="apps/web/public/assets/ghost-logo-lockup-white.png" alt="Ghost Protocol" width="400" />
 
   <p><strong>Confidential Zero-Loss Prize-Savings Protocol on Ethereum Sepolia</strong></p>
@@ -37,7 +39,7 @@
 
 **Ghost Protocol** is an institution-grade, non-custodial confidential prize-savings protocol built on **Ethereum Sepolia**. Traditional DeFi savings pools expose all balances, deposit amounts, and transaction histories publicly in plaintext ERC-20 transfer logs.
 
-Ghost eliminates this privacy vulnerability by performing all balance accounting, yield compounding, and prize distributions **homomorphically over encrypted integers (`euint64`)** using Zama fhEVM and Torus Network coprocessors.
+Ghost eliminates this privacy vulnerability by performing all balance accounting, yield compounding, and prize distributions **homomorphically over encrypted integers (\`euint64\`)** using Zama fhEVM and Torus Network coprocessors.
 
 Depositors benefit from a **zero-loss guarantee**: 100% of your initial deposited principal remains securely in the vault, while collective confidential yield is directed toward periodic, verifiable, zero-knowledge prize distributions.
 
@@ -47,7 +49,7 @@ Depositors benefit from a **zero-loss guarantee**: 100% of your initial deposite
 
 | Dimension | Traditional DeFi Savings (e.g. PoolTogether, Aave) | Ghost Confidential Protocol |
 | :--- | :--- | :--- |
-| **Balance Visibility** | Publicly visible to all MEV bots, searchers, and blockchain indexers. | **100% Encrypted:** Stored as `euint64` ciphertext handles. |
+| **Balance Visibility** | Publicly visible to all MEV bots, searchers, and blockchain indexers. | **100% Encrypted:** Stored as \`euint64\` ciphertext handles. |
 | **Yield Accrual** | Yield events emit plaintext transfer logs onchain. | **Homomorphic Math:** Compounded continuously without decryption. |
 | **Prize Draws** | Winner selection leaks net worth and participant tickets. | **Blind Draw:** Evaluated over encrypted stakes; proven via state roots. |
 | **Client Decryption** | N/A (Plaintext by default). | **Wallet Clearance:** Gated by on-demand cryptographic wallet signature. |
@@ -57,12 +59,12 @@ Depositors benefit from a **zero-loss guarantee**: 100% of your initial deposite
 
 ## Key Features
 
-- **Total Onchain Privacy:** Balances are sealed in `euint64` ciphertext handles on Sepolia.
+- **Total Onchain Privacy:** Balances are sealed in \`euint64\` ciphertext handles on Sepolia.
 - **Zero-Loss Guarantee:** You can withdraw 100% of your principal at any time without penalty.
 - **Continuous Compounding Yield:** Automated homomorphic interest accumulation computed over encrypted values.
 - **Dual-Key Wallet Clearance Flow:**
   - **Decryption:** Prompts wallet to sign an on-demand decryption clearance message to unmask balances client-side.
-  - **Re-Sealing / Locking:** Prompts wallet to sign a re-sealing request, immediately masking balances to `ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½`.
+  - **Re-Sealing / Locking:** Prompts wallet to sign a re-sealing request, immediately masking balances to \`••••••••\`.
 - **Address-Isolated Confidential Ledger:** Activity history and balances are strictly scoped per connected wallet.
 - **Testnet Confidential Faucet:** Built-in faucet to mint testnet confidential cUSDC directly on Sepolia.
 - **Verifiable Outcome State Roots:** Cryptographic randomness commitments and Merkle roots prove prize draw integrity.
@@ -71,7 +73,7 @@ Depositors benefit from a **zero-loss guarantee**: 100% of your initial deposite
 
 ## Architecture & Pipeline
 
-```
+\`\`\`
 +-------------------------------------------------------------------------+
 |                       User Web Client (Vite + React)                    |
 |   Plaintext view ONLY with active wallet session cryptographic signature|
@@ -110,20 +112,20 @@ Depositors benefit from a **zero-loss guarantee**: 100% of your initial deposite
 |                      Torus / Zama FHE Coprocessor                       |
 |        Homomorphic Arithmetic & Blind Random Winner Computation         |
 +-------------------------------------------------------------------------+
-```
+\`\`\`
 
 ---
 
 ## Smart Contracts & Sepolia Deployments
 
-All contracts are verified and deployed on **Ethereum Sepolia** (`Chain ID: 11155111`):
+All contracts are verified and deployed on **Ethereum Sepolia** (\`Chain ID: 11155111\`):
 
 | Contract | Verified Sepolia Address | Description |
 | :--- | :--- | :--- |
-| **`MockConfidentialToken`** (`cUSDC`) | [`0x65C9020961f4fdF5E0a1fE01dC1225A096408B03`](https://sepolia.etherscan.io/address/0x65C9020961f4fdF5E0a1fE01dC1225A096408B03) | Confidential ERC-20 test token with mintable faucet and encrypted balances. |
-| **`GhostVault`** | [`0xA83889ff7D4D78c53A05e050DaE596c9F3058b96`](https://sepolia.etherscan.io/address/0xA83889ff7D4D78c53A05e050DaE596c9F3058b96) | Non-custodial vault holding encrypted principal deposits. |
-| **`GhostPool`** | [`0x96e5946A0aa82656EBEA8f5Da5d998e211a10b06`](https://sepolia.etherscan.io/address/0x96e5946A0aa82656EBEA8f5Da5d998e211a10b06) | Homomorphic yield pooling and savings rate compounding engine. |
-| **`GhostDraw`** | [`0xFFDA136c18fdb7C0f74eE60f002f5fFfaCD9957F`](https://sepolia.etherscan.io/address/0xFFDA136c18fdb7C0f74eE60f002f5fFfaCD9957F) | Verifiable FHE randomness evaluator and prize dispatcher. |
+| **\`MockConfidentialToken\`** (\`cUSDC\`) | [\`0x65C9020961f4fdF5E0a1fE01dC1225A096408B03\`](https://sepolia.etherscan.io/address/0x65C9020961f4fdF5E0a1fE01dC1225A096408B03) | Confidential ERC-20 test token with mintable faucet and encrypted balances. |
+| **\`GhostVault\`** | [\`0xA83889ff7D4D78c53A05e050DaE596c9F3058b96\`](https://sepolia.etherscan.io/address/0xA83889ff7D4D78c53A05e050DaE596c9F3058b96) | Non-custodial vault holding encrypted principal deposits. |
+| **\`GhostPool\`** | [\`0x96e5946A0aa82656EBEA8f5Da5d998e211a10b06\`](https://sepolia.etherscan.io/address/0x96e5946A0aa82656EBEA8f5Da5d998e211a10b06) | Homomorphic yield pooling and savings rate compounding engine. |
+| **\`GhostDraw\`** | [\`0xFFDA136c18fdb7C0f74eE60f002f5fFfaCD9957F\`](https://sepolia.etherscan.io/address/0xFFDA136c18fdb7C0f74eE60f002f5fFfaCD9957F) | Verifiable FHE randomness evaluator and prize dispatcher. |
 
 ---
 
@@ -131,16 +133,16 @@ All contracts are verified and deployed on **Ethereum Sepolia** (`Chain ID: 1115
 
 - **No Plaintext In Logs:** Zero balance or transaction values are emitted in Ethereum transaction logs.
 - **Client-Side Key Possession:** Decryption tickets are never sent to a centralized server.
-- **Cryptographic Re-Sealing:** When locked, browser memory purges decrypted caches and presents only ciphertext indicators (`ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½`).
-- **Cryptographic Signatures:** Every access grant requires an EIP-712 / `signMessage` authorization from the connected wallet.
+- **Cryptographic Re-Sealing:** When locked, browser memory purges decrypted caches and presents only ciphertext indicators (\`••••••••\`).
+- **Cryptographic Signatures:** Every access grant requires an EIP-712 / \`signMessage\` authorization from the connected wallet.
 
 ---
 
 ## MVP User Walkthrough
 
 1. **Connect Wallet:** Connect MetaMask, Rainbow, or Coinbase Wallet and sign the session clearance message.
-2. **Claim Faucet Tokens:** In the **Vault** page, switch to the **Faucet** tab and mint 1,000 testnet `cUSDC`.
-3. **Deposit to Vault:** Enter your deposit amount and confirm. Principal is encrypted into `GhostVault`.
+2. **Claim Faucet Tokens:** In the **Vault** page, switch to the **Faucet** tab and mint 1,000 testnet \`cUSDC\`.
+3. **Deposit to Vault:** Enter your deposit amount and confirm. Principal is encrypted into \`GhostVault\`.
 4. **Earn Yield & Prize Tickets:** Your deposit automatically earns continuous savings yield and enters active prize draw cycles.
 5. **Decrypt / Re-Seal Balances:** Click **Decrypt Balance** or **Sign to Lock & Encrypt** to toggle between plaintext and sealed ciphertext.
 6. **Execute Draws:** On the **Events** page, execute the onchain draw when the countdown finishes.
@@ -152,13 +154,13 @@ All contracts are verified and deployed on **Ethereum Sepolia** (`Chain ID: 1115
 
 ### Prerequisites
 
-- **Node.js:** `v18.0.0` or higher
-- **npm:** `v9.0.0` or higher
+- **Node.js:** \`v18.0.0\` or higher
+- **npm:** \`v9.0.0\` or higher
 - **Git**
 
 ### 1. Clone & Install
 
-```bash
+\`\`\`bash
 git clone https://github.com/OpeyemiMoses/GHOST.git
 cd GHOST
 
@@ -169,32 +171,32 @@ npm install
 cd apps/web
 npm install
 cd ../..
-```
+\`\`\`
 
 ### 2. Configure Environment Variables
 
-Create your local `.env` file in the root directory:
+Create your local \`.env\` file in the root directory:
 
-```bash
+\`\`\`bash
 cp .env.example .env
-```
+\`\`\`
 
 ### 3. Launch Development Server
 
-```bash
+\`\`\`bash
 cd apps/web
 npm run dev
-```
+\`\`\`
 
-The app will be available at `http://localhost:5173`.
+The app will be available at \`http://localhost:5173\`.
 
 ---
 
 ## Environment Configuration (.env.example)
 
-Below is the complete reference for required environment variables in `.env`:
+Below is the complete reference for required environment variables in \`.env\`:
 
-```ini
+\`\`\`ini
 # =================================================================
 # NETWORK & RPC CONFIGURATION
 # =================================================================
@@ -219,13 +221,13 @@ VITE_TOKEN_ADDRESS="0x65C9020961f4fdF5E0a1fE01dC1225A096408B03"
 VITE_VAULT_ADDRESS="0xA83889ff7D4D78c53A05e050DaE596c9F3058b96"
 VITE_POOL_ADDRESS="0x96e5946A0aa82656EBEA8f5Da5d998e211a10b06"
 VITE_DRAW_ADDRESS="0xFFDA136c18fdb7C0f74eE60f002f5fFfaCD9957F"
-```
+\`\`\`
 
 ---
 
 ## Testing & Deployment
 
-```bash
+\`\`\`bash
 # Compile Hardhat contracts
 npx hardhat compile
 
@@ -237,7 +239,7 @@ npx hardhat run scripts/deploy.ts --network sepolia
 
 # Seed testnet draw data
 npx hardhat run scripts/seed-draw.ts --network sepolia
-```
+\`\`\`
 
 ---
 
@@ -253,10 +255,10 @@ Ghost guarantees auditability without sacrificing confidentiality:
 
 ## Roadmap
 
-- [x] **Phase 1: Cryptographic Foundation** - Zama fhEVM integration and `euint64` confidential token.
+- [x] **Phase 1: Cryptographic Foundation** - Zama fhEVM integration and \`euint64\` confidential token.
 - [x] **Phase 2: Vault & Pool Smart Contracts** - Zero-loss vault and continuous homomorphic compounding.
 - [x] **Phase 3: Verifiable FHE Draw Engine** - Torus randomness evaluator and prize dispatcher.
-- [x] **Phase 4: Sepolia Testnet Deployment** - Full contract deployment on Sepolia (Chain ID `11155111`).
+- [x] **Phase 4: Sepolia Testnet Deployment** - Full contract deployment on Sepolia (Chain ID \`11155111\`).
 - [x] **Phase 5: Web Application** - High-aesthetic React frontend with cryptographic session authorization.
 - [ ] **Phase 6: Multi-Asset Expansion** - Confidential vault pools for cETH, cWBTC, and liquid staking tokens.
 - [ ] **Phase 7: Mainnet Audit & Launch** - Formal verification and mainnet production deployment.
@@ -274,3 +276,7 @@ For vulnerability reports, please consult [SECURITY.md](SECURITY.md).
 ### License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+`;
+
+fs.writeFileSync("README.md", content, "utf8");
+console.log("README written cleanly with exact linebreaks!");
