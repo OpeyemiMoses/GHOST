@@ -25,20 +25,28 @@ const AppContent: React.FC = () => {
   const { currentView, currentUser, isWalletMatchingBound, isSessionAuthorized } = useGhost();
 
   if (currentView === 'connect') {
-    return <ConnectGatewayPage />;
+    return (
+      <div key="connect" className="animate-page-enter w-full min-h-screen">
+        <ConnectGatewayPage />
+      </div>
+    );
   }
 
   // Protected Private Views: Require Email Login + Bound Wallet + Session Authorization
   const isPrivateView = currentView === 'vault' || currentView === 'dashboard' || currentView === 'activity';
   if (isPrivateView && (!currentUser || !currentUser.boundWalletAddress || !isWalletMatchingBound || !isSessionAuthorized)) {
-    return <ConnectGatewayPage />;
+    return (
+      <div key="connect-gate" className="animate-page-enter w-full min-h-screen">
+        <ConnectGatewayPage />
+      </div>
+    );
   }
 
   const isHome = currentView === 'landing';
 
   if (isHome) {
     return (
-      <div className="min-h-screen flex flex-col bg-white text-zinc-900 selection:bg-zinc-200">
+      <div key="landing" className="animate-page-enter min-h-screen flex flex-col bg-white text-zinc-900 selection:bg-zinc-200">
         <Navbar />
         <main className="flex-1">
           <LandingPage />

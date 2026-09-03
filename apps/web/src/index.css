@@ -162,11 +162,17 @@ html, body {
 }
 
 /* Dashboard Page Entrance Kinematics */
+/* Page Enter Rise-In Blur Pop Keyframes */
 @keyframes page-enter {
   0% {
     opacity: 0;
-    transform: translateY(16px) scale(0.99);
-    filter: blur(4px);
+    transform: translateY(24px) scale(0.97);
+    filter: blur(10px);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.003);
+    filter: blur(0px);
   }
   100% {
     opacity: 1;
@@ -177,6 +183,7 @@ html, body {
 
 .animate-page-enter {
   animation: page-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform, filter;
 }
 
 /* Rise in Blur Pop Entrance Keyframes */
