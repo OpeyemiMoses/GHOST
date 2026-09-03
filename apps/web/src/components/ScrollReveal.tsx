@@ -11,7 +11,7 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
   children,
   className = '',
   delay = 0,
-  threshold = 0.08,
+  threshold = 0.05,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isRevealed, setIsRevealed] = useState(false);
@@ -20,12 +20,12 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
     const el = ref.current;
     if (!el) return;
 
-    // Find nearest scrollable parent or default to viewport
+    // Detect nearest scrollable container or fall back to viewport
     let scrollParent: Element | null = null;
     let parent = el.parentElement;
     while (parent) {
-      const overflowY = window.getComputedStyle(parent).overflowY;
-      if (overflowY === 'auto' || overflowY === 'scroll') {
+      const style = window.getComputedStyle(parent);
+      if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
         scrollParent = parent;
         break;
       }
@@ -33,30 +33,22 @@ export const ScrollReveal: React.FC<ScrollRevealProps> = ({
     }
 
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsRevealed(true);
-          observer.unobserve(entry.target);
-        }
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsRevealed(true);
+            observer.unobserve(entry.target);
+          }
+        });
       },
       {
         root: scrollParent,
-        threshold,
-        rootMargin: '0px 0px -20px 0px',
+        threshold: [0, 0.05, 0.1],
+        rootMargin: '0px 0px -40px 0px',
       }
     );
 
     observer.observe(el);
-
-    // Fallback if already visible on mount
-    const checkImmediateVisibility = () => {
-      const rect = el.getBoundingClientRect();
-      const parentRect = scrollParent ? scrollParent.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
-      if (rect.top < parentRect.bottom && rect.bottom > parentRect.top) {
-        setIsRevealed(true);
-      }
-    };
-    checkImmediateVisibility();
 
     return () => {
       observer.disconnect();

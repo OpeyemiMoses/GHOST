@@ -7,6 +7,7 @@ import {
   Zap, Server, GitBranch, ArrowDown, Network, ShieldCheck
 } from 'lucide-react';
 import { useGhost } from '../context/GhostContext';
+import { ScrollReveal } from '../components/ScrollReveal';
 
 interface SubPage {
   id: string;
@@ -418,7 +419,8 @@ export const DocsPage: React.FC = () => {
               <div className="space-y-16">
                 
                 {/* 01.1 Intro */}
-                <section id="intro" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="intro" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.1 · Introduction</div>
                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
@@ -471,9 +473,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 01.2 Getting Started */}
-                <section id="getting-started" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="getting-started" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.2 · Getting Started</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -531,9 +535,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 01.3 Why Ghost Exists */}
-                <section id="why-ghost" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="why-ghost" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.3 · Why Ghost Exists</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -614,9 +620,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 01.4 How Ghost Works */}
-                <section id="how-ghost-works" className="space-y-6 pt-4 pb-8">
+                <ScrollReveal>
+  <section id="how-ghost-works" className="space-y-6 pt-4 pb-8">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.4 · How Ghost Works</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -660,6 +668,7 @@ export const DocsPage: React.FC = () => {
                     })}
                   </div>
                 </section>
+</ScrollReveal>
 
               </div>
             )}
@@ -671,7 +680,8 @@ export const DocsPage: React.FC = () => {
               <div className="space-y-16">
                 
                 {/* 02.1 Overview */}
-                <section id="product-overview" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="product-overview" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.1 · Overview</div>
                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
@@ -699,9 +709,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 02.2 The Vault */}
-                <section id="vault" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="vault" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.2 · The Vault</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -733,9 +745,11 @@ export const DocsPage: React.FC = () => {
                     </ul>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 02.3 Deposits */}
-                <section id="deposits" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="deposits" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.3 · Deposits</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -771,9 +785,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 02.4 Withdrawals */}
-                <section id="withdrawals" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="withdrawals" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.4 · Withdrawals</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -798,9 +814,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 02.5 Yield */}
-                <section id="yield" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="yield" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.5 · Yield</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -828,9 +846,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 02.6 Events */}
-                <section id="events" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="events" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.6 · Events</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -854,9 +874,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 02.7 Activity */}
-                <section id="activity" className="space-y-6 pt-4 pb-8">
+                <ScrollReveal>
+  <section id="activity" className="space-y-6 pt-4 pb-8">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.7 · Activity</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -874,6 +896,7 @@ export const DocsPage: React.FC = () => {
                     </p>
                   </div>
                 </section>
+</ScrollReveal>
 
               </div>
             )}
@@ -885,7 +908,8 @@ export const DocsPage: React.FC = () => {
               <div className="space-y-16">
                 
                 {/* 03.1 Privacy Model */}
-                <section id="privacy-model" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="privacy-model" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.1 · Model</div>
                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
@@ -910,9 +934,11 @@ export const DocsPage: React.FC = () => {
                     without sacrificing decentralized consensus, censorship resistance, or non-custodial guarantees.
                   </p>
                 </section>
+</ScrollReveal>
 
                 {/* 03.2 What Is Private */}
-                <section id="what-is-private" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="what-is-private" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.2 · Classification</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -977,9 +1003,11 @@ export const DocsPage: React.FC = () => {
                     </table>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 03.3 What Is Public */}
-                <section id="what-is-public" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="what-is-public" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.3 · Public Metadata</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1002,9 +1030,11 @@ export const DocsPage: React.FC = () => {
                     </ul>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 03.4 Proof of Privacy */}
-                <section id="proof-of-privacy" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="proof-of-privacy" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.4 · Proof</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1033,9 +1063,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 03.5 What is FHE */}
-                <section id="fhe" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="fhe" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.5 · FHE</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1064,9 +1096,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 03.6 Encryption Lifecycle */}
-                <section id="encryption-lifecycle" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="encryption-lifecycle" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.6 · Lifecycle</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1087,9 +1121,11 @@ export const DocsPage: React.FC = () => {
                     Decryption requires EIP-712 wallet signature verification
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 03.7 Access Control */}
-                <section id="access-control" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="access-control" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.7 · Access Control</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1107,9 +1143,11 @@ export const DocsPage: React.FC = () => {
                     </p>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 03.8 User Decryption */}
-                <section id="user-decryption" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="user-decryption" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.8 · Decryption</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1130,9 +1168,11 @@ export const DocsPage: React.FC = () => {
                     User's browser decrypts and renders plaintext balance locally
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 03.9 Limitations */}
-                <section id="limitations" className="space-y-6 pt-4 pb-8">
+                <ScrollReveal>
+  <section id="limitations" className="space-y-6 pt-4 pb-8">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.9 · Limitations</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1154,6 +1194,7 @@ export const DocsPage: React.FC = () => {
                     </p>
                   </div>
                 </section>
+</ScrollReveal>
 
               </div>
             )}
@@ -1165,7 +1206,8 @@ export const DocsPage: React.FC = () => {
               <div className="space-y-16">
                 
                 {/* 04.1 Overview Stack */}
-                <section id="protocol-overview" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="protocol-overview" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.1 · Stack</div>
                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
@@ -1254,9 +1296,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 04.2 Confidential State */}
-                <section id="confidential-state" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="confidential-state" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.2 · State</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1282,9 +1326,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 04.3 Confidential Accounting */}
-                <section id="confidential-accounting" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="confidential-accounting" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.3 · Accounting</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1302,9 +1348,11 @@ export const DocsPage: React.FC = () => {
                     </p>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 04.4 Event Lifecycle */}
-                <section id="event-lifecycle" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="event-lifecycle" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.4 · Lifecycle</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1327,9 +1375,11 @@ export const DocsPage: React.FC = () => {
                     SETTLEMENT & FINALIZED (Prize added to winner ciphertext)
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 04.5 Verification */}
-                <section id="protocol-verification" className="space-y-6 pt-4 pb-8">
+                <ScrollReveal>
+  <section id="protocol-verification" className="space-y-6 pt-4 pb-8">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.5 · Verification</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1351,6 +1401,7 @@ export const DocsPage: React.FC = () => {
                     </ul>
                   </div>
                 </section>
+</ScrollReveal>
 
               </div>
             )}
@@ -1362,7 +1413,8 @@ export const DocsPage: React.FC = () => {
               <div className="space-y-16">
                 
                 {/* 05.1 System Architecture */}
-                <section id="system-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="system-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.1 · Topology</div>
                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
@@ -1443,9 +1495,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 05.2 Smart Contracts */}
-                <section id="smart-contracts" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="smart-contracts" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.2 · Contracts</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1490,9 +1544,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 05.3 FHE Architecture */}
-                <section id="fhe-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="fhe-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.3 · FHE Architecture</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1507,9 +1563,11 @@ export const DocsPage: React.FC = () => {
                     Ghost uses 64-bit encrypted integers (<code>euint64</code>) backed by Torus FHE lattice cryptography. Complex ciphertext multiplications and noise-reduction bootstrapping routines are delegated to the asynchronous coprocessor network to keep EVM gas low.
                   </p>
                 </section>
+</ScrollReveal>
 
                 {/* 05.4 Frontend Architecture */}
-                <section id="frontend-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="frontend-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.4 · Frontend</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1524,9 +1582,11 @@ export const DocsPage: React.FC = () => {
                     The web application utilizes RainbowKit and Wagmi v2 for multi-wallet connectivity. Decryption and re-sealing state is governed by on-demand cryptographic signatures (`signMessageAsync`), creating an address-isolated local storage vault scoped per user.
                   </p>
                 </section>
+</ScrollReveal>
 
                 {/* 05.5 Backend Architecture */}
-                <section id="backend-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="backend-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.5 · Backend</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1547,9 +1607,11 @@ export const DocsPage: React.FC = () => {
                     </p>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 05.6 Data Flows */}
-                <section id="data-flows" className="space-y-6 pt-4 pb-8">
+                <ScrollReveal>
+  <section id="data-flows" className="space-y-6 pt-4 pb-8">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.6 · Pipelines</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1680,6 +1742,7 @@ export const DocsPage: React.FC = () => {
                     )}
                   </div>
                 </section>
+</ScrollReveal>
 
               </div>
             )}
@@ -1691,7 +1754,8 @@ export const DocsPage: React.FC = () => {
               <div className="space-y-16">
                 
                 {/* 06.1 Quickstart */}
-                <section id="dev-quickstart" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="dev-quickstart" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.1 · Quickstart</div>
                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
@@ -1736,9 +1800,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 06.2 Setup */}
-                <section id="dev-setup" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="dev-setup" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.2 · Setup</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1755,9 +1821,11 @@ export const DocsPage: React.FC = () => {
                     ETHERSCAN_API_KEY=your_etherscan_api_key
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 06.3 Contracts */}
-                <section id="dev-contracts" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="dev-contracts" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.3 · Contracts</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1772,9 +1840,11 @@ export const DocsPage: React.FC = () => {
                     Ghost contracts require the fhEVM Solidity library. Run <code>npx hardhat compile</code> to compile all contracts with the Zama FHE compiler plugin.
                   </p>
                 </section>
+</ScrollReveal>
 
                 {/* 06.4 Frontend */}
-                <section id="dev-frontend" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="dev-frontend" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.4 · Frontend Integration</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1789,9 +1859,11 @@ export const DocsPage: React.FC = () => {
                     Use Ghost's React context hook <code>useGhost()</code> to access deposit, withdrawal, and balance decryption methods anywhere in your component tree.
                   </p>
                 </section>
+</ScrollReveal>
 
                 {/* 06.5 FHE Guide */}
-                <section id="dev-fhe-guide" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="dev-fhe-guide" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.5 · FHE Guide</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1808,9 +1880,11 @@ export const DocsPage: React.FC = () => {
                     <li>Use <code>euint64</code> for currency integers and <code>ebool</code> for confidential predicates.</li>
                   </ul>
                 </section>
+</ScrollReveal>
 
                 {/* 06.6 Integration */}
-                <section id="dev-integration" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="dev-integration" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.6 · Integration</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1825,9 +1899,11 @@ export const DocsPage: React.FC = () => {
                     DeFi protocols can route user funds into <code>GhostVault</code> to offer zero-loss prize savings as an underlying yield strategy while preserving depositor privacy.
                   </p>
                 </section>
+</ScrollReveal>
 
                 {/* 06.7 API & SDK */}
-                <section id="dev-api" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="dev-api" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.7 · API & SDK</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1845,9 +1921,11 @@ export const DocsPage: React.FC = () => {
                     lockSession(): Promise&lt;void&gt;
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 06.8 Contract Reference */}
-                <section id="dev-contract-reference" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="dev-contract-reference" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.8 · Reference</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1864,9 +1942,11 @@ export const DocsPage: React.FC = () => {
                     <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900">function executeDraw() external</div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 06.9 Deployments */}
-                <section id="dev-deployments" className="space-y-6 pt-4 pb-8">
+                <ScrollReveal>
+  <section id="dev-deployments" className="space-y-6 pt-4 pb-8">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.9 · Deployments</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1919,6 +1999,7 @@ export const DocsPage: React.FC = () => {
                     </table>
                   </div>
                 </section>
+</ScrollReveal>
 
               </div>
             )}
@@ -1930,7 +2011,8 @@ export const DocsPage: React.FC = () => {
               <div className="space-y-16">
                 
                 {/* 07.1 Security Model */}
-                <section id="security-model" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="security-model" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.1 · Model</div>
                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
@@ -1945,9 +2027,11 @@ export const DocsPage: React.FC = () => {
                     Ghost combines Ethereum's consensus security with Zama's lattice-based cryptography. Depositor funds are strictly non-custodial; protocol administrators cannot freeze, re-route, or arbitrarily decrypt user assets.
                   </p>
                 </section>
+</ScrollReveal>
 
                 {/* 07.2 Threat Matrix */}
-                <section id="threat-matrix" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="threat-matrix" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.2 · Matrix</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -1991,9 +2075,11 @@ export const DocsPage: React.FC = () => {
                     </table>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 07.3 FHE Security */}
-                <section id="fhe-security" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="fhe-security" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.3 · FHE Cryptography</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -2008,9 +2094,11 @@ export const DocsPage: React.FC = () => {
                     Ghost uses Learning With Errors (LWE) and Torus FHE parameters calibrated for 128 bits of post-quantum cryptographic security under standard lattice reduction attacks.
                   </p>
                 </section>
+</ScrollReveal>
 
                 {/* 07.4 Contract Security */}
-                <section id="smart-contract-security" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="smart-contract-security" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.4 · Contract Security</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -2025,9 +2113,11 @@ export const DocsPage: React.FC = () => {
                     All pool and vault contracts implement OpenZeppelin ReentrancyGuard, strict Checks-Effects-Interactions patterns, and access control boundaries.
                   </p>
                 </section>
+</ScrollReveal>
 
                 {/* 07.5 Audits */}
-                <section id="audits" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="audits" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.5 · Audits</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -2042,9 +2132,11 @@ export const DocsPage: React.FC = () => {
                     Smart contracts are compiled for the Zama Developer Program Season 4 with comprehensive unit tests and fuzzing suites. Formal verification of FHE invariant properties is scheduled prior to Ethereum mainnet deployment.
                   </p>
                 </section>
+</ScrollReveal>
 
                 {/* 07.6 Bug Bounty */}
-                <section id="bug-bounty" className="space-y-6 pt-4 pb-8">
+                <ScrollReveal>
+  <section id="bug-bounty" className="space-y-6 pt-4 pb-8">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.6 · Bug Bounty</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -2062,6 +2154,7 @@ export const DocsPage: React.FC = () => {
                     </p>
                   </div>
                 </section>
+</ScrollReveal>
 
               </div>
             )}
@@ -2073,7 +2166,8 @@ export const DocsPage: React.FC = () => {
               <div className="space-y-16">
                 
                 {/* 08.1 Glossary */}
-                <section id="glossary" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="glossary" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">08.1 · Glossary</div>
                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
@@ -2111,9 +2205,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 08.2 FAQ */}
-                <section id="faq" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                <ScrollReveal>
+  <section id="faq" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">08.2 · FAQ</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -2135,9 +2231,11 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
                 {/* 08.3 Changelog */}
-                <section id="changelog" className="space-y-6 pt-4 pb-8">
+                <ScrollReveal>
+  <section id="changelog" className="space-y-6 pt-4 pb-8">
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">08.3 · Changelog</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
@@ -2159,6 +2257,7 @@ export const DocsPage: React.FC = () => {
                     </div>
                   </div>
                 </section>
+</ScrollReveal>
 
               </div>
             )}
