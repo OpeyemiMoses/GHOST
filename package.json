@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "Ghost: Confidential Prize-Savings Protocol powered by Zama FHE",
   "main": "index.js",
+  "workspaces": [
+    "apps/web"
+  ],
   "scripts": {
+    "postinstall": "npm install --prefix apps/web",
     "build": "npm run build --prefix apps/web",
     "keeper": "npx ts-node scripts/keeper-bot.ts",
     "compile": "hardhat compile",
