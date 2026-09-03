@@ -52,10 +52,10 @@ const AppContent: React.FC = () => {
 
   if (isHome) {
     return (
-      <div key="landing" className="animate-page-enter min-h-screen flex flex-col bg-white text-zinc-900 selection:bg-zinc-200">
+      <div key="landing" className="min-h-screen flex flex-col bg-white text-zinc-900 selection:bg-zinc-200 relative">
         <ToastNotification toasts={toasts} removeToast={removeToast} />
         <Navbar />
-        <main className="flex-1">
+        <main className="flex-1 animate-page-enter">
           <LandingPage />
         </main>
         <Footer />
