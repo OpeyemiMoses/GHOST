@@ -164,7 +164,6 @@ interface GhostContextType {
   unclaimedPrizes: PrizeRecord[];
   claimedPrizes: PrizeRecord[];
   claimPrize: (prizeId: string) => Promise<boolean>;
-  simulateWinForTesting: () => void;
 }
 
 const GhostContext = createContext<GhostContextType | undefined>(undefined);
@@ -932,32 +931,6 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return true;
   };
 
-  // Quick Testing Win Simulator
-  const simulateWinForTesting = () => {
-    if (!address) {
-      addToast({ type: 'warning', title: 'Wallet Required', message: 'Connect a wallet first to simulate a win.' });
-      return;
-    }
-    const winAmount = 250.0;
-    const mockDrawTx = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
-    const mockEventId = pastEvents.length + 1;
-    const newPrize: PrizeRecord = {
-      id: `prize_${Date.now()}_${mockEventId}`,
-      eventId: mockEventId,
-      winnerAddress: address,
-      amount: winAmount,
-      drawTxHash: mockDrawTx,
-      timestamp: Date.now(),
-      status: 'UNCLAIMED',
-    };
-    setUnclaimedPrizes((prev) => [newPrize, ...prev]);
-    addToast({
-      type: 'success',
-      title: '🎉 Simulated Win Triggered!',
-      message: `You won Event #${mockEventId} ($${winAmount.toFixed(2)} cUSDC). Navigate to Claim Prizes to claim it to your wallet!`,
-    });
-  };
-
   // Autonomous Keeper Draw Execution
   const executeEventDraw = async () => {
     setIsComputingEvent(true);
@@ -1100,7 +1073,6 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         unclaimedPrizes,
         claimedPrizes,
         claimPrize,
-        simulateWinForTesting,
       }}
     >
       {children}

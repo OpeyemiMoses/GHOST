@@ -4,16 +4,11 @@ import {
   Trophy, 
   Sparkles, 
   ArrowRight, 
-  CheckCircle2, 
   ExternalLink, 
   ShieldCheck, 
   Gift, 
-  Clock, 
   Coins, 
-  AlertCircle,
-  HelpCircle,
-  Zap,
-  Lock
+  HelpCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -22,11 +17,9 @@ export const ClaimPage: React.FC = () => {
     unclaimedPrizes, 
     claimedPrizes, 
     claimPrize, 
-    simulateWinForTesting,
     userAddress, 
     rawAddress,
-    setCurrentView,
-    activeEvent
+    setCurrentView
   } = useGhost();
 
   const [claimingId, setClaimingId] = useState<string | null>(null);
@@ -69,18 +62,6 @@ export const ClaimPage: React.FC = () => {
           <p className="text-zinc-600 text-xs sm:text-sm max-w-xl">
             Ghost prize draws settle homomorphically on Sepolia. When your confidential ticket weight wins, your prize is reserved onchain and must be claimed directly to your wallet.
           </p>
-        </div>
-
-        {/* Quick Testing Trigger */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={simulateWinForTesting}
-            className="px-3.5 py-2 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-semibold border border-zinc-300 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
-            title="Trigger a simulated win to test the onchain claim workflow"
-          >
-            <Zap className="w-3.5 h-3.5 text-amber-600" />
-            <span>Simulate Win ($250.00)</span>
-          </button>
         </div>
       </div>
 
