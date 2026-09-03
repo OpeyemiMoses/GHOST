@@ -813,7 +813,7 @@ export const DocsPage: React.FC = () => {
 
                   <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
                     <p>
-                      In Ghost, yield originates from the collective capital pool deployed in <code>GhostPool.sol</code>. 
+                      In Ghost, yield originates from the collective capital pool deployed in <code>GhostPool</code>. 
                       Torus FHE coprocessors evaluate continuous compound interest formulas over encrypted integer state.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1081,7 +1081,7 @@ export const DocsPage: React.FC = () => {
                     Plaintext Number (User Input)<br />
                     &nbsp;&nbsp;↓ Client-side SDK encryption via Torus Web3 Provider<br />
                     euint64 Ciphertext Handle generated with ZK proof<br />
-                    &nbsp;&nbsp;↓ Submitted onchain to GhostVault.sol<br />
+                    &nbsp;&nbsp;↓ Submitted onchain to GhostVault<br />
                     Smart Contract updates mappings homomorphically<br />
                     &nbsp;&nbsp;↓<br />
                     Decryption requires EIP-712 wallet signature verification
@@ -1248,7 +1248,7 @@ export const DocsPage: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono bg-zinc-100 px-2.5 py-1 rounded-md text-zinc-700 font-medium">GhostVerifier.sol</span>
+                        <span className="text-[10px] font-mono bg-zinc-100 px-2.5 py-1 rounded-md text-zinc-700 font-medium">GhostVerifier</span>
                         <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md font-medium">Verifiable Outcomes</span>
                       </div>
                     </div>
@@ -1459,7 +1459,7 @@ export const DocsPage: React.FC = () => {
                   <div className="space-y-3 text-xs">
                     <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
                       <div className="font-bold text-zinc-950 flex items-center justify-between">
-                        <span className="text-sm">GhostVault.sol</span>
+                        <span className="text-sm">GhostVault</span>
                         <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0xA83889...8b96</span>
                       </div>
                       <p className="text-zinc-600 leading-relaxed">Non-custodial vault holding encrypted principal deposits and enforcing zero-loss guarantees.</p>
@@ -1467,7 +1467,7 @@ export const DocsPage: React.FC = () => {
 
                     <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
                       <div className="font-bold text-zinc-950 flex items-center justify-between">
-                        <span className="text-sm">GhostPool.sol</span>
+                        <span className="text-sm">GhostPool</span>
                         <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0x96e594...0b06</span>
                       </div>
                       <p className="text-zinc-600 leading-relaxed">Homomorphic yield pooling engine and savings rate compounding calculator.</p>
@@ -1475,7 +1475,7 @@ export const DocsPage: React.FC = () => {
 
                     <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
                       <div className="font-bold text-zinc-950 flex items-center justify-between">
-                        <span className="text-sm">GhostDraw.sol</span>
+                        <span className="text-sm">GhostDraw</span>
                         <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0xFFDA13...957F</span>
                       </div>
                       <p className="text-zinc-600 leading-relaxed">Verifiable FHE randomness evaluator and prize dispatcher.</p>
@@ -1483,7 +1483,7 @@ export const DocsPage: React.FC = () => {
 
                     <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
                       <div className="font-bold text-zinc-950 flex items-center justify-between">
-                        <span className="text-sm">MockConfidentialToken.sol (cUSDC)</span>
+                        <span className="text-sm">MockConfidentialToken (cUSDC)</span>
                         <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0x65C902...8B03</span>
                       </div>
                       <p className="text-zinc-600 leading-relaxed">Confidential ERC-20 test token supporting encrypted mints and balance transfers.</p>
@@ -1822,7 +1822,7 @@ export const DocsPage: React.FC = () => {
                   </div>
 
                   <p className="text-xs text-zinc-600 leading-relaxed">
-                    DeFi protocols can route user funds into <code>GhostVault.sol</code> to offer zero-loss prize savings as an underlying yield strategy while preserving depositor privacy.
+                    DeFi protocols can route user funds into <code>GhostVault</code> to offer zero-loss prize savings as an underlying yield strategy while preserving depositor privacy.
                   </p>
                 </section>
 
