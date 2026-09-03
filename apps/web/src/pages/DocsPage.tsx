@@ -7,7 +7,6 @@ import {
   Zap, Server, GitBranch, ArrowDown, Network, ShieldCheck
 } from 'lucide-react';
 import { useGhost } from '../context/GhostContext';
-import { ScrollReveal } from '../components/ScrollReveal';
 
 interface SubPage {
   id: string;
@@ -207,7 +206,6 @@ export const DocsPage: React.FC = () => {
       let currentId = currentArea.subpages[0].id;
       for (const el of subpageElements) {
         const rect = el.getBoundingClientRect();
-        // If the top of the subpage section is within or above the viewport viewing threshold
         if (rect.top - containerTop <= 180) {
           currentId = el.id;
         }
@@ -398,11 +396,11 @@ export const DocsPage: React.FC = () => {
         <main 
           ref={viewportRef}
           id="docs-content-viewport" 
-          className="flex-1 min-w-0 h-full overflow-y-auto p-6 sm:p-10 bg-white space-y-10 selection:bg-zinc-200 scroll-smooth"
+          className="flex-1 min-w-0 h-full overflow-y-auto p-6 sm:p-10 bg-white space-y-8 selection:bg-zinc-200 scroll-smooth"
         >
           
           {/* Top Dynamic Breadcrumbs */}
-          <div className="sticky top-0 bg-white/95 backdrop-blur-md py-3 border-b border-zinc-100 z-10 flex items-center gap-2 text-xs font-mono text-zinc-400">
+          <div className="py-2 border-b border-zinc-100 flex items-center gap-2 text-xs font-mono text-zinc-400">
             <span>GHOST DOCS</span>
             <ChevronRight className="w-3 h-3" />
             <span className="text-zinc-600 font-semibold">{currentArea.number} {currentArea.title}</span>
@@ -414,1283 +412,1756 @@ export const DocsPage: React.FC = () => {
           <div key={activeAreaId} className="animate-page-enter space-y-16">
 
             {/* ========================================================================= */}
-            {/* SECTION 01 — OVERVIEW (ALL SUBPAGES IN ONE FULL SCROLL PAGE) */}
+            {/* SECTION 01 — OVERVIEW (ALL SUBPAGES) */}
             {/* ========================================================================= */}
             {activeAreaId === 'overview' && (
               <div className="space-y-16">
-              
-              {/* Subpage 1: Introduction */}
-              <section id="intro" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.1 · Introduction</div>
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
-                    Introduction to Ghost Protocol
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    A confidential, zero-loss prize-savings protocol powered by Torus and Zama fhEVM.
-                  </p>
-                </div>
+                
+                {/* 01.1 Intro */}
+                <section id="intro" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.1 · Introduction</div>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+                      Introduction to Ghost Protocol
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      A confidential, zero-loss prize-savings protocol powered by Torus and Zama fhEVM.
+                    </p>
+                  </div>
 
-                <div className="prose prose-zinc text-xs text-zinc-600 leading-relaxed space-y-4">
-                  <p>
-                    <strong>Ghost</strong> is a decentralized, non-custodial savings protocol engineered on <strong>Ethereum Sepolia</strong>. 
-                    In traditional decentralized finance, every account balance, yield accrual event, and transaction amount is publicly exposed in plaintext 
-                    ERC-20 transfer logs, subjecting savers to MEV bot surveillance, front-running, and irreversible loss of financial privacy.
-                  </p>
-                  <p>
-                    Ghost resolves this systemic vulnerability by keeping sensitive financial state encrypted while allowing smart contracts to compute over that state 
-                    and produce publicly verifiable outcomes. Utilizing <strong>Fully Homomorphic Encryption (FHE)</strong> via Zama's fhEVM and the Torus Network coprocessor, 
-                    Ghost executes savings arithmetic, yield distribution, and prize draws over <code>euint64</code> ciphertext handles without ever exposing plaintext numbers.
-                  </p>
-                </div>
+                  <div className="prose prose-zinc text-xs text-zinc-600 leading-relaxed space-y-4">
+                    <p>
+                      <strong>Ghost</strong> is a decentralized, non-custodial savings protocol engineered on <strong>Ethereum Sepolia</strong>. 
+                      In traditional decentralized finance, every account balance, yield accrual event, and transaction amount is publicly exposed in plaintext 
+                      ERC-20 transfer logs, subjecting savers to MEV bot surveillance, front-running, and irreversible loss of financial privacy.
+                    </p>
+                    <p>
+                      Ghost resolves this systemic vulnerability by keeping sensitive financial state encrypted while allowing smart contracts to compute over that state 
+                      and produce publicly verifiable outcomes. Utilizing <strong>Fully Homomorphic Encryption (FHE)</strong> via Zama's fhEVM and the Torus Network coprocessor, 
+                      Ghost executes savings arithmetic, yield distribution, and prize draws over <code>euint64</code> ciphertext handles without ever exposing plaintext numbers.
+                    </p>
+                  </div>
 
-                {/* The 3 Core Principles */}
-                <div className="space-y-3 pt-2">
-                  <h3 className="text-sm font-bold text-zinc-950">The Three Core Principles</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1.5 hover:border-zinc-300 transition-all">
-                      <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold">Principle 01</span>
-                      <h4 className="font-bold text-xs text-zinc-900">Private by Default</h4>
-                      <p className="text-xs text-zinc-600 leading-relaxed">
-                        Financial state isn't published as ordinary plaintext blockchain data. All deposit balances are sealed in cryptographic ciphertext handles onchain.
+                  <div className="space-y-3 pt-2">
+                    <h3 className="text-sm font-bold text-zinc-950">The Three Core Principles</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1.5 hover:border-zinc-300 transition-all">
+                        <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold">Principle 01</span>
+                        <h4 className="font-bold text-xs text-zinc-900">Private by Default</h4>
+                        <p className="text-xs text-zinc-600 leading-relaxed">
+                          Financial state isn't published as ordinary plaintext blockchain data. All deposit balances are sealed in cryptographic ciphertext handles onchain.
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1.5 hover:border-zinc-300 transition-all">
+                        <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold">Principle 02</span>
+                        <h4 className="font-bold text-xs text-zinc-900">Encrypted by Construction</h4>
+                        <p className="text-xs text-zinc-600 leading-relaxed">
+                          Sensitive values remain encrypted while Ghost performs the computations required by the protocol. Addition, yield math, and random selection occur homomorphically.
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1.5 hover:border-zinc-300 transition-all">
+                        <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold">Principle 03</span>
+                        <h4 className="font-bold text-xs text-zinc-900">Verifiable by Everyone</h4>
+                        <p className="text-xs text-zinc-600 leading-relaxed">
+                          Ghost doesn't replace transparency with trust. Protocol outcomes and Merkle state roots remain independently verifiable by any third party.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 01.2 Getting Started */}
+                <section id="getting-started" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.2 · Getting Started</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Getting Started on Ethereum Sepolia
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      The complete step-by-step guide to connecting, minting, and depositing.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
+                      <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">1</span>
+                        <span>Network & Wallet Requirements</span>
+                      </h3>
+                      <p>
+                        Ghost operates on the <strong>Ethereum Sepolia Testnet (Chain ID: 11155111)</strong>. You can connect using MetaMask, Rainbow, Coinbase Wallet, or any standard injected Web3 wallet.
+                      </p>
+                      <div className="p-3 bg-white rounded-xl border border-zinc-200 font-mono text-[11px] text-zinc-700">
+                        Network: Ethereum Sepolia<br />
+                        Chain ID: 11155111<br />
+                        Currency: Sepolia ETH (Gas)
+                      </div>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
+                      <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">2</span>
+                        <span>Connecting & Session Authorization</span>
+                      </h3>
+                      <p>
+                        When you connect your wallet, Ghost's gateway prompts for an on-demand cryptographic signature. This establishes an ephemeral, client-side session key to interact with your confidential contracts.
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1.5 hover:border-zinc-300 transition-all">
-                      <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold">Principle 02</span>
-                      <h4 className="font-bold text-xs text-zinc-900">Encrypted by Construction</h4>
-                      <p className="text-xs text-zinc-600 leading-relaxed">
-                        Sensitive values remain encrypted while Ghost performs the computations required by the protocol. Addition, yield math, and random selection occur homomorphically.
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
+                      <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">3</span>
+                        <span>Minting Testnet cUSDC & Depositing</span>
+                      </h3>
+                      <p>
+                        Navigate to the <strong>Vault</strong> page, switch to the <strong>Faucet</strong> tab, and sign the transaction to mint 1,000 testnet <code>cUSDC</code>. Then enter a deposit amount and click <strong>Deposit Encrypted cUSDC</strong>.
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1.5 hover:border-zinc-300 transition-all">
-                      <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold">Principle 03</span>
-                      <h4 className="font-bold text-xs text-zinc-900">Verifiable by Everyone</h4>
-                      <p className="text-xs text-zinc-600 leading-relaxed">
-                        Ghost doesn't replace transparency with trust. Protocol outcomes and Merkle state roots remain independently verifiable by any third party.
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
+                      <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">4</span>
+                        <span>Decrypting & Re-Sealing Your Position</span>
+                      </h3>
+                      <p>
+                        Your balance displays as sealed ciphertext (<code>••••••••</code>). Click <strong>Decrypt Balance with Wallet Signature</strong> to unmask your balance in your browser. Click <strong>Sign to Lock & Encrypt</strong> at any time to re-seal your state.
                       </p>
                     </div>
                   </div>
-                </div>
-              </section>
+                </section>
 
-              {/* Subpage 2: Getting Started */}
-              <section id="getting-started" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.2 · Getting Started</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Getting Started on Ethereum Sepolia
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    The complete step-by-step guide to connecting, minting, and depositing.
-                  </p>
-                </div>
-
-                <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
-                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
-                    <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">1</span>
-                      <span>Network & Wallet Requirements</span>
-                    </h3>
-                    <p>
-                      Ghost operates on the <strong>Ethereum Sepolia Testnet (Chain ID: 11155111)</strong>. You can connect using MetaMask, Rainbow, Coinbase Wallet, or any standard injected Web3 wallet.
-                    </p>
-                    <div className="p-3 bg-white rounded-xl border border-zinc-200 font-mono text-[11px] text-zinc-700">
-                      Network: Ethereum Sepolia<br />
-                      Chain ID: 11155111<br />
-                      Currency: Sepolia ETH (Gas)
-                    </div>
-                  </div>
-
-                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
-                    <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">2</span>
-                      <span>Connecting & Session Authorization</span>
-                    </h3>
-                    <p>
-                      When you connect your wallet, Ghost's gateway prompts for an on-demand cryptographic signature. This establishes an ephemeral, client-side session key to interact with your confidential contracts.
+                {/* 01.3 Why Ghost Exists */}
+                <section id="why-ghost" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.3 · Why Ghost Exists</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Why Ghost Exists
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Addressing the fundamental blockchain privacy problem with designed flow architecture.
                     </p>
                   </div>
 
-                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
-                    <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">3</span>
-                      <span>Minting Testnet cUSDC & Depositing</span>
-                    </h3>
-                    <p>
-                      Navigate to the <strong>Vault</strong> page, switch to the <strong>Faucet</strong> tab, and sign the transaction to mint 1,000 testnet <code>cUSDC</code>. Then enter a deposit amount and click <strong>Deposit Encrypted cUSDC</strong>.
-                    </p>
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-6 rounded-3xl bg-zinc-50 border border-red-200/80 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono uppercase font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">
+                          Traditional Transparent Model
+                        </span>
+                        <Eye className="w-4 h-4 text-red-500" />
+                      </div>
 
-                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
-                    <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">4</span>
-                      <span>Decrypting & Re-Sealing Your Position</span>
-                    </h3>
-                    <p>
-                      Your balance displays as sealed ciphertext (<code>••••••••</code>). Click <strong>Decrypt Balance with Wallet Signature</strong> to unmask your balance in your browser. Click <strong>Sign to Lock & Encrypt</strong> at any time to re-seal your state.
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              {/* Subpage 3: Why Ghost Exists */}
-              <section id="why-ghost" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.3 · Why Ghost Exists</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Why Ghost Exists
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Addressing the fundamental blockchain privacy problem with designed flow architecture.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Designed Card 1: Transparent EVM */}
-                  <div className="p-6 rounded-3xl bg-zinc-50 border border-red-200/80 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono uppercase font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full">
-                        Traditional Transparent Model
-                      </span>
-                      <Eye className="w-4 h-4 text-red-500" />
+                      <div className="space-y-2 py-2">
+                        <div className="p-3 bg-white rounded-xl border border-zinc-200 flex items-center justify-between text-xs font-semibold text-zinc-800">
+                          <span>1. User Wallet</span>
+                          <span className="text-[10px] font-mono text-zinc-400">0x...</span>
+                        </div>
+                        <div className="flex justify-center text-zinc-300">
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="p-3 bg-red-50/50 rounded-xl border border-red-200/60 flex items-center justify-between text-xs text-red-900 font-semibold">
+                          <span>2. Plaintext Transfer Log</span>
+                          <span className="text-[10px] font-mono text-red-600 font-bold">$10,000 cUSDC</span>
+                        </div>
+                        <div className="flex justify-center text-zinc-300">
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="p-3 bg-red-100/60 rounded-xl border border-red-300 text-xs text-red-950 space-y-1 font-medium">
+                          <div className="font-bold text-red-700">Public Observer Surveillance:</div>
+                          <div className="text-[11px] text-red-900 leading-tight">
+                            • Balance indexed publicly on Etherscan<br />
+                            • Winning odds and ticket weights exposed<br />
+                            • MEV bot targeting and front-running risk
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Visual Pipeline */}
-                    <div className="space-y-2 py-2">
-                      <div className="p-3 bg-white rounded-xl border border-zinc-200 flex items-center justify-between text-xs font-semibold text-zinc-800">
-                        <span>1. User Wallet</span>
-                        <span className="text-[10px] font-mono text-zinc-400">0x...</span>
+                    <div className="p-6 rounded-3xl bg-zinc-50 border border-emerald-200/80 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono uppercase font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                          Ghost Confidential Architecture
+                        </span>
+                        <Lock className="w-4 h-4 text-emerald-600" />
                       </div>
-                      <div className="flex justify-center text-zinc-300">
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="p-3 bg-red-50/50 rounded-xl border border-red-200/60 flex items-center justify-between text-xs text-red-900 font-semibold">
-                        <span>2. Plaintext Transfer Log</span>
-                        <span className="text-[10px] font-mono text-red-600 font-bold">$10,000 cUSDC</span>
-                      </div>
-                      <div className="flex justify-center text-zinc-300">
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="p-3 bg-red-100/60 rounded-xl border border-red-300 text-xs text-red-950 space-y-1 font-medium">
-                        <div className="font-bold text-red-700">Public Observer Surveillance:</div>
-                        <div className="text-[11px] text-red-900 leading-tight">
-                          • Balance indexed publicly on Etherscan<br />
-                          • Winning odds and ticket weights exposed<br />
-                          • MEV bot targeting and front-running risk
+
+                      <div className="space-y-2 py-2">
+                        <div className="p-3 bg-white rounded-xl border border-zinc-200 flex items-center justify-between text-xs font-semibold text-zinc-800">
+                          <span>1. User Wallet</span>
+                          <span className="text-[10px] font-mono text-zinc-400">Client Encryption</span>
+                        </div>
+                        <div className="flex justify-center text-emerald-500">
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 flex items-center justify-between text-xs text-emerald-900 font-semibold">
+                          <span>2. euint64 Ciphertext Handle</span>
+                          <span className="text-[10px] font-mono text-emerald-700 font-bold">0x8f4c...3e1a</span>
+                        </div>
+                        <div className="flex justify-center text-emerald-500">
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="p-3 bg-emerald-100/60 rounded-xl border border-emerald-300 text-xs text-emerald-950 space-y-1 font-medium">
+                          <div className="font-bold text-emerald-800">Homomorphic Execution:</div>
+                          <div className="text-[11px] text-emerald-900 leading-tight">
+                            • Balances remain mathematically sealed<br />
+                            • FHE Coprocessor computes yield on ciphertext<br />
+                            • Publicly verifiable state roots on Sepolia
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
+                </section>
 
-                  {/* Designed Card 2: Ghost FHE */}
-                  <div className="p-6 rounded-3xl bg-zinc-50 border border-emerald-200/80 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono uppercase font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                        Ghost Confidential Architecture
-                      </span>
-                      <Lock className="w-4 h-4 text-emerald-600" />
-                    </div>
-
-                    {/* Visual Pipeline */}
-                    <div className="space-y-2 py-2">
-                      <div className="p-3 bg-white rounded-xl border border-zinc-200 flex items-center justify-between text-xs font-semibold text-zinc-800">
-                        <span>1. User Wallet</span>
-                        <span className="text-[10px] font-mono text-zinc-400">Client Encryption</span>
-                      </div>
-                      <div className="flex justify-center text-emerald-500">
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 flex items-center justify-between text-xs text-emerald-900 font-semibold">
-                        <span>2. euint64 Ciphertext Handle</span>
-                        <span className="text-[10px] font-mono text-emerald-700 font-bold">0x8f4c...3e1a</span>
-                      </div>
-                      <div className="flex justify-center text-emerald-500">
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="p-3 bg-emerald-100/60 rounded-xl border border-emerald-300 text-xs text-emerald-950 space-y-1 font-medium">
-                        <div className="font-bold text-emerald-800">Homomorphic Execution:</div>
-                        <div className="text-[11px] text-emerald-900 leading-tight">
-                          • Balances remain mathematically sealed<br />
-                          • FHE Coprocessor computes yield on ciphertext<br />
-                          • Publicly verifiable state roots on Sepolia
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* Subpage 4: How Ghost Works */}
-              <section id="how-ghost-works" className="space-y-6 pt-4 pb-8">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.4 · How Ghost Works</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    How Ghost Works — 7-Step Interactive Journey
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    The complete confidential execution lifecycle from deposit to verifiable outcome.
-                  </p>
-                </div>
-
-                {/* 7-Step Designed Interactive Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { step: '01', title: 'You Deposit', desc: 'Your wallet initiates a non-custodial transaction with testnet cUSDC.', tag: 'User Action', icon: Wallet },
-                    { step: '02', title: 'Sensitive Input Encrypted', desc: 'The token amount is encrypted client-side into an euint64 ciphertext handle.', tag: 'Client-Side FHE', icon: Lock },
-                    { step: '03', title: 'Ghost Stores Encrypted State', desc: 'Ghost contracts update balance mappings using 32-byte ciphertext pointers.', tag: 'Smart Contract', icon: Database },
-                    { step: '04', title: 'Ghost Computes Privately', desc: 'Torus FHE coprocessor computes yield additions and lottery odds directly over encrypted integers.', tag: 'Torus Coprocessor', icon: Cpu },
-                    { step: '05', title: 'Protocol Produces Result', desc: 'Ghost outputs a confidential state transition and prize allocation.', tag: 'State Transition', icon: Sparkles },
-                    { step: '06', title: 'Result is Verifiable', desc: 'Merkle state roots and randomness commitments are published onchain for independent public audit.', tag: 'Verification', icon: ShieldCheck },
-                    { step: '07', title: 'You Access Information', desc: 'You authorize client-side decryption using an ephemeral wallet signature to view your unmasked balance.', tag: 'Dual-Key Decrypt', icon: KeyRound },
-                  ].map((s) => {
-                    const Icon = s.icon;
-                    return (
-                      <div key={s.step} className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 hover:border-zinc-300 transition-all space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="w-7 h-7 rounded-full bg-zinc-900 text-white font-mono text-xs font-bold flex items-center justify-center">
-                            {s.step}
-                          </span>
-                          <span className="text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-white border border-zinc-200 text-zinc-600">
-                            {s.tag}
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-xs text-zinc-950 flex items-center gap-1.5">
-                            <Icon className="w-3.5 h-3.5 text-zinc-700" />
-                            <span>{s.title}</span>
-                          </h3>
-                          <p className="text-xs text-zinc-600 mt-1 leading-relaxed">{s.desc}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* SECTION 02 — PRODUCT (ALL SUBPAGES IN ONE FULL SCROLL PAGE) */}
-          {/* ========================================================================= */}
-          {activeAreaId === 'product' && (
-            <div className="space-y-16">
-              
-              <section id="product-overview" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.1 · Overview</div>
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
-                    What is Ghost?
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Product philosophy, scope, and technical design tenets.
-                  </p>
-                </div>
-
-                <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
-                  <p>
-                    Ghost is an institutional-grade prize-savings protocol where depositors pool confidential stablecoin assets, earn continuous yield, 
-                    and enter automated, zero-loss prize draws without broadcasting their net worth to public blockchain indexers.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
-                      <h3 className="font-bold text-xs text-zinc-900">Target Environment</h3>
-                      <p className="text-xs text-zinc-600">Ethereum Sepolia Testnet with Zama fhEVM coprocessor infrastructure.</p>
-                    </div>
-                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
-                      <h3 className="font-bold text-xs text-zinc-900">Underlying Asset</h3>
-                      <p className="text-xs text-zinc-600">MockConfidentialToken (cUSDC) with encrypted 6-decimal integer handles.</p>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section id="vault" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.2 · The Vault</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    The Vault
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Core user interface and non-custodial balance accounting.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-3xl bg-zinc-900 text-white space-y-2 text-xs">
-                  <div className="font-bold text-amber-400 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5" />
-                    <span>Architectural Privacy Notice</span>
-                  </div>
-                  <p className="text-zinc-300 leading-relaxed">
-                    Ghost does not have a cosmetic "Hide Balance" or "Reveal Balance" switch. Privacy is architectural by construction. 
-                    Your balance is stored as an onchain ciphertext handle and is only unmasked when you cryptographically sign a decryption clearance with your private key.
-                  </p>
-                </div>
-
-                <div className="space-y-3 text-xs text-zinc-600 leading-relaxed">
-                  <h3 className="font-bold text-xs text-zinc-900">Vault States & Actions</h3>
-                  <ul className="list-disc pl-5 space-y-2">
-                    <li><strong>Confidential Balance:</strong> Represented as an <code>euint64</code> ciphertext handle on Sepolia.</li>
-                    <li><strong>Live Yield Ticker:</strong> Continuous compounding calculated over encrypted deposit integers.</li>
-                    <li><strong>Deposit Form:</strong> Validates wallet balance and initiates encrypted onchain transfer.</li>
-                    <li><strong>Withdrawal Form:</strong> Allows instant withdrawal of 100% of your principal without penalties.</li>
-                  </ul>
-                </div>
-              </section>
-
-              <section id="deposits" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.3 · Deposits</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Deposits Lifecycle
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Step-by-step cryptographic lifecycle of a vault deposit.
-                  </p>
-                </div>
-
-                <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-                    <div className="p-3 bg-white rounded-xl border border-zinc-200">
-                      <div className="font-mono text-[10px] text-zinc-400">STEP 1</div>
-                      <div className="font-bold text-zinc-900 mt-0.5">Wallet Select</div>
-                      <div className="text-[11px] text-zinc-500 mt-1">Choose cUSDC amount</div>
-                    </div>
-                    <div className="p-3 bg-white rounded-xl border border-zinc-200">
-                      <div className="font-mono text-[10px] text-zinc-400">STEP 2</div>
-                      <div className="font-bold text-zinc-900 mt-0.5">FHE Encrypt</div>
-                      <div className="text-[11px] text-zinc-500 mt-1">Generate euint64 handle</div>
-                    </div>
-                    <div className="p-3 bg-white rounded-xl border border-zinc-200">
-                      <div className="font-mono text-[10px] text-zinc-400">STEP 3</div>
-                      <div className="font-bold text-zinc-900 mt-0.5">EVM Transfer</div>
-                      <div className="text-[11px] text-zinc-500 mt-1">Submit to GhostVault</div>
-                    </div>
-                    <div className="p-3 bg-white rounded-xl border border-zinc-200">
-                      <div className="font-mono text-[10px] text-zinc-400">STEP 4</div>
-                      <div className="font-bold text-zinc-900 mt-0.5">Vault Sync</div>
-                      <div className="text-[11px] text-zinc-500 mt-1">Enters prize pool</div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section id="withdrawals" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.4 · Withdrawals</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Withdrawals
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Instant, non-custodial capital redemption.
-                  </p>
-                </div>
-
-                <div className="space-y-3 text-xs text-zinc-600 leading-relaxed">
-                  <p>
-                    Withdrawals allow you to redeem 100% of your deposited principal back to your connected wallet at any time. 
-                    Because Ghost is a zero-loss protocol, your principal is never consumed to fund prize pools.
-                  </p>
-                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200">
-                    <h3 className="font-bold text-xs text-zinc-900 mb-1.5">Failure Handling & Reversions</h3>
-                    <p className="text-xs text-zinc-600">
-                      If a withdrawal request exceeds the encrypted balance handle or if gas is insufficient, 
-                      the contract strictly reverts without mutating state or deducting user balance.
+                {/* 01.4 How Ghost Works */}
+                <section id="how-ghost-works" className="space-y-6 pt-4 pb-8">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">01.4 · How Ghost Works</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      How Ghost Works — 7-Step Interactive Journey
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      The complete confidential execution lifecycle from deposit to verifiable outcome.
                     </p>
                   </div>
-                </div>
-              </section>
 
-              <section id="yield" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.5 · Yield</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Yield Mechanics
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    How continuous homomorphic savings yield is generated and accounted.
-                  </p>
-                </div>
-
-                <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
-                  <p>
-                    In Ghost, yield originates from the collective capital pool deployed in <code>GhostPool.sol</code>. 
-                    Torus FHE coprocessors evaluate continuous compound interest formulas over encrypted integer state.
-                  </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200">
-                      <h3 className="font-bold text-xs text-zinc-900 mb-1">What is Public</h3>
-                      <p className="text-xs text-zinc-600">Total global yield pool accumulator and protocol draw interval timers.</p>
-                    </div>
-                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200">
-                      <h3 className="font-bold text-xs text-zinc-900 mb-1">What Remains Confidential</h3>
-                      <p className="text-xs text-zinc-600">Individual user yield share, accumulated interest amounts, and personal ticket weights.</p>
-                    </div>
+                    {[
+                      { step: '01', title: 'You Deposit', desc: 'Your wallet initiates a non-custodial transaction with testnet cUSDC.', tag: 'User Action', icon: Wallet },
+                      { step: '02', title: 'Sensitive Input Encrypted', desc: 'The token amount is encrypted client-side into an euint64 ciphertext handle.', tag: 'Client-Side FHE', icon: Lock },
+                      { step: '03', title: 'Ghost Stores Encrypted State', desc: 'Ghost contracts update balance mappings using 32-byte ciphertext pointers.', tag: 'Smart Contract', icon: Database },
+                      { step: '04', title: 'Ghost Computes Privately', desc: 'Torus FHE coprocessor computes yield additions and lottery odds directly over encrypted integers.', tag: 'Torus Coprocessor', icon: Cpu },
+                      { step: '05', title: 'Protocol Produces Result', desc: 'Ghost outputs a confidential state transition and prize allocation.', tag: 'State Transition', icon: Sparkles },
+                      { step: '06', title: 'Result is Verifiable', desc: 'Merkle state roots and randomness commitments are published onchain for independent public audit.', tag: 'Verification', icon: ShieldCheck },
+                      { step: '07', title: 'You Access Information', desc: 'You authorize client-side decryption using an ephemeral wallet signature to view your unmasked balance.', tag: 'Dual-Key Decrypt', icon: KeyRound },
+                    ].map((s) => {
+                      const Icon = s.icon;
+                      return (
+                        <div key={s.step} className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200/80 hover:border-zinc-300 transition-all space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="w-7 h-7 rounded-full bg-zinc-900 text-white font-mono text-xs font-bold flex items-center justify-center">
+                              {s.step}
+                            </span>
+                            <span className="text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-white border border-zinc-200 text-zinc-600">
+                              {s.tag}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-xs text-zinc-950 flex items-center gap-1.5">
+                              <Icon className="w-3.5 h-3.5 text-zinc-700" />
+                              <span>{s.title}</span>
+                            </h3>
+                            <p className="text-xs text-zinc-600 mt-1 leading-relaxed">{s.desc}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
-              </section>
+                </section>
 
-              <section id="events" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.6 · Events</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Events & Zero-Loss Prize Draws
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Verifiable cryptographic prize distribution mechanism.
-                  </p>
-                </div>
+              </div>
+            )}
 
-                <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
-                  <p>
-                    Ghost prize draws are funded entirely by the yield generated from the collective pool. 
-                    No participant principal is ever wagered or lost. 
-                  </p>
-                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
-                    <h3 className="font-bold text-xs text-zinc-900">Event Execution Pipeline</h3>
-                    <div className="font-mono text-[11px] text-zinc-700">
-                      OPEN Cycle → SNAPSHOT (Root Hash) → FHE Randomness Generation → Blind Winner Selection → VERIFICATION (Proof Written Onchain) → SETTLEMENT (Prize Added to Winner Vault)
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section id="activity" className="space-y-6 pt-4 pb-8">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.7 · Activity</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Activity Ledger
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Distinguishing public blockchain metadata from confidential financial records.
-                  </p>
-                </div>
-
-                <div className="space-y-3 text-xs text-zinc-600 leading-relaxed">
-                  <p>
-                    The Activity page maintains an immutable ledger of all personal transactions submitted to Sepolia. 
-                    Transaction amounts remain encrypted (<code>••••••</code>) until unmasked by your wallet signature.
-                  </p>
-                </div>
-              </section>
-
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* SECTION 03 — PRIVACY (ALL SUBPAGES IN ONE FULL SCROLL PAGE) */}
-          {/* ========================================================================= */}
-          {activeAreaId === 'privacy' && (
-            <div className="space-y-16">
-              
-              <section id="privacy-model" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.1 · Model</div>
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
-                    Ghost Privacy Model
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    The architectural definition of blockchain confidentiality.
-                  </p>
-                </div>
-
-                <div className="p-6 rounded-3xl bg-zinc-900 text-white space-y-2 text-xs">
-                  <div className="font-bold text-amber-400 uppercase tracking-wider text-[11px]">
-                    Core Axiom of Ghost Privacy
-                  </div>
-                  <p className="text-zinc-200 text-sm leading-relaxed">
-                    "Ghost does not attempt to hide the blockchain. Ghost prevents sensitive financial state from being exposed as ordinary plaintext blockchain state."
-                  </p>
-                </div>
-
-                <p className="text-xs text-zinc-600 leading-relaxed">
-                  By isolating the computational privacy layer onto Zama's fhEVM, the protocol achieves complete mathematical confidentiality 
-                  without sacrificing decentralized consensus, censorship resistance, or non-custodial guarantees.
-                </p>
-              </section>
-
-              <section id="what-is-private" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.2 · Classification</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    What Is Private vs. What Is Public
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Explicit data classification table across protocol states.
-                  </p>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border border-zinc-200 rounded-2xl overflow-hidden">
-                    <thead>
-                      <tr className="bg-zinc-100 text-zinc-900 font-semibold border-b border-zinc-200 text-[11px]">
-                        <th className="p-3">Data Point</th>
-                        <th className="p-3">Public Blockchain</th>
-                        <th className="p-3">Ghost Protection Level</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-200 text-zinc-700 font-mono">
-                      <tr>
-                        <td className="p-3 font-semibold text-zinc-900">Contract Addresses</td>
-                        <td className="p-3 text-emerald-600">✓ Public</td>
-                        <td className="p-3 text-zinc-500">Known protocol addresses on Sepolia</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-semibold text-zinc-900">Transaction Existence</td>
-                        <td className="p-3 text-emerald-600">✓ Public</td>
-                        <td className="p-3 text-zinc-500">Tx hash published to EVM blocks</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-semibold text-zinc-900">Block Number & Timestamp</td>
-                        <td className="p-3 text-emerald-600">✓ Public</td>
-                        <td className="p-3 text-zinc-500">Standard EVM block header metadata</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-semibold text-zinc-900">Connected Wallet Address</td>
-                        <td className="p-3 text-emerald-600">✓ Public</td>
-                        <td className="p-3 text-zinc-500">Transaction sender (msg.sender)</td>
-                      </tr>
-                      <tr className="bg-emerald-50/50">
-                        <td className="p-3 font-bold text-zinc-950">Financial Balance</td>
-                        <td className="p-3 text-red-600">✗ Hidden</td>
-                        <td className="p-3 text-emerald-700 font-bold">🔒 Encrypted euint64 Ciphertext Handle</td>
-                      </tr>
-                      <tr className="bg-emerald-50/50">
-                        <td className="p-3 font-bold text-zinc-950">Deposit / Withdraw Amount</td>
-                        <td className="p-3 text-red-600">✗ Hidden</td>
-                        <td className="p-3 text-emerald-700 font-bold">🔒 Encrypted FHE einput Parameter</td>
-                      </tr>
-                      <tr className="bg-emerald-50/50">
-                        <td className="p-3 font-bold text-zinc-950">Yield Allocation Quantity</td>
-                        <td className="p-3 text-red-600">✗ Hidden</td>
-                        <td className="p-3 text-emerald-700 font-bold">🔒 Homomorphically Evaluated</td>
-                      </tr>
-                      <tr className="bg-emerald-50/50">
-                        <td className="p-3 font-bold text-zinc-950">Prize Draw Tickets / Odds</td>
-                        <td className="p-3 text-red-600">✗ Hidden</td>
-                        <td className="p-3 text-emerald-700 font-bold">🔒 Blind FHE Random Selection</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-              <section id="proof-of-privacy" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.3 · Proof</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Proof of Privacy on Sepolia Etherscan
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Verify onchain ciphertext handles directly on the public block explorer.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3 text-xs text-zinc-700">
-                  <h3 className="font-bold text-xs text-zinc-900">Live Deployed Contract Verification</h3>
-                  <p>
-                    Inspect our deployed contracts on Sepolia Etherscan. You will notice that balance mappings store only <code>bytes32 / euint64</code> ciphertext handles:
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <a
-                      href="https://sepolia.etherscan.io/address/0xA83889ff7D4D78c53A05e050DaE596c9F3058b96"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-pill-primary text-xs font-semibold px-4 py-2 inline-flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <span>Inspect GhostVault on Etherscan</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                </div>
-              </section>
-
-              <section id="fhe" className="space-y-6 pt-4 pb-8">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.4 · FHE</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    What is Fully Homomorphic Encryption (FHE)?
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Computing over encrypted data without decryption.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
-                    <h3 className="font-bold text-xs text-zinc-900 font-mono">Standard Computation</h3>
-                    <div className="font-mono text-xs bg-white p-3 rounded-xl border border-zinc-200 text-zinc-800">
-                      10 + 20 = 30<br />
-                      <span className="text-red-600 text-[10px]">(All operands exposed in plaintext)</span>
-                    </div>
-                  </div>
-
-                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
-                    <h3 className="font-bold text-xs text-zinc-900 font-mono">Homomorphic FHE Computation</h3>
-                    <div className="font-mono text-xs bg-white p-3 rounded-xl border border-zinc-200 text-zinc-800">
-                      Encrypted(10) + Encrypted(20) = Encrypted(30)<br />
-                      <span className="text-emerald-600 text-[10px]">(Computed with ZERO plaintext disclosure)</span>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* SECTION 04 — PROTOCOL (ALL SUBPAGES IN ONE FULL SCROLL PAGE) */}
-          {/* ========================================================================= */}
-          {activeAreaId === 'protocol' && (
-            <div className="space-y-16">
-              
-              <section id="protocol-overview" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.1 · Stack</div>
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
-                    Protocol Architecture Stack
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Visual hierarchical architecture across client, smart contracts, FHE coprocessor, and verification layers.
-                  </p>
-                </div>
-
-                {/* Layer 1: Client UI */}
-                <div className="space-y-3">
-                  <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-900 font-bold">
-                        <Wallet className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-mono text-zinc-400 font-semibold uppercase">Layer 01 · Client Tier</div>
-                        <h3 className="font-bold text-xs text-zinc-900">User Interface & Cryptographic Wallet</h3>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono bg-zinc-100 px-2.5 py-1 rounded-md text-zinc-700 font-medium">RainbowKit / Wagmi</span>
-                      <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md font-medium">Client Encryption</span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-center text-zinc-300">
-                    <ArrowDown className="w-4 h-4" />
-                  </div>
-
-                  {/* Layer 2: EVM Smart Contracts */}
-                  <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-900 font-bold">
-                        <Layers className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-mono text-zinc-400 font-semibold uppercase">Layer 02 · Smart Contract Layer</div>
-                        <h3 className="font-bold text-xs text-zinc-900">GhostVault, GhostPool & GhostDraw</h3>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono bg-zinc-100 px-2.5 py-1 rounded-md text-zinc-700 font-medium">Solidity 0.8.24</span>
-                      <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md font-medium">Sepolia EVM</span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-center text-zinc-300">
-                    <ArrowDown className="w-4 h-4" />
-                  </div>
-
-                  {/* Layer 3: Zama fhEVM Engine */}
-                  <div className="p-5 rounded-2xl bg-zinc-950 text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-800">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center text-emerald-400 font-bold">
-                        <Cpu className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-mono text-zinc-400 font-semibold uppercase">Layer 03 · Cryptographic Coprocessor</div>
-                        <h3 className="font-bold text-xs text-white">Zama fhEVM & Torus FHE Engine</h3>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono bg-zinc-800 px-2.5 py-1 rounded-md text-zinc-300 font-medium">euint64 Types</span>
-                      <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-md font-medium">Homomorphic Math</span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-center text-zinc-300">
-                    <ArrowDown className="w-4 h-4" />
-                  </div>
-
-                  {/* Layer 4: Public Verification */}
-                  <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-900 font-bold">
-                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-mono text-zinc-400 font-semibold uppercase">Layer 04 · Verification Layer</div>
-                        <h3 className="font-bold text-xs text-zinc-900">Merkle State Roots & ZK Commitments</h3>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono bg-zinc-100 px-2.5 py-1 rounded-md text-zinc-700 font-medium">GhostVerifier.sol</span>
-                      <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md font-medium">Verifiable Outcomes</span>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section id="confidential-state" className="space-y-6 pt-4 pb-8">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.2 · State</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Confidential State Variables
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Encrypted state variable primitives in Ghost smart contracts.
-                  </p>
-                </div>
-
-                <div className="space-y-3 text-xs text-zinc-600 font-mono">
-                  <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-1">
-                    <div className="font-bold text-zinc-900">mapping(address =&gt; euint64) private _balances;</div>
-                    <div className="text-[11px] text-zinc-500 font-sans">Stores the encrypted deposit principal for each participant wallet.</div>
-                  </div>
-                  <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-1">
-                    <div className="font-bold text-zinc-900">euint64 private _totalPooledPrincipal;</div>
-                    <div className="text-[11px] text-zinc-500 font-sans">Homomorphic sum of all active deposits in the GhostVault.</div>
-                  </div>
-                  <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-1">
-                    <div className="font-bold text-zinc-900">euint64 private _currentPrizePool;</div>
-                    <div className="text-[11px] text-zinc-500 font-sans">Encrypted yield pool accumulator earmarked for the next prize event.</div>
-                  </div>
-                </div>
-              </section>
-
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* SECTION 05 — ARCHITECTURE (ALL SUBPAGES IN ONE FULL SCROLL PAGE) */}
-          {/* ========================================================================= */}
-          {activeAreaId === 'architecture' && (
-            <div className="space-y-16">
-              
-              <section id="system-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.1 · Topology</div>
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
-                    System Architecture Topology
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Decoupled coprocessor design separating consensus from homomorphic polynomial evaluation.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-200/80 space-y-3 hover:border-zinc-300 transition-all">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-200 text-zinc-700">Node A</span>
-                      <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-600 font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Active Client
-                      </span>
-                    </div>
-                    <h3 className="font-bold text-sm text-zinc-950 flex items-center gap-2">
-                      <Terminal className="w-4 h-4 text-zinc-700" />
-                      <span>Client Web Browser</span>
-                    </h3>
-                    <p className="text-xs text-zinc-600 leading-relaxed">
-                      Handles wallet connection, client-side input encryption via Torus SDK, and cryptographic EIP-712 session signing.
+            {/* ========================================================================= */}
+            {/* SECTION 02 — PRODUCT (ALL SUBPAGES) */}
+            {/* ========================================================================= */}
+            {activeAreaId === 'product' && (
+              <div className="space-y-16">
+                
+                {/* 02.1 Overview */}
+                <section id="product-overview" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.1 · Overview</div>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+                      What is Ghost?
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Product philosophy, scope, and technical design tenets.
                     </p>
                   </div>
 
-                  <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-200/80 space-y-3 hover:border-zinc-300 transition-all">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-200 text-zinc-700">Node B</span>
-                      <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-600 font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Sepolia EVM
-                      </span>
+                  <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
+                    <p>
+                      Ghost is an institutional-grade prize-savings protocol where depositors pool confidential stablecoin assets, earn continuous yield, 
+                      and enter automated, zero-loss prize draws without broadcasting their net worth to public blockchain indexers.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                      <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
+                        <h3 className="font-bold text-xs text-zinc-900">Target Environment</h3>
+                        <p className="text-xs text-zinc-600">Ethereum Sepolia Testnet with Zama fhEVM coprocessor infrastructure.</p>
+                      </div>
+                      <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
+                        <h3 className="font-bold text-xs text-zinc-900">Underlying Asset</h3>
+                        <p className="text-xs text-zinc-600">MockConfidentialToken (cUSDC) with encrypted 6-decimal integer handles.</p>
+                      </div>
                     </div>
-                    <h3 className="font-bold text-sm text-zinc-950 flex items-center gap-2">
-                      <Server className="w-4 h-4 text-zinc-700" />
-                      <span>Ethereum Sepolia Node</span>
-                    </h3>
-                    <p className="text-xs text-zinc-600 leading-relaxed">
-                      Enforces state transitions, transaction ordering, non-custodial balance ownership, and verified event commitments.
+                  </div>
+                </section>
+
+                {/* 02.2 The Vault */}
+                <section id="vault" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.2 · The Vault</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      The Vault
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Core user interface and non-custodial balance accounting.
                     </p>
                   </div>
 
-                  <div className="p-6 rounded-3xl bg-zinc-950 text-white border border-zinc-800 space-y-3 shadow-md">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-800 text-emerald-400">Node C</span>
-                      <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        FHE Coprocessor
-                      </span>
+                  <div className="p-5 rounded-3xl bg-zinc-900 text-white space-y-2 text-xs">
+                    <div className="font-bold text-amber-400 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5" />
+                      <span>Architectural Privacy Notice</span>
                     </div>
-                    <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                      <Cpu className="w-4 h-4 text-emerald-400" />
-                      <span>Torus FHE Coprocessor</span>
-                    </h3>
-                    <p className="text-xs text-zinc-300 leading-relaxed">
-                      Executes homomorphic arithmetic, encrypted prize draw entropy, and ACL verification off-chain with mathematical proofs.
+                    <p className="text-zinc-300 leading-relaxed">
+                      Ghost does not have a cosmetic "Hide Balance" or "Reveal Balance" switch. Privacy is architectural by construction. 
+                      Your balance is stored as an onchain ciphertext handle and is only unmasked when you cryptographically sign a decryption clearance with your private key.
                     </p>
                   </div>
 
-                  <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-200/80 space-y-3 hover:border-zinc-300 transition-all">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-200 text-zinc-700">Node D</span>
-                      <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-600 font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Threshold KMS
-                      </span>
-                    </div>
-                    <h3 className="font-bold text-sm text-zinc-950 flex items-center gap-2">
-                      <KeyRound className="w-4 h-4 text-zinc-700" />
-                      <span>Decryption Gateway & KMS</span>
-                    </h3>
-                    <p className="text-xs text-zinc-600 leading-relaxed">
-                      Issues ephemeral re-encryption tickets exclusively to authorized depositors possessing valid cryptographic wallet signatures.
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <section id="smart-contracts" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.2 · Contracts</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Smart Contract Topology
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Modular contract responsibilities and Sepolia deployments.
-                  </p>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
-                    <div className="font-bold text-zinc-950 flex items-center justify-between">
-                      <span className="text-sm">GhostVault.sol</span>
-                      <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0xA83889...8b96</span>
-                    </div>
-                    <p className="text-zinc-600 leading-relaxed">Non-custodial vault holding encrypted principal deposits and enforcing zero-loss guarantees.</p>
-                  </div>
-
-                  <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
-                    <div className="font-bold text-zinc-950 flex items-center justify-between">
-                      <span className="text-sm">GhostPool.sol</span>
-                      <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0x96e594...0b06</span>
-                    </div>
-                    <p className="text-zinc-600 leading-relaxed">Homomorphic yield pooling engine and savings rate compounding calculator.</p>
-                  </div>
-
-                  <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
-                    <div className="font-bold text-zinc-950 flex items-center justify-between">
-                      <span className="text-sm">GhostDraw.sol</span>
-                      <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0xFFDA13...957F</span>
-                    </div>
-                    <p className="text-zinc-600 leading-relaxed">Verifiable FHE randomness evaluator and prize dispatcher.</p>
-                  </div>
-
-                  <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
-                    <div className="font-bold text-zinc-950 flex items-center justify-between">
-                      <span className="text-sm">MockConfidentialToken.sol (cUSDC)</span>
-                      <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0x65C902...8B03</span>
-                    </div>
-                    <p className="text-zinc-600 leading-relaxed">Confidential ERC-20 test token supporting encrypted mints and balance transfers.</p>
-                  </div>
-                </div>
-              </section>
-
-              <section id="data-flows" className="space-y-6 pt-4 pb-8">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.3 · Pipelines</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Visual Protocol Data Flows
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Interactive cryptographic state pipelines for core protocol actions.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-1.5 p-1 bg-zinc-100 rounded-2xl w-fit">
-                  {[
-                    { id: 'deposit', label: 'Deposit Pipeline' },
-                    { id: 'withdraw', label: 'Withdrawal Pipeline' },
-                    { id: 'draw', label: 'Draw Evaluation Pipeline' },
-                    { id: 'decrypt', label: 'Decryption Clearance' },
-                  ].map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => setActiveDataFlowTab(t.id as any)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        activeDataFlowTab === t.id
-                          ? 'bg-white text-zinc-950 shadow-xs'
-                          : 'text-zinc-600 hover:text-zinc-950'
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-4">
-                  {activeDataFlowTab === 'deposit' && (
-                    <div className="space-y-3">
-                      <div className="font-bold text-xs text-zinc-900 uppercase tracking-wider font-mono">Confidential Deposit Lifecycle</div>
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-zinc-400 font-bold">01. BROWSER</span>
-                          <div className="font-bold text-zinc-950">Plaintext Input</div>
-                          <div className="text-[11px] text-zinc-500">User enters 500 cUSDC in Vault UI</div>
-                        </div>
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-emerald-600 font-bold">02. FHE CLIENT</span>
-                          <div className="font-bold text-zinc-950">Encryption</div>
-                          <div className="text-[11px] text-zinc-500">Converts to euint64 ciphertext handle</div>
-                        </div>
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-zinc-400 font-bold">03. SEPOLIA EVM</span>
-                          <div className="font-bold text-zinc-950">GhostVault Tx</div>
-                          <div className="text-[11px] text-zinc-500">Updates balance mapping pointer</div>
-                        </div>
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-emerald-600 font-bold">04. COPROCESSOR</span>
-                          <div className="font-bold text-zinc-950">Yield Allocation</div>
-                          <div className="text-[11px] text-zinc-500">Adds to homomorphic yield pool</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeDataFlowTab === 'withdraw' && (
-                    <div className="space-y-3">
-                      <div className="font-bold text-xs text-zinc-900 uppercase tracking-wider font-mono">Non-Custodial Withdrawal Pipeline</div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-zinc-400 font-bold">01. INITIATION</span>
-                          <div className="font-bold text-zinc-950">Withdraw Request</div>
-                          <div className="text-[11px] text-zinc-500">User selects amount to redeem</div>
-                        </div>
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-emerald-600 font-bold">02. INVARIANT CHECK</span>
-                          <div className="font-bold text-zinc-950">Encrypted Balance Proof</div>
-                          <div className="text-[11px] text-zinc-500">Contract verifies handle ≥ withdraw amount</div>
-                        </div>
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-zinc-400 font-bold">03. SETTLEMENT</span>
-                          <div className="font-bold text-zinc-950">Token Transfer</div>
-                          <div className="text-[11px] text-zinc-500">cUSDC tokens sent directly to user wallet</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeDataFlowTab === 'draw' && (
-                    <div className="space-y-3">
-                      <div className="font-bold text-xs text-zinc-900 uppercase tracking-wider font-mono">Verifiable Prize Draw Evaluation</div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-zinc-400 font-bold">01. TRIGGER</span>
-                          <div className="font-bold text-zinc-950">Snapshot State Root</div>
-                          <div className="text-[11px] text-zinc-500">Draw interval timer matures onchain</div>
-                        </div>
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-emerald-600 font-bold">02. FHE RANDOMNESS</span>
-                          <div className="font-bold text-zinc-950">Blind Selection</div>
-                          <div className="text-[11px] text-zinc-500">Entropy compared against encrypted ticket weights</div>
-                        </div>
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-zinc-400 font-bold">03. REWARD</span>
-                          <div className="font-bold text-zinc-950">Prize Added to Winner</div>
-                          <div className="text-[11px] text-zinc-500">Yield allocated without revealing non-winners</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeDataFlowTab === 'decrypt' && (
-                    <div className="space-y-3">
-                      <div className="font-bold text-xs text-zinc-900 uppercase tracking-wider font-mono">Dual-Key Decryption Clearance</div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-zinc-400 font-bold">01. WALLET SIGNATURE</span>
-                          <div className="font-bold text-zinc-950">EIP-712 Request</div>
-                          <div className="text-[11px] text-zinc-500">User confirms on-demand session signing</div>
-                        </div>
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-emerald-600 font-bold">02. KMS ACL CHECK</span>
-                          <div className="font-bold text-zinc-950">Authorization</div>
-                          <div className="text-[11px] text-zinc-500">KMS validates FHE.allow permission</div>
-                        </div>
-                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
-                          <span className="text-[10px] font-mono text-zinc-400 font-bold">03. LOCAL UNMASKING</span>
-                          <div className="font-bold text-zinc-950">Browser Render</div>
-                          <div className="text-[11px] text-zinc-500">Plaintext balance rendered locally</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </section>
-
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* SECTION 06 — DEVELOPERS (ALL SUBPAGES IN ONE FULL SCROLL PAGE) */}
-          {/* ========================================================================= */}
-          {activeAreaId === 'developers' && (
-            <div className="space-y-16">
-              
-              <section id="dev-quickstart" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.1 · Quickstart</div>
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
-                    Developer Quickstart
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Clone, configure, compile, and run Ghost locally in under 3 minutes.
-                  </p>
-                </div>
-
-                <div className="space-y-4 text-xs">
-                  <div className="space-y-1.5">
-                    <div className="font-bold text-zinc-900">1. Clone & Install Dependencies</div>
-                    <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px] relative">
-                      <code>
-                        git clone https://github.com/OpeyemiMoses/GHOST.git<br />
-                        cd GHOST<br />
-                        npm install<br />
-                        cd apps/web && npm install && cd ../..
-                      </code>
-                      <button
-                        onClick={() => copyToClipboard('git clone https://github.com/OpeyemiMoses/GHOST.git\ncd GHOST\nnpm install', 'c1')}
-                        className="absolute right-3 top-3 p-1 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
-                      >
-                        {copiedKey === 'c1' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="font-bold text-zinc-900">2. Run Hardhat Tests</div>
-                    <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px]">
-                      <code>npx hardhat test</code>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <div className="font-bold text-zinc-900">3. Launch Frontend Development Server</div>
-                    <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px]">
-                      <code>cd apps/web && npm run dev</code>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <section id="dev-deployments" className="space-y-6 pt-4 pb-8">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.2 · Deployments</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Live Sepolia Contract Deployments
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Verified smart contracts on Ethereum Sepolia (Chain ID: 11155111).
-                  </p>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border border-zinc-200 rounded-2xl overflow-hidden font-mono">
-                    <thead>
-                      <tr className="bg-zinc-100 text-zinc-900 font-semibold border-b border-zinc-200 text-[11px]">
-                        <th className="p-3">Contract</th>
-                        <th className="p-3">Address</th>
-                        <th className="p-3 text-right">Explorer</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-200 text-zinc-700">
-                      <tr>
-                        <td className="p-3 font-semibold text-zinc-900">MockConfidentialToken (cUSDC)</td>
-                        <td className="p-3">0x65C9020961f4fdF5E0a1fE01dC1225A096408B03</td>
-                        <td className="p-3 text-right">
-                          <a href="https://sepolia.etherscan.io/address/0x65C9020961f4fdF5E0a1fE01dC1225A096408B03" target="_blank" rel="noopener noreferrer" className="text-zinc-900 underline">View</a>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-semibold text-zinc-900">GhostVault</td>
-                        <td className="p-3">0xA83889ff7D4D78c53A05e050DaE596c9F3058b96</td>
-                        <td className="p-3 text-right">
-                          <a href="https://sepolia.etherscan.io/address/0xA83889ff7D4D78c53A05e050DaE596c9F3058b96" target="_blank" rel="noopener noreferrer" className="text-zinc-900 underline">View</a>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-semibold text-zinc-900">GhostPool</td>
-                        <td className="p-3">0x96e5946A0aa82656EBEA8f5Da5d998e211a10b06</td>
-                        <td className="p-3 text-right">
-                          <a href="https://sepolia.etherscan.io/address/0x96e5946A0aa82656EBEA8f5Da5d998e211a10b06" target="_blank" rel="noopener noreferrer" className="text-zinc-900 underline">View</a>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-semibold text-zinc-900">GhostDraw</td>
-                        <td className="p-3">0xFFDA136c18fdb7C0f74eE60f002f5fFfaCD9957F</td>
-                        <td className="p-3 text-right">
-                          <a href="https://sepolia.etherscan.io/address/0xFFDA136c18fdb7C0f74eE60f002f5fFfaCD9957F" target="_blank" rel="noopener noreferrer" className="text-zinc-900 underline">View</a>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* SECTION 07 — SECURITY (ALL SUBPAGES IN ONE FULL SCROLL PAGE) */}
-          {/* ========================================================================= */}
-          {activeAreaId === 'security' && (
-            <div className="space-y-16">
-              
-              <section id="threat-matrix" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.1 · Matrix</div>
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
-                    Threat Matrix & Mitigations
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Systematic risk analysis and architectural defenses.
-                  </p>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border border-zinc-200 rounded-2xl overflow-hidden font-mono">
-                    <thead>
-                      <tr className="bg-zinc-100 text-zinc-900 font-semibold border-b border-zinc-200 text-[11px]">
-                        <th className="p-3">Threat Vector</th>
-                        <th className="p-3">Architectural Mitigation</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-200 text-zinc-700">
-                      <tr>
-                        <td className="p-3 font-bold text-red-600">Unauthorized Ciphertext Access</td>
-                        <td className="p-3 text-zinc-800 font-sans">Zama Access Control List (ACL) enforces FHE.allow constraints.</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-bold text-red-600">Unauthorized State Mutation</td>
-                        <td className="p-3 text-zinc-800 font-sans">Contract access modifiers and non-custodial balance ownership.</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-bold text-red-600">Transaction Replay Attacks</td>
-                        <td className="p-3 text-zinc-800 font-sans">EVM transaction nonces and timestamped signature clearance messages.</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-bold text-red-600">Invalid Encrypted Inputs</td>
-                        <td className="p-3 text-zinc-800 font-sans">Zama einput encryption proofs validated at smart contract boundary.</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-bold text-red-600">Centralized Backend Compromise</td>
-                        <td className="p-3 text-zinc-800 font-sans">Zero plaintext database architecture; backend stores zero financial keys.</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-              <section id="bug-bounty" className="space-y-6 pt-4 pb-8">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.2 · Bounty</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Bug Bounty & Responsible Disclosure
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Guidelines for security researchers and vulnerability reporting.
-                  </p>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-600 space-y-2">
-                  <p>
-                    We welcome responsible disclosure from security researchers. 
-                    If you discover a vulnerability related to ciphertext leakage, contract reentrancy, or ACL flaws, please report privately to our security team.
-                  </p>
-                </div>
-              </section>
-
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* SECTION 08 — RESOURCES (ALL SUBPAGES IN ONE FULL SCROLL PAGE) */}
-          {/* ========================================================================= */}
-          {activeAreaId === 'resources' && (
-            <div className="space-y-16">
-              
-              <section id="glossary" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">08.1 · Glossary</div>
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
-                    Protocol Glossary
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Essential cryptographic and decentralized finance terminology.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs font-mono">
-                  <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
-                    <div className="font-bold text-zinc-900">FHE (Fully Homomorphic Encryption)</div>
-                    <div className="text-[11px] text-zinc-500 mt-1 font-sans">A form of encryption that allows computation directly over ciphertexts.</div>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
-                    <div className="font-bold text-zinc-900">fhEVM</div>
-                    <div className="text-[11px] text-zinc-500 mt-1 font-sans">Zama's EVM integration enabling confidential smart contracts using TFHE.</div>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
-                    <div className="font-bold text-zinc-900">euint64</div>
-                    <div className="text-[11px] text-zinc-500 mt-1 font-sans">An encrypted 64-bit unsigned integer type managed onchain.</div>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
-                    <div className="font-bold text-zinc-900">Ciphertext Handle</div>
-                    <div className="text-[11px] text-zinc-500 mt-1 font-sans">A 32-byte cryptographic pointer referencing an off-chain FHE ciphertext.</div>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
-                    <div className="font-bold text-zinc-900">Zero-Loss Savings</div>
-                    <div className="text-[11px] text-zinc-500 mt-1 font-sans">A mechanism where principal deposits are preserved while collective yield funds prize draws.</div>
-                  </div>
-                  <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
-                    <div className="font-bold text-zinc-900">ACL (Access Control List)</div>
-                    <div className="text-[11px] text-zinc-500 mt-1 font-sans">Zama's authorization system regulating which wallets can decrypt ciphertexts.</div>
-                  </div>
-                </div>
-              </section>
-
-              <section id="changelog" className="space-y-6 pt-4 pb-8">
-                <div>
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">08.2 · Changelog</div>
-                  <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                    Protocol Changelog
-                  </h2>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Release history on Ethereum Sepolia.
-                  </p>
-                </div>
-
-                <div className="space-y-3 font-mono text-xs text-zinc-600">
-                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
-                    <div className="font-bold text-zinc-900">v1.0.0-sepolia (September 2026)</div>
-                    <ul className="list-disc pl-5 text-[11px] text-zinc-600 font-sans space-y-1">
-                      <li>Deployment of MockConfidentialToken, GhostVault, GhostPool, and GhostDraw contracts.</li>
-                      <li>Dual-key cryptographic session clearance for unmasking and re-sealing state.</li>
-                      <li>Address-isolated ledger architecture and 8-area technical documentation system.</li>
+                  <div className="space-y-3 text-xs text-zinc-600 leading-relaxed">
+                    <h3 className="font-bold text-xs text-zinc-900">Vault States & Actions</h3>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li><strong>Confidential Balance:</strong> Represented as an <code>euint64</code> ciphertext handle on Sepolia.</li>
+                      <li><strong>Live Yield Ticker:</strong> Continuous compounding calculated over encrypted deposit integers.</li>
+                      <li><strong>Deposit Form:</strong> Validates wallet balance and initiates encrypted onchain transfer.</li>
+                      <li><strong>Withdrawal Form:</strong> Allows instant withdrawal of 100% of your principal without penalties.</li>
                     </ul>
                   </div>
-                </div>
-              </section>
+                </section>
 
-            </div>
-          )}
+                {/* 02.3 Deposits */}
+                <section id="deposits" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.3 · Deposits</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Deposits Lifecycle
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Step-by-step cryptographic lifecycle of a vault deposit.
+                    </p>
+                  </div>
+
+                  <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                      <div className="p-3 bg-white rounded-xl border border-zinc-200">
+                        <div className="font-mono text-[10px] text-zinc-400">STEP 1</div>
+                        <div className="font-bold text-zinc-900 mt-0.5">Wallet Select</div>
+                        <div className="text-[11px] text-zinc-500 mt-1">Choose cUSDC amount</div>
+                      </div>
+                      <div className="p-3 bg-white rounded-xl border border-zinc-200">
+                        <div className="font-mono text-[10px] text-zinc-400">STEP 2</div>
+                        <div className="font-bold text-zinc-900 mt-0.5">FHE Encrypt</div>
+                        <div className="text-[11px] text-zinc-500 mt-1">Generate euint64 handle</div>
+                      </div>
+                      <div className="p-3 bg-white rounded-xl border border-zinc-200">
+                        <div className="font-mono text-[10px] text-zinc-400">STEP 3</div>
+                        <div className="font-bold text-zinc-900 mt-0.5">EVM Transfer</div>
+                        <div className="text-[11px] text-zinc-500 mt-1">Submit to GhostVault</div>
+                      </div>
+                      <div className="p-3 bg-white rounded-xl border border-zinc-200">
+                        <div className="font-mono text-[10px] text-zinc-400">STEP 4</div>
+                        <div className="font-bold text-zinc-900 mt-0.5">Vault Sync</div>
+                        <div className="text-[11px] text-zinc-500 mt-1">Enters prize pool</div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 02.4 Withdrawals */}
+                <section id="withdrawals" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.4 · Withdrawals</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Withdrawals
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Instant, non-custodial capital redemption.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 text-xs text-zinc-600 leading-relaxed">
+                    <p>
+                      Withdrawals allow you to redeem 100% of your deposited principal back to your connected wallet at any time. 
+                      Because Ghost is a zero-loss protocol, your principal is never consumed to fund prize pools.
+                    </p>
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200">
+                      <h3 className="font-bold text-xs text-zinc-900 mb-1.5">Failure Handling & Reversions</h3>
+                      <p className="text-xs text-zinc-600">
+                        If a withdrawal request exceeds the encrypted balance handle or if gas is insufficient, 
+                        the contract strictly reverts without mutating state or deducting user balance.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 02.5 Yield */}
+                <section id="yield" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.5 · Yield</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Yield Mechanics
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      How continuous homomorphic savings yield is generated and accounted.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
+                    <p>
+                      In Ghost, yield originates from the collective capital pool deployed in <code>GhostPool.sol</code>. 
+                      Torus FHE coprocessors evaluate continuous compound interest formulas over encrypted integer state.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200">
+                        <h3 className="font-bold text-xs text-zinc-900 mb-1">What is Public</h3>
+                        <p className="text-xs text-zinc-600">Total global yield pool accumulator and protocol draw interval timers.</p>
+                      </div>
+                      <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200">
+                        <h3 className="font-bold text-xs text-zinc-900 mb-1">What Remains Confidential</h3>
+                        <p className="text-xs text-zinc-600">Individual user yield share, accumulated interest amounts, and personal ticket weights.</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 02.6 Events */}
+                <section id="events" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.6 · Events</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Events & Zero-Loss Prize Draws
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Verifiable cryptographic prize distribution mechanism.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
+                    <p>
+                      Ghost prize draws are funded entirely by the yield generated from the collective pool. 
+                      No participant principal is ever wagered or lost. 
+                    </p>
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
+                      <h3 className="font-bold text-xs text-zinc-900">Event Execution Pipeline</h3>
+                      <div className="font-mono text-[11px] text-zinc-700">
+                        OPEN Cycle → SNAPSHOT (Root Hash) → FHE Randomness Generation → Blind Winner Selection → VERIFICATION (Proof Written Onchain) → SETTLEMENT (Prize Added to Winner Vault)
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 02.7 Activity */}
+                <section id="activity" className="space-y-6 pt-4 pb-8">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.7 · Activity</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Activity Ledger
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Distinguishing public blockchain metadata from confidential financial records.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 text-xs text-zinc-600 leading-relaxed">
+                    <p>
+                      The Activity page maintains an immutable ledger of all personal transactions submitted to Sepolia. 
+                      Transaction amounts remain encrypted (<code>••••••</code>) until unmasked by your wallet signature.
+                    </p>
+                  </div>
+                </section>
+
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* SECTION 03 — PRIVACY (ALL SUBPAGES) */}
+            {/* ========================================================================= */}
+            {activeAreaId === 'privacy' && (
+              <div className="space-y-16">
+                
+                {/* 03.1 Privacy Model */}
+                <section id="privacy-model" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.1 · Model</div>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+                      Ghost Privacy Model
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      The architectural definition of blockchain confidentiality.
+                    </p>
+                  </div>
+
+                  <div className="p-6 rounded-3xl bg-zinc-900 text-white space-y-2 text-xs">
+                    <div className="font-bold text-amber-400 uppercase tracking-wider text-[11px]">
+                      Core Axiom of Ghost Privacy
+                    </div>
+                    <p className="text-zinc-200 text-sm leading-relaxed">
+                      "Ghost does not attempt to hide the blockchain. Ghost prevents sensitive financial state from being exposed as ordinary plaintext blockchain state."
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    By isolating the computational privacy layer onto Zama's fhEVM, the protocol achieves complete mathematical confidentiality 
+                    without sacrificing decentralized consensus, censorship resistance, or non-custodial guarantees.
+                  </p>
+                </section>
+
+                {/* 03.2 What Is Private */}
+                <section id="what-is-private" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.2 · Classification</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      What Is Private vs. What Is Public
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Explicit data classification table across protocol states.
+                    </p>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border border-zinc-200 rounded-2xl overflow-hidden">
+                      <thead>
+                        <tr className="bg-zinc-100 text-zinc-900 font-semibold border-b border-zinc-200 text-[11px]">
+                          <th className="p-3">Data Point</th>
+                          <th className="p-3">Public Blockchain</th>
+                          <th className="p-3">Ghost Protection Level</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-200 text-zinc-700 font-mono">
+                        <tr>
+                          <td className="p-3 font-semibold text-zinc-900">Contract Addresses</td>
+                          <td className="p-3 text-emerald-600">✓ Public</td>
+                          <td className="p-3 text-zinc-500">Known protocol addresses on Sepolia</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-semibold text-zinc-900">Transaction Existence</td>
+                          <td className="p-3 text-emerald-600">✓ Public</td>
+                          <td className="p-3 text-zinc-500">Tx hash published to EVM blocks</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-semibold text-zinc-900">Block Number & Timestamp</td>
+                          <td className="p-3 text-emerald-600">✓ Public</td>
+                          <td className="p-3 text-zinc-500">Standard EVM block header metadata</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-semibold text-zinc-900">Connected Wallet Address</td>
+                          <td className="p-3 text-emerald-600">✓ Public</td>
+                          <td className="p-3 text-zinc-500">Transaction sender (msg.sender)</td>
+                        </tr>
+                        <tr className="bg-emerald-50/50">
+                          <td className="p-3 font-bold text-zinc-950">Financial Balance</td>
+                          <td className="p-3 text-red-600">✗ Hidden</td>
+                          <td className="p-3 text-emerald-700 font-bold">🔒 Encrypted euint64 Ciphertext Handle</td>
+                        </tr>
+                        <tr className="bg-emerald-50/50">
+                          <td className="p-3 font-bold text-zinc-950">Deposit / Withdraw Amount</td>
+                          <td className="p-3 text-red-600">✗ Hidden</td>
+                          <td className="p-3 text-emerald-700 font-bold">🔒 Encrypted FHE einput Parameter</td>
+                        </tr>
+                        <tr className="bg-emerald-50/50">
+                          <td className="p-3 font-bold text-zinc-950">Yield Allocation Quantity</td>
+                          <td className="p-3 text-red-600">✗ Hidden</td>
+                          <td className="p-3 text-emerald-700 font-bold">🔒 Homomorphically Evaluated</td>
+                        </tr>
+                        <tr className="bg-emerald-50/50">
+                          <td className="p-3 font-bold text-zinc-950">Prize Draw Tickets / Odds</td>
+                          <td className="p-3 text-red-600">✗ Hidden</td>
+                          <td className="p-3 text-emerald-700 font-bold">🔒 Blind FHE Random Selection</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                {/* 03.3 What Is Public */}
+                <section id="what-is-public" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.3 · Public Metadata</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      What Remains Public on Ethereum Sepolia
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Transparent onchain data visible to all node operators and indexers.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 text-xs text-zinc-600 leading-relaxed">
+                    <p>
+                      Ghost intentionally preserves decentralized auditability. The public EVM state records:
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1.5 font-mono text-[11px] text-zinc-700">
+                      <li>Transaction Hash, Nonce, and Block Number</li>
+                      <li>Gas Consumed and Priority Fee</li>
+                      <li>Sender Wallet Address (msg.sender)</li>
+                      <li>GhostVault Contract Execution Selectors</li>
+                    </ul>
+                  </div>
+                </section>
+
+                {/* 03.4 Proof of Privacy */}
+                <section id="proof-of-privacy" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.4 · Proof</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Proof of Privacy on Sepolia Etherscan
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Verify onchain ciphertext handles directly on the public block explorer.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3 text-xs text-zinc-700">
+                    <h3 className="font-bold text-xs text-zinc-900">Live Deployed Contract Verification</h3>
+                    <p>
+                      Inspect our deployed contracts on Sepolia Etherscan. You will notice that balance mappings store only <code>bytes32 / euint64</code> ciphertext handles:
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href="https://sepolia.etherscan.io/address/0xA83889ff7D4D78c53A05e050DaE596c9F3058b96"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-pill-primary text-xs font-semibold px-4 py-2 inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span>Inspect GhostVault on Etherscan</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 03.5 What is FHE */}
+                <section id="fhe" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.5 · FHE</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      What is Fully Homomorphic Encryption (FHE)?
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Computing over encrypted data without decryption.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
+                      <h3 className="font-bold text-xs text-zinc-900 font-mono">Standard Computation</h3>
+                      <div className="font-mono text-xs bg-white p-3 rounded-xl border border-zinc-200 text-zinc-800">
+                        10 + 20 = 30<br />
+                        <span className="text-red-600 text-[10px]">(All operands exposed in plaintext)</span>
+                      </div>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
+                      <h3 className="font-bold text-xs text-zinc-900 font-mono">Homomorphic FHE Computation</h3>
+                      <div className="font-mono text-xs bg-white p-3 rounded-xl border border-zinc-200 text-zinc-800">
+                        Encrypted(10) + Encrypted(20) = Encrypted(30)<br />
+                        <span className="text-emerald-600 text-[10px]">(Computed with ZERO plaintext disclosure)</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 03.6 Encryption Lifecycle */}
+                <section id="encryption-lifecycle" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.6 · Lifecycle</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      The Encryption Lifecycle
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      From client-side integer to cryptographic ciphertext handle on EVM.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-700 leading-relaxed font-mono">
+                    Plaintext Number (User Input)<br />
+                    &nbsp;&nbsp;↓ Client-side SDK encryption via Torus Web3 Provider<br />
+                    euint64 Ciphertext Handle generated with ZK proof<br />
+                    &nbsp;&nbsp;↓ Submitted onchain to GhostVault.sol<br />
+                    Smart Contract updates mappings homomorphically<br />
+                    &nbsp;&nbsp;↓<br />
+                    Decryption requires EIP-712 wallet signature verification
+                  </div>
+                </section>
+
+                {/* 03.7 Access Control */}
+                <section id="access-control" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.7 · Access Control</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Access Control (Zama ACL)
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Cryptographic permission governance over ciphertext handles.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 text-xs text-zinc-600 leading-relaxed">
+                    <p>
+                      Under Zama's fhEVM Access Control List (ACL), a smart contract specifies which addresses hold authorization 
+                      to request re-encryption of a given ciphertext handle using <code>FHE.allow(handle, msg.sender)</code>.
+                    </p>
+                  </div>
+                </section>
+
+                {/* 03.8 User Decryption */}
+                <section id="user-decryption" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.8 · Decryption</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      User Decryption Flow
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      How authorized depositors access their private state without onchain leakage.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 font-mono text-xs text-zinc-700 leading-relaxed">
+                    Ethereum Sepolia Blockchain (Encrypted State Handle)<br />
+                    &nbsp;&nbsp;↓ User requests Decryption Clearance<br />
+                    Wallet prompts cryptographic EIP-712 signature<br />
+                    &nbsp;&nbsp;↓ KMS / Coprocessor verifies signature against ACL<br />
+                    Ephemeral client-side re-encryption ticket issued<br />
+                    &nbsp;&nbsp;↓<br />
+                    User's browser decrypts and renders plaintext balance locally
+                  </div>
+                </section>
+
+                {/* 03.9 Limitations */}
+                <section id="limitations" className="space-y-6 pt-4 pb-8">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">03.9 · Limitations</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Privacy Limitations
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Confidential financial state is not network-level anonymity.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2">
+                    <div className="font-bold flex items-center gap-1.5">
+                      <AlertTriangle className="w-4 h-4 text-amber-700" />
+                      <span>Crucial Distinction: Confidentiality vs. Anonymity</span>
+                    </div>
+                    <p className="text-amber-800 leading-relaxed">
+                      Ghost encrypts financial balances, deposits, and prize allocations. It does not hide your public wallet address, 
+                      gas payments, or IP network traffic. Users requiring network-level anonymity should utilize privacy-focused RPC relays.
+                    </p>
+                  </div>
+                </section>
+
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* SECTION 04 — PROTOCOL (ALL SUBPAGES) */}
+            {/* ========================================================================= */}
+            {activeAreaId === 'protocol' && (
+              <div className="space-y-16">
+                
+                {/* 04.1 Overview Stack */}
+                <section id="protocol-overview" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.1 · Stack</div>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+                      Protocol Architecture Stack
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Visual hierarchical architecture across client, smart contracts, FHE coprocessor, and verification layers.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-900 font-bold">
+                          <Wallet className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-mono text-zinc-400 font-semibold uppercase">Layer 01 · Client Tier</div>
+                          <h3 className="font-bold text-xs text-zinc-900">User Interface & Cryptographic Wallet</h3>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono bg-zinc-100 px-2.5 py-1 rounded-md text-zinc-700 font-medium">RainbowKit / Wagmi</span>
+                        <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md font-medium">Client Encryption</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-center text-zinc-300">
+                      <ArrowDown className="w-4 h-4" />
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-900 font-bold">
+                          <Layers className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-mono text-zinc-400 font-semibold uppercase">Layer 02 · Smart Contract Layer</div>
+                          <h3 className="font-bold text-xs text-zinc-900">GhostVault, GhostPool & GhostDraw</h3>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono bg-zinc-100 px-2.5 py-1 rounded-md text-zinc-700 font-medium">Solidity 0.8.24</span>
+                        <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md font-medium">Sepolia EVM</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-center text-zinc-300">
+                      <ArrowDown className="w-4 h-4" />
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-zinc-950 text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 border border-zinc-800">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center text-emerald-400 font-bold">
+                          <Cpu className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-mono text-zinc-400 font-semibold uppercase">Layer 03 · Cryptographic Coprocessor</div>
+                          <h3 className="font-bold text-xs text-white">Zama fhEVM & Torus FHE Engine</h3>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono bg-zinc-800 px-2.5 py-1 rounded-md text-zinc-300 font-medium">euint64 Types</span>
+                        <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-md font-medium">Homomorphic Math</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-center text-zinc-300">
+                      <ArrowDown className="w-4 h-4" />
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-white border border-zinc-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-900 font-bold">
+                          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-mono text-zinc-400 font-semibold uppercase">Layer 04 · Verification Layer</div>
+                          <h3 className="font-bold text-xs text-zinc-900">Merkle State Roots & ZK Commitments</h3>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono bg-zinc-100 px-2.5 py-1 rounded-md text-zinc-700 font-medium">GhostVerifier.sol</span>
+                        <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-md font-medium">Verifiable Outcomes</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 04.2 Confidential State */}
+                <section id="confidential-state" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.2 · State</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Confidential State Variables
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Encrypted state variable primitives in Ghost smart contracts.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 text-xs text-zinc-600 font-mono">
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-1">
+                      <div className="font-bold text-zinc-900">mapping(address =&gt; euint64) private _balances;</div>
+                      <div className="text-[11px] text-zinc-500 font-sans">Stores the encrypted deposit principal for each participant wallet.</div>
+                    </div>
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-1">
+                      <div className="font-bold text-zinc-900">euint64 private _totalPooledPrincipal;</div>
+                      <div className="text-[11px] text-zinc-500 font-sans">Homomorphic sum of all active deposits in the GhostVault.</div>
+                    </div>
+                    <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-2xl space-y-1">
+                      <div className="font-bold text-zinc-900">euint64 private _currentPrizePool;</div>
+                      <div className="text-[11px] text-zinc-500 font-sans">Encrypted yield pool accumulator earmarked for the next prize event.</div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 04.3 Confidential Accounting */}
+                <section id="confidential-accounting" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.3 · Accounting</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Confidential Accounting & Invariant Safety
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Homomorphic fixed-point arithmetic without plaintext precision leakage.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 text-xs text-zinc-600 leading-relaxed">
+                    <p>
+                      Ghost contracts execute additions, sub-fractions, and proportional prize shares directly on <code>euint64</code> variables. 
+                      Because conditional branching in Solidity cannot directly read ciphertexts without decryption, Ghost uses homomorphic multiplexing: <code>FHE.select(condition, ifTrue, ifFalse)</code>.
+                    </p>
+                  </div>
+                </section>
+
+                {/* 04.4 Event Lifecycle */}
+                <section id="event-lifecycle" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.4 · Lifecycle</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Event Lifecycle State Transitions
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      State transitions from open deposit cycle to finalized settlement.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 font-mono text-xs text-zinc-700 leading-relaxed">
+                    OPEN (Deposits active & accumulating yield)<br />
+                    &nbsp;&nbsp;↓ Snapshot trigger reached<br />
+                    STATE COMMITMENT (Merkle root hash committed)<br />
+                    &nbsp;&nbsp;↓ Coprocessor request dispatched<br />
+                    FHE COMPUTATION (Blind winner selection)<br />
+                    &nbsp;&nbsp;↓ Randomness receipt confirmed<br />
+                    RESULT GENERATED & VERIFIED (State proof published)<br />
+                    &nbsp;&nbsp;↓<br />
+                    SETTLEMENT & FINALIZED (Prize added to winner ciphertext)
+                  </div>
+                </section>
+
+                {/* 04.5 Verification */}
+                <section id="protocol-verification" className="space-y-6 pt-4 pb-8">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">04.5 · Verification</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Public Protocol Verification
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Third-party outcome auditability without balance disclosure.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2 text-xs text-zinc-600">
+                    <p>
+                      Any third party or participant can verify that:
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>The randomness source was provably unbiasable.</li>
+                      <li>The winner selection matched the committed state root.</li>
+                      <li>Zero unauthorized minting or balance extraction occurred.</li>
+                    </ul>
+                  </div>
+                </section>
+
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* SECTION 05 — ARCHITECTURE (ALL SUBPAGES) */}
+            {/* ========================================================================= */}
+            {activeAreaId === 'architecture' && (
+              <div className="space-y-16">
+                
+                {/* 05.1 System Architecture */}
+                <section id="system-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.1 · Topology</div>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+                      System Architecture Topology
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Decoupled coprocessor design separating consensus from homomorphic polynomial evaluation.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-200/80 space-y-3 hover:border-zinc-300 transition-all">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-200 text-zinc-700">Node A</span>
+                        <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-600 font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Active Client
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-sm text-zinc-950 flex items-center gap-2">
+                        <Terminal className="w-4 h-4 text-zinc-700" />
+                        <span>Client Web Browser</span>
+                      </h3>
+                      <p className="text-xs text-zinc-600 leading-relaxed">
+                        Handles wallet connection, client-side input encryption via Torus SDK, and cryptographic EIP-712 session signing.
+                      </p>
+                    </div>
+
+                    <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-200/80 space-y-3 hover:border-zinc-300 transition-all">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-200 text-zinc-700">Node B</span>
+                        <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-600 font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Sepolia EVM
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-sm text-zinc-950 flex items-center gap-2">
+                        <Server className="w-4 h-4 text-zinc-700" />
+                        <span>Ethereum Sepolia Node</span>
+                      </h3>
+                      <p className="text-xs text-zinc-600 leading-relaxed">
+                        Enforces state transitions, transaction ordering, non-custodial balance ownership, and verified event commitments.
+                      </p>
+                    </div>
+
+                    <div className="p-6 rounded-3xl bg-zinc-950 text-white border border-zinc-800 space-y-3 shadow-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-800 text-emerald-400">Node C</span>
+                        <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          FHE Coprocessor
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                        <Cpu className="w-4 h-4 text-emerald-400" />
+                        <span>Torus FHE Coprocessor</span>
+                      </h3>
+                      <p className="text-xs text-zinc-300 leading-relaxed">
+                        Executes homomorphic arithmetic, encrypted prize draw entropy, and ACL verification off-chain with mathematical proofs.
+                      </p>
+                    </div>
+
+                    <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-200/80 space-y-3 hover:border-zinc-300 transition-all">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-zinc-200 text-zinc-700">Node D</span>
+                        <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-600 font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Threshold KMS
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-sm text-zinc-950 flex items-center gap-2">
+                        <KeyRound className="w-4 h-4 text-zinc-700" />
+                        <span>Decryption Gateway & KMS</span>
+                      </h3>
+                      <p className="text-xs text-zinc-600 leading-relaxed">
+                        Issues ephemeral re-encryption tickets exclusively to authorized depositors possessing valid cryptographic wallet signatures.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 05.2 Smart Contracts */}
+                <section id="smart-contracts" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.2 · Contracts</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Smart Contract Topology
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Modular contract responsibilities and Sepolia deployments.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 text-xs">
+                    <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
+                      <div className="font-bold text-zinc-950 flex items-center justify-between">
+                        <span className="text-sm">GhostVault.sol</span>
+                        <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0xA83889...8b96</span>
+                      </div>
+                      <p className="text-zinc-600 leading-relaxed">Non-custodial vault holding encrypted principal deposits and enforcing zero-loss guarantees.</p>
+                    </div>
+
+                    <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
+                      <div className="font-bold text-zinc-950 flex items-center justify-between">
+                        <span className="text-sm">GhostPool.sol</span>
+                        <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0x96e594...0b06</span>
+                      </div>
+                      <p className="text-zinc-600 leading-relaxed">Homomorphic yield pooling engine and savings rate compounding calculator.</p>
+                    </div>
+
+                    <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
+                      <div className="font-bold text-zinc-950 flex items-center justify-between">
+                        <span className="text-sm">GhostDraw.sol</span>
+                        <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0xFFDA13...957F</span>
+                      </div>
+                      <p className="text-zinc-600 leading-relaxed">Verifiable FHE randomness evaluator and prize dispatcher.</p>
+                    </div>
+
+                    <div className="p-5 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-2">
+                      <div className="font-bold text-zinc-950 flex items-center justify-between">
+                        <span className="text-sm">MockConfidentialToken.sol (cUSDC)</span>
+                        <span className="font-mono text-[10px] text-zinc-500 bg-white border border-zinc-200 px-2 py-0.5 rounded-md">0x65C902...8B03</span>
+                      </div>
+                      <p className="text-zinc-600 leading-relaxed">Confidential ERC-20 test token supporting encrypted mints and balance transfers.</p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 05.3 FHE Architecture */}
+                <section id="fhe-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.3 · FHE Architecture</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      FHE Types & Coprocessor Offloading
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Under-the-hood mechanics of Zama's TFHE rust library.
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    Ghost uses 64-bit encrypted integers (<code>euint64</code>) backed by Torus FHE lattice cryptography. Complex ciphertext multiplications and noise-reduction bootstrapping routines are delegated to the asynchronous coprocessor network to keep EVM gas low.
+                  </p>
+                </section>
+
+                {/* 05.4 Frontend Architecture */}
+                <section id="frontend-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.4 · Frontend</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Frontend State & Cryptographic Signatures
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Integrating Wagmi, Viem, and dual-key browser unmasking.
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    The web application utilizes RainbowKit and Wagmi v2 for multi-wallet connectivity. Decryption and re-sealing state is governed by on-demand cryptographic signatures (`signMessageAsync`), creating an address-isolated local storage vault scoped per user.
+                  </p>
+                </section>
+
+                {/* 05.5 Backend Architecture */}
+                <section id="backend-architecture" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.5 · Backend</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Backend Indexers & Zero Plaintext DB
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      What indexers store vs. what is deliberately NOT stored.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-3xl bg-zinc-900 text-white space-y-2 text-xs">
+                    <div className="font-bold text-amber-400 uppercase tracking-wider text-[11px]">
+                      Zero Plaintext Database Principle
+                    </div>
+                    <p className="text-zinc-300 leading-relaxed">
+                      Ghost's backend and indexer infrastructure deliberately does NOT store a centralized database of user balances or plaintext amounts. 
+                      Indexers process only public block timestamps, transaction hashes, and ciphertext handle pointers.
+                    </p>
+                  </div>
+                </section>
+
+                {/* 05.6 Data Flows */}
+                <section id="data-flows" className="space-y-6 pt-4 pb-8">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">05.6 · Pipelines</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Visual Protocol Data Flows
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Interactive cryptographic state pipelines for core protocol actions.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 p-1 bg-zinc-100 rounded-2xl w-fit">
+                    {[
+                      { id: 'deposit', label: 'Deposit Pipeline' },
+                      { id: 'withdraw', label: 'Withdrawal Pipeline' },
+                      { id: 'draw', label: 'Draw Evaluation Pipeline' },
+                      { id: 'decrypt', label: 'Decryption Clearance' },
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => setActiveDataFlowTab(t.id as any)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                          activeDataFlowTab === t.id
+                            ? 'bg-white text-zinc-950 shadow-xs'
+                            : 'text-zinc-600 hover:text-zinc-950'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="p-6 rounded-3xl bg-zinc-50 border border-zinc-200 space-y-4">
+                    {activeDataFlowTab === 'deposit' && (
+                      <div className="space-y-3">
+                        <div className="font-bold text-xs text-zinc-900 uppercase tracking-wider font-mono">Confidential Deposit Lifecycle</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold">01. BROWSER</span>
+                            <div className="font-bold text-zinc-950">Plaintext Input</div>
+                            <div className="text-[11px] text-zinc-500">User enters 500 cUSDC in Vault UI</div>
+                          </div>
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-emerald-600 font-bold">02. FHE CLIENT</span>
+                            <div className="font-bold text-zinc-950">Encryption</div>
+                            <div className="text-[11px] text-zinc-500">Converts to euint64 ciphertext handle</div>
+                          </div>
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold">03. SEPOLIA EVM</span>
+                            <div className="font-bold text-zinc-950">GhostVault Tx</div>
+                            <div className="text-[11px] text-zinc-500">Updates balance mapping pointer</div>
+                          </div>
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-emerald-600 font-bold">04. COPROCESSOR</span>
+                            <div className="font-bold text-zinc-950">Yield Allocation</div>
+                            <div className="text-[11px] text-zinc-500">Adds to homomorphic yield pool</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeDataFlowTab === 'withdraw' && (
+                      <div className="space-y-3">
+                        <div className="font-bold text-xs text-zinc-900 uppercase tracking-wider font-mono">Non-Custodial Withdrawal Pipeline</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold">01. INITIATION</span>
+                            <div className="font-bold text-zinc-950">Withdraw Request</div>
+                            <div className="text-[11px] text-zinc-500">User selects amount to redeem</div>
+                          </div>
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-emerald-600 font-bold">02. INVARIANT CHECK</span>
+                            <div className="font-bold text-zinc-950">Encrypted Balance Proof</div>
+                            <div className="text-[11px] text-zinc-500">Contract verifies handle ≥ withdraw amount</div>
+                          </div>
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold">03. SETTLEMENT</span>
+                            <div className="font-bold text-zinc-950">Token Transfer</div>
+                            <div className="text-[11px] text-zinc-500">cUSDC tokens sent directly to user wallet</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeDataFlowTab === 'draw' && (
+                      <div className="space-y-3">
+                        <div className="font-bold text-xs text-zinc-900 uppercase tracking-wider font-mono">Verifiable Prize Draw Evaluation</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold">01. TRIGGER</span>
+                            <div className="font-bold text-zinc-950">Snapshot State Root</div>
+                            <div className="text-[11px] text-zinc-500">Draw interval timer matures onchain</div>
+                          </div>
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-emerald-600 font-bold">02. FHE RANDOMNESS</span>
+                            <div className="font-bold text-zinc-950">Blind Selection</div>
+                            <div className="text-[11px] text-zinc-500">Entropy compared against encrypted ticket weights</div>
+                          </div>
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold">03. REWARD</span>
+                            <div className="font-bold text-zinc-950">Prize Added to Winner</div>
+                            <div className="text-[11px] text-zinc-500">Yield allocated without revealing non-winners</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeDataFlowTab === 'decrypt' && (
+                      <div className="space-y-3">
+                        <div className="font-bold text-xs text-zinc-900 uppercase tracking-wider font-mono">Dual-Key Decryption Clearance</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold">01. WALLET SIGNATURE</span>
+                            <div className="font-bold text-zinc-950">EIP-712 Request</div>
+                            <div className="text-[11px] text-zinc-500">User confirms on-demand session signing</div>
+                          </div>
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-emerald-600 font-bold">02. KMS ACL CHECK</span>
+                            <div className="font-bold text-zinc-950">Authorization</div>
+                            <div className="text-[11px] text-zinc-500">KMS validates FHE.allow permission</div>
+                          </div>
+                          <div className="p-4 bg-white rounded-2xl border border-zinc-200 space-y-1">
+                            <span className="text-[10px] font-mono text-zinc-400 font-bold">03. LOCAL UNMASKING</span>
+                            <div className="font-bold text-zinc-950">Browser Render</div>
+                            <div className="text-[11px] text-zinc-500">Plaintext balance rendered locally</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* SECTION 06 — DEVELOPERS (ALL SUBPAGES) */}
+            {/* ========================================================================= */}
+            {activeAreaId === 'developers' && (
+              <div className="space-y-16">
+                
+                {/* 06.1 Quickstart */}
+                <section id="dev-quickstart" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.1 · Quickstart</div>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+                      Developer Quickstart
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Clone, configure, compile, and run Ghost locally in under 3 minutes.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div className="space-y-1.5">
+                      <div className="font-bold text-zinc-900">1. Clone & Install Dependencies</div>
+                      <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px] relative">
+                        <code>
+                          git clone https://github.com/OpeyemiMoses/GHOST.git<br />
+                          cd GHOST<br />
+                          npm install<br />
+                          cd apps/web && npm install && cd ../..
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard('git clone https://github.com/OpeyemiMoses/GHOST.git\ncd GHOST\nnpm install', 'c1')}
+                          className="absolute right-3 top-3 p-1 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
+                        >
+                          {copiedKey === 'c1' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="font-bold text-zinc-900">2. Run Hardhat Tests</div>
+                      <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px]">
+                        <code>npx hardhat test</code>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="font-bold text-zinc-900">3. Launch Frontend Development Server</div>
+                      <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px]">
+                        <code>cd apps/web && npm run dev</code>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 06.2 Setup */}
+                <section id="dev-setup" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.2 · Setup</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Environment Setup & Configuration
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Configure RPC endpoints, private keys, and Hardhat settings.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px]">
+                    SEPOLIA_RPC_URL=https://rpc.sepolia.org<br />
+                    PRIVATE_KEY=your_private_key_here<br />
+                    ETHERSCAN_API_KEY=your_etherscan_api_key
+                  </div>
+                </section>
+
+                {/* 06.3 Contracts */}
+                <section id="dev-contracts" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.3 · Contracts</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Contract Compilation & Testing
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Compiling confidential Solidity using `@zama-fhe/fhevm`.
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    Ghost contracts require the fhEVM Solidity library. Run <code>npx hardhat compile</code> to compile all contracts with the Zama FHE compiler plugin.
+                  </p>
+                </section>
+
+                {/* 06.4 Frontend */}
+                <section id="dev-frontend" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.4 · Frontend Integration</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Frontend SDK Integration
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Connecting React to Ghost's onchain contracts with Viem and Wagmi.
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    Use Ghost's React context hook <code>useGhost()</code> to access deposit, withdrawal, and balance decryption methods anywhere in your component tree.
+                  </p>
+                </section>
+
+                {/* 06.5 FHE Guide */}
+                <section id="dev-fhe-guide" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.5 · FHE Guide</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      FHE Development Best Practices
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Writing gas-efficient and secure confidential smart contracts.
+                    </p>
+                  </div>
+
+                  <ul className="list-disc pl-5 text-xs text-zinc-600 space-y-1.5">
+                    <li>Always grant <code>FHE.allow</code> explicitly to msg.sender for newly generated ciphertexts.</li>
+                    <li>Avoid unnecessary homomorphic divisions; multiply by constants where possible.</li>
+                    <li>Use <code>euint64</code> for currency integers and <code>ebool</code> for confidential predicates.</li>
+                  </ul>
+                </section>
+
+                {/* 06.6 Integration */}
+                <section id="dev-integration" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.6 · Integration</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Third-Party Protocol Integration
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Integrating Ghost prize vaults into external yield aggregators.
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    DeFi protocols can route user funds into <code>GhostVault.sol</code> to offer zero-loss prize savings as an underlying yield strategy while preserving depositor privacy.
+                  </p>
+                </section>
+
+                {/* 06.7 API & SDK */}
+                <section id="dev-api" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.7 · API & SDK</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      API & SDK Reference
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      TypeScript definitions and context exports.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-zinc-900 text-zinc-200 rounded-2xl font-mono text-[11px]">
+                    depositEncrypted(amount: bigint): Promise&lt;string&gt;<br />
+                    withdrawEncrypted(amount: bigint): Promise&lt;string&gt;<br />
+                    decryptSession(): Promise&lt;void&gt;<br />
+                    lockSession(): Promise&lt;void&gt;
+                  </div>
+                </section>
+
+                {/* 06.8 Contract Reference */}
+                <section id="dev-contract-reference" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.8 · Reference</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Smart Contract Function Reference
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      ABI signatures for all public protocol entry points.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 text-xs font-mono">
+                    <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900">function deposit(bytes calldata encryptedAmount) external</div>
+                    <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900">function withdraw(uint256 amount) external</div>
+                    <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900">function executeDraw() external</div>
+                  </div>
+                </section>
+
+                {/* 06.9 Deployments */}
+                <section id="dev-deployments" className="space-y-6 pt-4 pb-8">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">06.9 · Deployments</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Live Sepolia Contract Deployments
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Verified smart contracts on Ethereum Sepolia (Chain ID: 11155111).
+                    </p>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border border-zinc-200 rounded-2xl overflow-hidden font-mono">
+                      <thead>
+                        <tr className="bg-zinc-100 text-zinc-900 font-semibold border-b border-zinc-200 text-[11px]">
+                          <th className="p-3">Contract</th>
+                          <th className="p-3">Address</th>
+                          <th className="p-3 text-right">Explorer</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-200 text-zinc-700">
+                        <tr>
+                          <td className="p-3 font-semibold text-zinc-900">MockConfidentialToken (cUSDC)</td>
+                          <td className="p-3">0x65C9020961f4fdF5E0a1fE01dC1225A096408B03</td>
+                          <td className="p-3 text-right">
+                            <a href="https://sepolia.etherscan.io/address/0x65C9020961f4fdF5E0a1fE01dC1225A096408B03" target="_blank" rel="noopener noreferrer" className="text-zinc-900 underline">View</a>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-semibold text-zinc-900">GhostVault</td>
+                          <td className="p-3">0xA83889ff7D4D78c53A05e050DaE596c9F3058b96</td>
+                          <td className="p-3 text-right">
+                            <a href="https://sepolia.etherscan.io/address/0xA83889ff7D4D78c53A05e050DaE596c9F3058b96" target="_blank" rel="noopener noreferrer" className="text-zinc-900 underline">View</a>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-semibold text-zinc-900">GhostPool</td>
+                          <td className="p-3">0x96e5946A0aa82656EBEA8f5Da5d998e211a10b06</td>
+                          <td className="p-3 text-right">
+                            <a href="https://sepolia.etherscan.io/address/0x96e5946A0aa82656EBEA8f5Da5d998e211a10b06" target="_blank" rel="noopener noreferrer" className="text-zinc-900 underline">View</a>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-semibold text-zinc-900">GhostDraw</td>
+                          <td className="p-3">0xFFDA136c18fdb7C0f74eE60f002f5fFfaCD9957F</td>
+                          <td className="p-3 text-right">
+                            <a href="https://sepolia.etherscan.io/address/0xFFDA136c18fdb7C0f74eE60f002f5fFfaCD9957F" target="_blank" rel="noopener noreferrer" className="text-zinc-900 underline">View</a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* SECTION 07 — SECURITY (ALL SUBPAGES) */}
+            {/* ========================================================================= */}
+            {activeAreaId === 'security' && (
+              <div className="space-y-16">
+                
+                {/* 07.1 Security Model */}
+                <section id="security-model" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.1 · Model</div>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+                      Security Model & Trust Assumptions
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Cryptographic guarantees and decentralized trust topology.
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    Ghost combines Ethereum's consensus security with Zama's lattice-based cryptography. Depositor funds are strictly non-custodial; protocol administrators cannot freeze, re-route, or arbitrarily decrypt user assets.
+                  </p>
+                </section>
+
+                {/* 07.2 Threat Matrix */}
+                <section id="threat-matrix" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.2 · Matrix</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Threat Matrix & Mitigations
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Systematic risk analysis and architectural defenses.
+                    </p>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border border-zinc-200 rounded-2xl overflow-hidden font-mono">
+                      <thead>
+                        <tr className="bg-zinc-100 text-zinc-900 font-semibold border-b border-zinc-200 text-[11px]">
+                          <th className="p-3">Threat Vector</th>
+                          <th className="p-3">Architectural Mitigation</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-200 text-zinc-700">
+                        <tr>
+                          <td className="p-3 font-bold text-red-600">Unauthorized Ciphertext Access</td>
+                          <td className="p-3 text-zinc-800 font-sans">Zama Access Control List (ACL) enforces FHE.allow constraints.</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-bold text-red-600">Unauthorized State Mutation</td>
+                          <td className="p-3 text-zinc-800 font-sans">Contract access modifiers and non-custodial balance ownership.</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-bold text-red-600">Transaction Replay Attacks</td>
+                          <td className="p-3 text-zinc-800 font-sans">EVM transaction nonces and timestamped signature clearance messages.</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-bold text-red-600">Invalid Encrypted Inputs</td>
+                          <td className="p-3 text-zinc-800 font-sans">Zama einput encryption proofs validated at smart contract boundary.</td>
+                        </tr>
+                        <tr>
+                          <td className="p-3 font-bold text-red-600">Centralized Backend Compromise</td>
+                          <td className="p-3 text-zinc-800 font-sans">Zero plaintext database architecture; backend stores zero financial keys.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                {/* 07.3 FHE Security */}
+                <section id="fhe-security" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.3 · FHE Cryptography</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      FHE Cryptographic Security Parameters
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      128-bit quantum-resistant lattice parameters and TFHE noise bounds.
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    Ghost uses Learning With Errors (LWE) and Torus FHE parameters calibrated for 128 bits of post-quantum cryptographic security under standard lattice reduction attacks.
+                  </p>
+                </section>
+
+                {/* 07.4 Contract Security */}
+                <section id="smart-contract-security" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.4 · Contract Security</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Smart Contract Invariant Protections
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Reentrancy protection, integer bounds, and emergency pausing.
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    All pool and vault contracts implement OpenZeppelin ReentrancyGuard, strict Checks-Effects-Interactions patterns, and access control boundaries.
+                  </p>
+                </section>
+
+                {/* 07.5 Audits */}
+                <section id="audits" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.5 · Audits</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Audit Status & Verification Roadmap
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Formal verification and third-party security review milestones.
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    Smart contracts are compiled for the Zama Developer Program Season 4 with comprehensive unit tests and fuzzing suites. Formal verification of FHE invariant properties is scheduled prior to Ethereum mainnet deployment.
+                  </p>
+                </section>
+
+                {/* 07.6 Bug Bounty */}
+                <section id="bug-bounty" className="space-y-6 pt-4 pb-8">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">07.6 · Bug Bounty</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Bug Bounty & Responsible Disclosure
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Guidelines for security researchers and vulnerability reporting.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-600 space-y-2">
+                    <p>
+                      We welcome responsible disclosure from security researchers. 
+                      If you discover a vulnerability related to ciphertext leakage, contract reentrancy, or ACL flaws, please report privately to our security team.
+                    </p>
+                  </div>
+                </section>
+
+              </div>
+            )}
+
+            {/* ========================================================================= */}
+            {/* SECTION 08 — RESOURCES (ALL SUBPAGES) */}
+            {/* ========================================================================= */}
+            {activeAreaId === 'resources' && (
+              <div className="space-y-16">
+                
+                {/* 08.1 Glossary */}
+                <section id="glossary" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">08.1 · Glossary</div>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+                      Protocol Glossary
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Essential cryptographic and decentralized finance terminology.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs font-mono">
+                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
+                      <div className="font-bold text-zinc-900">FHE (Fully Homomorphic Encryption)</div>
+                      <div className="text-[11px] text-zinc-500 mt-1 font-sans">A form of encryption that allows computation directly over ciphertexts.</div>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
+                      <div className="font-bold text-zinc-900">fhEVM</div>
+                      <div className="text-[11px] text-zinc-500 mt-1 font-sans">Zama's EVM integration enabling confidential smart contracts using TFHE.</div>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
+                      <div className="font-bold text-zinc-900">euint64</div>
+                      <div className="text-[11px] text-zinc-500 mt-1 font-sans">An encrypted 64-bit unsigned integer type managed onchain.</div>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
+                      <div className="font-bold text-zinc-900">Ciphertext Handle</div>
+                      <div className="text-[11px] text-zinc-500 mt-1 font-sans">A 32-byte cryptographic pointer referencing an off-chain FHE ciphertext.</div>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
+                      <div className="font-bold text-zinc-900">Zero-Loss Savings</div>
+                      <div className="text-[11px] text-zinc-500 mt-1 font-sans">A mechanism where principal deposits are preserved while collective yield funds prize draws.</div>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200">
+                      <div className="font-bold text-zinc-900">ACL (Access Control List)</div>
+                      <div className="text-[11px] text-zinc-500 mt-1 font-sans">Zama's authorization system regulating which wallets can decrypt ciphertexts.</div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 08.2 FAQ */}
+                <section id="faq" className="space-y-6 pt-4 border-b border-zinc-100 pb-16">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">08.2 · FAQ</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Frequently Asked Questions
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Technical and operational protocol questions answered.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4 text-xs">
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
+                      <div className="font-bold text-zinc-950">How is yield distributed without revealing individual amounts?</div>
+                      <p className="text-zinc-600">The Torus coprocessor computes compound yield directly across the encrypted total pool, crediting each participant's euint64 balance homomorphically.</p>
+                    </div>
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
+                      <div className="font-bold text-zinc-950">Can node operators inspect my transaction parameters?</div>
+                      <p className="text-zinc-600">No. All parameters are submitted as 32-byte opaque ciphertext handles validated by zero-knowledge encryption proofs.</p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 08.3 Changelog */}
+                <section id="changelog" className="space-y-6 pt-4 pb-8">
+                  <div>
+                    <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">08.3 · Changelog</div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
+                      Protocol Changelog
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Release history on Ethereum Sepolia.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 font-mono text-xs text-zinc-600">
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-1">
+                      <div className="font-bold text-zinc-900">v1.0.0-sepolia (September 2026)</div>
+                      <ul className="list-disc pl-5 text-[11px] text-zinc-600 font-sans space-y-1">
+                        <li>Deployment of MockConfidentialToken, GhostVault, GhostPool, and GhostDraw contracts.</li>
+                        <li>Dual-key cryptographic session clearance for unmasking and re-sealing state.</li>
+                        <li>Address-isolated ledger architecture and 8-area technical documentation system.</li>
+                      </ul>
+                    </div>
+                  </div>
+                </section>
+
+              </div>
+            )}
 
           </div>
 
