@@ -337,7 +337,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         sig = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}1c`;
       }
       setDecryptionSignature(sig);
-      setIsDecrypted(true);
+      setIsDecrypted(false); // Balances remain encrypted/sealed by default on entry
       setIsSessionAuthorized(true);
       return true;
     } catch (err) {
@@ -349,7 +349,26 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const decryptSession = async () => {
-    await requestSessionAuthorization();
+    if (!isConnected || !address) return;
+    setIsSigning(true);
+    try {
+      const timestamp = new Date().toISOString();
+      const message = `Ghost Protocol · Confidential Decryption Clearance\n\nAccount: ${currentUser?.email || 'Confidential'}\nBound Wallet: ${address}\nTimestamp: ${timestamp}\nScope: GhostPool::EncryptedBalance, GhostVault::EncryptedPosition\nStandard: Zama fhEVM euint64 Decryption Clearance\n\nSigning this message unmasks your onchain ciphertext handles client-side in your local browser session.`;
+
+      let sig = '';
+      if (signMessageAsync) {
+        sig = await signMessageAsync({ account: address, message });
+      } else {
+        await new Promise((r) => setTimeout(r, 600));
+        sig = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}1c`;
+      }
+      setDecryptionSignature(sig);
+      setIsDecrypted(true);
+    } catch (err) {
+      console.error('User rejected decryption clearance signature:', err);
+    } finally {
+      setIsSigning(false);
+    }
   };
 
   const lockSession = async () => {
