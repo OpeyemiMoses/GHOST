@@ -22,9 +22,15 @@ import { DocsPage } from './pages/DocsPage';
 import { HelpPage } from './pages/HelpPage';
 
 const AppContent: React.FC = () => {
-  const { currentView } = useGhost();
+  const { currentView, currentUser, isWalletMatchingBound, isSessionAuthorized } = useGhost();
 
   if (currentView === 'connect') {
+    return <ConnectGatewayPage />;
+  }
+
+  // Protected Private Views: Require Email Login + Bound Wallet + Session Authorization
+  const isPrivateView = currentView === 'vault' || currentView === 'dashboard' || currentView === 'activity';
+  if (isPrivateView && (!currentUser || !currentUser.boundWalletAddress || !isWalletMatchingBound || !isSessionAuthorized)) {
     return <ConnectGatewayPage />;
   }
 

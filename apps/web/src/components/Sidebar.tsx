@@ -18,11 +18,13 @@ import {
   Settings,
   Flame,
   Radio,
-  BookOpen
+  BookOpen,
+  Mail,
+  LogOut
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
-  const { currentView, setCurrentView, isDecrypted } = useGhost();
+  const { currentView, setCurrentView, isDecrypted, currentUser, logoutAccount } = useGhost();
   const [collapsed, setCollapsed] = useState<boolean>(false);
 
   const navItems = [
@@ -110,7 +112,32 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Bottom Account & Web3 Wallet Block */}
-      <div className="pt-4 border-t border-zinc-800/80">
+      <div className="pt-3 border-t border-zinc-800/80 space-y-2">
+        {/* User Account Card */}
+        {currentUser && !collapsed && (
+          <div className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs space-y-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-zinc-300 font-mono text-[11px] truncate max-w-[130px]">
+                <Mail className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                <span className="truncate">{currentUser.email}</span>
+              </div>
+              <button
+                onClick={logoutAccount}
+                title="Sign Out"
+                className="text-zinc-500 hover:text-red-400 p-1 rounded-md transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            {currentUser.boundWalletAddress && (
+              <div className="text-[10px] font-mono text-zinc-400 flex items-center justify-between pt-0.5">
+                <span>Bound:</span>
+                <span className="text-zinc-300">{currentUser.boundWalletAddress.slice(0, 6)}...{currentUser.boundWalletAddress.slice(-4)}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         <ConnectButton.Custom>
           {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
             const ready = mounted;

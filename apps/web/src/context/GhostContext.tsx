@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { useAccount, useDisconnect, useSignMessage, useWalletClient, usePublicClient } from 'wagmi';
 
 export const DEPLOYED_CONTRACTS = {
@@ -73,10 +73,25 @@ export interface ProtocolEventRecord {
   isVerified: boolean;
 }
 
+export interface UserAccount {
+  email: string;
+  passwordHash: string;
+  boundWalletAddress: string | null;
+  createdAt: number;
+}
+
 interface GhostContextType {
   // Navigation
   currentView: string;
   setCurrentView: (view: string) => void;
+
+  // Email & Password Auth State
+  currentUser: UserAccount | null;
+  registerAccount: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginAccount: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logoutAccount: () => void;
+  bindWalletToAccount: (walletAddress: string) => Promise<{ success: boolean; error?: string }>;
+  isWalletMatchingBound: boolean;
 
   // Real Wallet State from RainbowKit / wagmi
   walletConnected: boolean;
@@ -132,6 +147,13 @@ export const generateCiphertextHandle = (val: number, addr: string): string => {
   return `0x${hexPart}e8f9a2b41c6d830f57e2a9b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3`;
 };
 
+async function hashPassword(password: string): Promise<string> {
+  const enc = new TextEncoder();
+  const data = enc.encode(password + ':ghost_secure_auth_salt_v1');
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 // Clear any old legacy test keys from previous iterations
 if (typeof window !== 'undefined') {
   try {
@@ -154,6 +176,20 @@ if (typeof window !== 'undefined') {
 export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, setCurrentView] = useState<string>('landing');
 
+  // Email & Password Authentication State (Zero Onchain Knowledge)
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
+    try {
+      const savedEmail = localStorage.getItem('ghost_current_user_email');
+      if (savedEmail) {
+        const accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+        return accountsDb[savedEmail.toLowerCase()] || null;
+      }
+    } catch (e) {
+      // Ignore
+    }
+    return null;
+  });
+
   // Wagmi real wallet state
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
@@ -163,25 +199,135 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const formattedAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
 
+  // Check if active connected wallet matches account's bound wallet
+  const isWalletMatchingBound = useMemo(() => {
+    if (!currentUser || !currentUser.boundWalletAddress) return true; // not bound yet
+    if (!address) return false;
+    return address.toLowerCase() === currentUser.boundWalletAddress.toLowerCase();
+  }, [currentUser, address]);
+
   // Cryptographic Signature Decryption & Session Authorization State
   const [isSessionAuthorized, setIsSessionAuthorized] = useState<boolean>(false);
   const [isDecrypted, setIsDecrypted] = useState<boolean>(false);
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [decryptionSignature, setDecryptionSignature] = useState<string | null>(null);
 
+  // Authentication Actions
+  const registerAccount = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return { success: false, error: 'Please enter a valid email address.' };
+    }
+    if (!password || password.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters.' };
+    }
+    try {
+      const accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+      if (accountsDb[cleanEmail]) {
+        return { success: false, error: 'An account with this email already exists. Please sign in.' };
+      }
+      const hash = await hashPassword(password);
+      const newAccount: UserAccount = {
+        email: cleanEmail,
+        passwordHash: hash,
+        boundWalletAddress: null,
+        createdAt: Date.now(),
+      };
+      accountsDb[cleanEmail] = newAccount;
+      localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
+      localStorage.setItem('ghost_current_user_email', cleanEmail);
+      setCurrentUser(newAccount);
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to register account.' };
+    }
+  };
+
+  const loginAccount = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !password) {
+      return { success: false, error: 'Please enter both email and password.' };
+    }
+    try {
+      const accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+      const account: UserAccount | undefined = accountsDb[cleanEmail];
+      if (!account) {
+        return { success: false, error: 'No account found with this email. Please create one.' };
+      }
+      const hash = await hashPassword(password);
+      if (account.passwordHash !== hash) {
+        return { success: false, error: 'Incorrect password. Please try again.' };
+      }
+      localStorage.setItem('ghost_current_user_email', cleanEmail);
+      setCurrentUser(account);
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to login.' };
+    }
+  };
+
+  const logoutAccount = () => {
+    localStorage.removeItem('ghost_current_user_email');
+    setCurrentUser(null);
+    setIsSessionAuthorized(false);
+    setIsDecrypted(false);
+    setDecryptionSignature(null);
+    disconnect();
+    setCurrentView('connect');
+  };
+
+  const bindWalletToAccount = async (walletAddress: string): Promise<{ success: boolean; error?: string }> => {
+    if (!currentUser) {
+      return { success: false, error: 'You must be logged into an email account to bind a wallet.' };
+    }
+    if (!walletAddress) {
+      return { success: false, error: 'No wallet address connected.' };
+    }
+    try {
+      const accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+      // Verify no other account has already bound this wallet
+      for (const emailKey in accountsDb) {
+        if (
+          emailKey !== currentUser.email.toLowerCase() &&
+          accountsDb[emailKey].boundWalletAddress?.toLowerCase() === walletAddress.toLowerCase()
+        ) {
+          return {
+            success: false,
+            error: `This wallet is already bound to another account (${accountsDb[emailKey].email}).`
+          };
+        }
+      }
+
+      const updatedAccount: UserAccount = {
+        ...currentUser,
+        boundWalletAddress: walletAddress.toLowerCase(),
+      };
+      accountsDb[currentUser.email.toLowerCase()] = updatedAccount;
+      localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
+      setCurrentUser(updatedAccount);
+      return { success: true };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to bind wallet.' };
+    }
+  };
+
   // When account changes or disconnects, re-lock the confidential session
   useEffect(() => {
     setIsSessionAuthorized(false);
     setIsDecrypted(false);
     setDecryptionSignature(null);
-  }, [address, isConnected]);
+  }, [address, isConnected, currentUser]);
 
   const requestSessionAuthorization = async (): Promise<boolean> => {
     if (!isConnected || !address) return false;
+    if (currentUser?.boundWalletAddress && address.toLowerCase() !== currentUser.boundWalletAddress.toLowerCase()) {
+      alert(`Wallet mismatch! This account is bound to ${currentUser.boundWalletAddress}. Please switch to the correct address in your wallet.`);
+      return false;
+    }
     setIsSigning(true);
     try {
       const timestamp = new Date().toISOString();
-      const message = `Ghost Protocol · Session Authentication\n\nAuthorize confidential session for account:\n${address}\n\nTimestamp: ${timestamp}\nScope: GhostPool & GhostVault Dashboard Access\nStandard: Zama fhEVM euint64 Decryption Clearance\n\nSigning this message confirms wallet ownership and grants access to your confidential onchain dashboard.`;
+      const message = `Ghost Protocol · Session Authentication\n\nAccount: ${currentUser?.email || 'Confidential'}\nBound Wallet: ${address}\nTimestamp: ${timestamp}\nScope: GhostPool & GhostVault Dashboard Access\nStandard: Zama fhEVM euint64 Decryption Clearance\n\nSigning this message confirms wallet ownership and grants access to your confidential onchain dashboard.`;
 
       let sig = '';
       if (signMessageAsync) {
@@ -595,6 +741,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         currentView,
         setCurrentView,
+        currentUser,
+        registerAccount,
+        loginAccount,
+        logoutAccount,
+        bindWalletToAccount,
+        isWalletMatchingBound,
         walletConnected: isConnected,
         userAddress: formattedAddress,
         rawAddress: address,
