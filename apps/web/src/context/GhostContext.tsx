@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { useAccount, useDisconnect, useSignMessage, useWalletClient, usePublicClient, useChainId, useSwitchChain } from 'wagmi';
+import { writeContract, waitForTransactionReceipt } from 'wagmi/actions';
 import { sepolia } from 'wagmi/chains';
+import { config } from '../lib/wagmi';
 import { fetchGlobalCloudState, pushGlobalCloudState, subscribeToGlobalState } from '../services/cloudSync';
 
 export const PROTOCOL_BASELINE_TVL = 0;
@@ -838,7 +840,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [isMinting, setIsMinting] = useState<boolean>(false);
 
-  // Mint Testnet cUSDC Faucet Handler with Genuine Wallet Signature & Authorization
+  // Mint Testnet cUSDC Faucet Handler with Real Onchain Sepolia Execution
   const handleMint = async (amount: number = 1000) => {
     if (!address) {
       addToast({ type: 'warning', title: 'Wallet Required', message: 'Connect a wallet to mint testnet cUSDC.' });
@@ -847,40 +849,22 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsMinting(true);
 
     try {
-      let txHash = '';
+      addToast({
+        type: 'info',
+        title: 'Confirm in Wallet',
+        message: 'Please confirm the onchain mint transaction in your wallet.',
+      });
 
-      // 1. Attempt onchain contract write with wallet client
-      if (walletClient) {
-        try {
-          const hash = await (walletClient as any).writeContract({
-            address: DEPLOYED_CONTRACTS.MockConfidentialToken,
-            abi: TOKEN_ABI,
-            functionName: 'mintPlaintext',
-            args: [address, BigInt(amount * 1e6)],
-          });
-          txHash = hash;
-          if (publicClient) {
-            publicClient.waitForTransactionReceipt({ hash }).catch(() => {});
-          }
-        } catch (chainErr: any) {
-          const errMsg = (chainErr?.shortMessage || chainErr?.message || '').toLowerCase();
-          if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('cancel') || errMsg.includes('user rejected')) {
-            throw chainErr;
-          }
-          console.warn('Onchain minting requires cryptographic signature authorization:', chainErr);
-        }
-      }
+      const hash = await writeContract(config, {
+        address: DEPLOYED_CONTRACTS.MockConfidentialToken,
+        abi: TOKEN_ABI,
+        functionName: 'mintPlaintext',
+        args: [address, BigInt(amount * 1e6)],
+        chainId: sepolia.id,
+      } as any);
 
-      // 2. If onchain contract was not signed (e.g. 0 Sepolia ETH), prompt for cryptographic signature authorization
-      if (!txHash) {
-        if (signMessageAsync) {
-          const authMsg = `Ghost Protocol · Faucet Mint Authorization\n\nRecipient: ${address}\nAmount: ${amount.toLocaleString()} cUSDC\nTimestamp: ${new Date().toISOString()}\nStandard: Zama Confidential Faucet\n\nSign this cryptographic request with your wallet to authorize minting testnet cUSDC.`;
-          const sig = await signMessageAsync({ account: address, message: authMsg });
-          txHash = `0x${sig.slice(2, 66)}`;
-        } else {
-          throw new Error('Wallet not ready for signing. Please reconnect.');
-        }
-      }
+      // Wait for real onchain confirmation on Sepolia
+      await waitForTransactionReceipt(config, { hash });
 
       const key = address.toLowerCase();
       const newWalletBalance = walletTokenBalance + amount;
@@ -891,7 +875,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         amount,
         encryptedHandle: generateCiphertextHandle(amount, address),
         timestamp: Date.now(),
-        txHash,
+        txHash: hash,
         status: 'Confirmed',
       };
 
@@ -914,14 +898,15 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       addToast({
         type: 'success',
-        title: 'Tokens Minted',
-        message: `Successfully minted ${amount.toLocaleString()} testnet cUSDC to your wallet.`,
+        title: 'Onchain Mint Confirmed',
+        message: `Successfully minted ${amount.toLocaleString()} cUSDC on Sepolia! Tx: ${hash.slice(0, 10)}...`,
       });
     } catch (err: any) {
+      console.warn('Mint transaction rejected or failed:', err);
       addToast({
         type: 'warning',
-        title: 'Minting Cancelled',
-        message: err?.shortMessage || err?.message || 'Transaction was cancelled or rejected in your wallet.',
+        title: 'Mint Cancelled / Failed',
+        message: err?.shortMessage || err?.message || 'Transaction was rejected or failed onchain.',
       });
     } finally {
       setIsMinting(false);
@@ -1145,7 +1130,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [isComputingEvent, setIsComputingEvent] = useState<boolean>(false);
 
-  // Deposit Handler with Mandatory Wallet Signature & Authorization Check
+  // Deposit Handler with Real Onchain Sepolia Execution
   const handleDeposit = async (amount: number) => {
     if (amount <= 0 || !address) {
       addToast({ type: 'warning', title: 'Invalid Amount', message: 'Please enter a deposit amount greater than 0.' });
@@ -1161,46 +1146,28 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
 
-    const key = address.toLowerCase();
-    const newBalance = userBalance + amount;
-    const newWalletBalance = Math.max(0, walletTokenBalance - amount);
-    const newHandle = generateCiphertextHandle(newBalance, address);
-
     try {
-      let txHash = '';
+      addToast({
+        type: 'info',
+        title: 'Confirm in Wallet',
+        message: 'Please confirm the onchain deposit transaction in your wallet.',
+      });
 
-      // 1. Attempt onchain deposit via walletClient
-      if (walletClient) {
-        try {
-          const hash = await (walletClient as any).writeContract({
-            address: DEPLOYED_CONTRACTS.GhostPool,
-            abi: POOL_ABI,
-            functionName: 'depositPlaintext',
-            args: [BigInt(Math.floor(amount * 1e6))],
-          });
-          txHash = hash;
-          if (publicClient) {
-            publicClient.waitForTransactionReceipt({ hash }).catch(() => {});
-          }
-        } catch (chainErr: any) {
-          const errMsg = (chainErr?.shortMessage || chainErr?.message || '').toLowerCase();
-          if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('cancel') || errMsg.includes('user rejected')) {
-            throw chainErr;
-          }
-          console.warn('Onchain deposit requires cryptographic signature authorization:', chainErr);
-        }
-      }
+      const hash = await writeContract(config, {
+        address: DEPLOYED_CONTRACTS.GhostPool,
+        abi: POOL_ABI,
+        functionName: 'depositPlaintext',
+        args: [BigInt(Math.floor(amount * 1e6))],
+        chainId: sepolia.id,
+      } as any);
 
-      // 2. If onchain tx was not signed via writeContract (e.g. 0 gas), prompt for cryptographic signature authorization
-      if (!txHash) {
-        if (signMessageAsync) {
-          const depositMsg = `Ghost Protocol · Confidential Vault Deposit Authorization\n\nSaver: ${address}\nAmount: ${amount.toLocaleString()} cUSDC\nCiphertext Handle: ${newHandle}\nTimestamp: ${new Date().toISOString()}\nScope: GhostPool Deposit\n\nSign this cryptographic request with your wallet to authorize depositing funds into the confidential prize pool.`;
-          const sig = await signMessageAsync({ account: address, message: depositMsg });
-          txHash = `0x${sig.slice(2, 66)}`;
-        } else {
-          throw new Error('Wallet not ready for signing. Please reconnect.');
-        }
-      }
+      // Wait for real onchain confirmation on Sepolia
+      await waitForTransactionReceipt(config, { hash });
+
+      const key = address.toLowerCase();
+      const newBalance = userBalance + amount;
+      const newWalletBalance = Math.max(0, walletTokenBalance - amount);
+      const newHandle = generateCiphertextHandle(newBalance, address);
 
       try {
         localStorage.setItem(`ghost_balance_${key}`, newBalance.toString());
@@ -1221,7 +1188,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         amount,
         encryptedHandle: newHandle,
         timestamp: Date.now(),
-        txHash,
+        txHash: hash,
         status: 'Confirmed',
       };
 
@@ -1246,19 +1213,20 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       addToast({
         type: 'success',
-        title: 'Deposit Confirmed',
-        message: `Successfully deposited ${amount.toLocaleString()} cUSDC into the confidential vault.`,
+        title: 'Deposit Confirmed Onchain',
+        message: `Successfully deposited ${amount.toLocaleString()} cUSDC into the confidential vault! Tx: ${hash.slice(0, 10)}...`,
       });
     } catch (err: any) {
+      console.warn('Deposit transaction rejected or failed:', err);
       addToast({
         type: 'warning',
-        title: 'Deposit Cancelled',
-        message: err?.shortMessage || err?.message || 'Deposit was cancelled or rejected in your wallet.',
+        title: 'Deposit Cancelled / Failed',
+        message: err?.shortMessage || err?.message || 'Deposit was rejected or failed onchain.',
       });
     }
   };
 
-  // Withdraw Handler with Real Onchain Sepolia Execution & Signature Confirmation
+  // Withdraw Handler with Real Onchain Sepolia Execution
   const handleWithdraw = async (amount: number) => {
     if (amount <= 0 || !address) {
       addToast({ type: 'warning', title: 'Invalid Amount', message: 'Please enter a valid withdrawal amount.' });
@@ -1273,44 +1241,27 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return;
     }
 
-    const key = address.toLowerCase();
-    const newBalance = Math.max(0, userBalance - amount);
-    const newWalletBalance = walletTokenBalance + amount;
-    const newHandle = generateCiphertextHandle(newBalance, address);
-
     try {
-      let txHash = '';
+      addToast({
+        type: 'info',
+        title: 'Confirm in Wallet',
+        message: 'Please confirm the onchain withdrawal transaction in your wallet.',
+      });
 
-      if (walletClient) {
-        try {
-          const hash = await (walletClient as any).writeContract({
-            address: DEPLOYED_CONTRACTS.MockConfidentialToken,
-            abi: TOKEN_ABI,
-            functionName: 'mintPlaintext',
-            args: [address, BigInt(Math.floor(amount * 1e6))],
-          });
-          txHash = hash;
-          if (publicClient) {
-            publicClient.waitForTransactionReceipt({ hash }).catch(() => {});
-          }
-        } catch (chainErr: any) {
-          const errMsg = (chainErr?.shortMessage || chainErr?.message || '').toLowerCase();
-          if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('cancel') || errMsg.includes('user rejected')) {
-            throw chainErr;
-          }
-          console.warn('Onchain withdraw requires cryptographic signature authorization:', chainErr);
-        }
-      }
+      const hash = await writeContract(config, {
+        address: DEPLOYED_CONTRACTS.MockConfidentialToken,
+        abi: TOKEN_ABI,
+        functionName: 'mintPlaintext',
+        args: [address, BigInt(Math.floor(amount * 1e6))],
+        chainId: sepolia.id,
+      } as any);
 
-      if (!txHash) {
-        if (signMessageAsync) {
-          const withdrawMsg = `Ghost Protocol · Confidential Vault Withdrawal Authorization\n\nSaver: ${address}\nAmount: ${amount.toLocaleString()} cUSDC\nTimestamp: ${new Date().toISOString()}\nScope: GhostPool Withdrawal\n\nSign this cryptographic request with your wallet to authorize withdrawing funds from the confidential vault.`;
-          const sig = await signMessageAsync({ account: address, message: withdrawMsg });
-          txHash = `0x${sig.slice(2, 66)}`;
-        } else {
-          throw new Error('Wallet not ready for signing. Please reconnect.');
-        }
-      }
+      await waitForTransactionReceipt(config, { hash });
+
+      const key = address.toLowerCase();
+      const newBalance = Math.max(0, userBalance - amount);
+      const newWalletBalance = walletTokenBalance + amount;
+      const newHandle = generateCiphertextHandle(newBalance, address);
 
       try {
         localStorage.setItem(`ghost_balance_${key}`, newBalance.toString());
@@ -1328,7 +1279,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         amount,
         encryptedHandle: newHandle,
         timestamp: Date.now(),
-        txHash,
+        txHash: hash,
         status: 'Confirmed',
       };
 
@@ -1353,14 +1304,15 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       addToast({
         type: 'success',
-        title: 'Withdrawal Confirmed',
-        message: `Successfully redeemed ${amount.toLocaleString()} cUSDC back to your Sepolia wallet.`,
+        title: 'Withdrawal Confirmed Onchain',
+        message: `Successfully redeemed ${amount.toLocaleString()} cUSDC back to your Sepolia wallet! Tx: ${hash.slice(0, 10)}...`,
       });
     } catch (err: any) {
+      console.warn('Withdrawal transaction rejected or failed:', err);
       addToast({
         type: 'warning',
-        title: 'Withdrawal Cancelled',
-        message: err?.shortMessage || err?.message || 'Withdrawal was cancelled or rejected in your wallet.',
+        title: 'Withdrawal Cancelled / Failed',
+        message: err?.shortMessage || err?.message || 'Withdrawal was rejected or failed onchain.',
       });
     }
   };
@@ -1373,62 +1325,62 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return false;
     }
 
-    let claimTxHash = '';
-    if (walletClient) {
-      try {
-        const hash = await (walletClient as any).writeContract({
-          address: DEPLOYED_CONTRACTS.MockConfidentialToken,
-          abi: TOKEN_ABI,
-          functionName: 'mintPlaintext',
-          args: [address as `0x${string}`, BigInt(Math.floor(prize.amount * 1e6))],
-        });
-        claimTxHash = hash;
-        if (publicClient) {
-          await publicClient.waitForTransactionReceipt({ hash });
-        }
-      } catch (err: any) {
-        console.error('Prize claim cancelled or rejected:', err);
-        addToast({
-          type: 'error',
-          title: 'Claim Cancelled',
-          message: err?.shortMessage || 'Claim transaction was rejected in your wallet.',
-        });
-        return false;
-      }
-    } else {
-      claimTxHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+    try {
+      addToast({
+        type: 'info',
+        title: 'Confirm in Wallet',
+        message: 'Please confirm the prize claim transaction in your wallet.',
+      });
+
+      const hash = await writeContract(config, {
+        address: DEPLOYED_CONTRACTS.MockConfidentialToken,
+        abi: TOKEN_ABI,
+        functionName: 'mintPlaintext',
+        args: [address as `0x${string}`, BigInt(Math.floor(prize.amount * 1e6))],
+        chainId: sepolia.id,
+      } as any);
+
+      await waitForTransactionReceipt(config, { hash });
+
+      const claimedRecord: PrizeRecord = {
+        ...prize,
+        status: 'CLAIMED',
+        claimTxHash: hash,
+        claimTimestamp: Date.now(),
+      };
+
+      setUnclaimedPrizes((prev) => prev.filter((p) => p.id !== prizeId));
+      setClaimedPrizes((prev) => [claimedRecord, ...prev]);
+      setWalletTokenBalance((b) => b + prize.amount);
+
+      const claimTx: TransactionRecord = {
+        id: `tx_claim_${Date.now()}`,
+        ownerAddress: address.toLowerCase(),
+        type: 'Prize Won',
+        amount: prize.amount,
+        encryptedHandle: generateCiphertextHandle(prize.amount, address),
+        timestamp: Date.now(),
+        txHash: hash,
+        status: 'Confirmed',
+      };
+      setTransactions((prev) => [claimTx, ...prev]);
+
+      addToast({
+        type: 'success',
+        title: 'Prize Claimed to Wallet!',
+        message: `Successfully transferred $${prize.amount.toFixed(2)} cUSDC into your Sepolia wallet! Tx: ${hash.slice(0, 10)}...`,
+      });
+
+      return true;
+    } catch (err: any) {
+      console.warn('Prize claim rejected or failed:', err);
+      addToast({
+        type: 'warning',
+        title: 'Claim Cancelled / Failed',
+        message: err?.shortMessage || err?.message || 'Claim transaction was rejected or failed onchain.',
+      });
+      return false;
     }
-
-    const claimedRecord: PrizeRecord = {
-      ...prize,
-      status: 'CLAIMED',
-      claimTxHash,
-      claimTimestamp: Date.now(),
-    };
-
-    setUnclaimedPrizes((prev) => prev.filter((p) => p.id !== prizeId));
-    setClaimedPrizes((prev) => [claimedRecord, ...prev]);
-    setWalletTokenBalance((b) => b + prize.amount);
-
-    const claimTx: TransactionRecord = {
-      id: `tx_claim_${Date.now()}`,
-      ownerAddress: address.toLowerCase(),
-      type: 'Prize Won',
-      amount: prize.amount,
-      encryptedHandle: generateCiphertextHandle(prize.amount, address),
-      timestamp: Date.now(),
-      txHash: claimTxHash,
-      status: 'Confirmed',
-    };
-    setTransactions((prev) => [claimTx, ...prev]);
-
-    addToast({
-      type: 'success',
-      title: 'Prize Claimed to Wallet!',
-      message: `Successfully transferred $${prize.amount.toFixed(2)} cUSDC into your Sepolia wallet.`,
-    });
-
-    return true;
   };
 
   // Autonomous Keeper Draw Execution
