@@ -1038,27 +1038,48 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('ghost_past_events', JSON.stringify(pastEvents));
   }, [address, walletTokenBalance, userBalance, userYield, encryptedHandle, currentPrizePool, transactions, unclaimedPrizes, claimedPrizes, pastEvents]);
 
-  // Protocol-level Event
-  const [activeEvent, setActiveEvent] = useState<ProtocolEventRecord>({
-    eventId: 1,
-    status: 'OPEN',
-    startTime: Date.now() - 3600000 * 2,
-    endTime: Date.now() + 3600000 * 22,
-    prizeAmount: currentPrizePool,
-    encryptedPrizeHandle: generateCiphertextHandle(currentPrizePool, 'GhostVault'),
-    winnerAddress: 'Pending Onchain Draw',
-    randomnessCommitment: '',
-    stateRoot: '',
-    txHash: '',
-    isVerified: false,
+  // Protocol-level Event (Dynamic lifecycle persisting across all rounds forever)
+  const [activeEvent, setActiveEvent] = useState<ProtocolEventRecord>(() => {
+    try {
+      const saved = localStorage.getItem('ghost_active_event');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.eventId === 'number') {
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    return {
+      eventId: 1,
+      status: 'OPEN',
+      startTime: Date.now() - 3600000 * 2,
+      endTime: Date.now() + 3600000 * 22,
+      prizeAmount: currentPrizePool,
+      encryptedPrizeHandle: generateCiphertextHandle(currentPrizePool, 'GhostVault'),
+      winnerAddress: 'Pending Onchain Draw',
+      randomnessCommitment: '',
+      stateRoot: '',
+      txHash: '',
+      isVerified: false,
+    };
   });
 
   useEffect(() => {
-    setActiveEvent((prev) => ({
-      ...prev,
-      prizeAmount: currentPrizePool,
-      encryptedPrizeHandle: generateCiphertextHandle(currentPrizePool, 'GhostVault'),
-    }));
+    setActiveEvent((prev) => {
+      const updated = {
+        ...prev,
+        prizeAmount: currentPrizePool,
+        encryptedPrizeHandle: generateCiphertextHandle(currentPrizePool, 'GhostVault'),
+      };
+      try {
+        localStorage.setItem('ghost_active_event', JSON.stringify(updated));
+      } catch {
+        // Ignore
+      }
+      return updated;
+    });
   }, [currentPrizePool]);
 
   const [isComputingEvent, setIsComputingEvent] = useState<boolean>(false);
