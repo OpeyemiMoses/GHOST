@@ -216,7 +216,7 @@ export const getViewFromHash = (): string | null => {
 // One-time automatic clean slate purge across all clients and wallets
 if (typeof window !== 'undefined') {
   try {
-    const CLEAN_SLATE_KEY = 'ghost_clean_slate_v5';
+    const CLEAN_SLATE_KEY = 'ghost_clean_slate_v6';
     if (!localStorage.getItem(CLEAN_SLATE_KEY)) {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
