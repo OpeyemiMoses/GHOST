@@ -1680,18 +1680,45 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
-  // Autonomous Background Network Keeper Loop
+  // Autonomous Background Network Keeper Loop with $25.00 Minimum Prize Threshold (Jackpot Rollover)
   useEffect(() => {
+    const MINIMUM_PRIZE_THRESHOLD = 25.0;
+
     const keeperInterval = setInterval(() => {
       const now = Date.now();
       if (activeEvent.endTime <= now && activeEvent.status === 'OPEN' && !isComputingEvent) {
-        console.log('[Autonomous Keeper] 24h cycle threshold reached. Resolving onchain draw...');
-        executeEventDraw();
+        if (currentPrizePool >= MINIMUM_PRIZE_THRESHOLD) {
+          console.log(`[Autonomous Keeper] 24h cycle threshold reached & prize pool ($${currentPrizePool.toFixed(2)}) >= $${MINIMUM_PRIZE_THRESHOLD}. Resolving onchain draw...`);
+          executeEventDraw();
+        } else {
+          console.log(`[Autonomous Keeper] 24h cycle ended with yield $${currentPrizePool.toFixed(2)} (< $${MINIMUM_PRIZE_THRESHOLD} threshold). Rolling over into next 24h window...`);
+          const extendedEndTime = now + 3600000 * 24;
+          const updatedEvent: ProtocolEventRecord = {
+            ...activeEvent,
+            endTime: extendedEndTime,
+          };
+          setActiveEvent(updatedEvent);
+          try {
+            localStorage.setItem('ghost_active_event', JSON.stringify(updatedEvent));
+          } catch {
+            // Ignore
+          }
+          pushGlobalCloudState({
+            activeEvent: updatedEvent,
+            lastUpdated: Date.now(),
+          }).catch(() => {});
+
+          addToast({
+            type: 'info',
+            title: 'Prize Rollover (Under $25.00 Threshold)',
+            message: `Current yield is $${currentPrizePool.toFixed(2)}. Compounding into next 24h window until the $25.00 minimum prize is reached.`,
+          });
+        }
       }
     }, 4000);
 
     return () => clearInterval(keeperInterval);
-  }, [activeEvent, isComputingEvent]);
+  }, [activeEvent, currentPrizePool, isComputingEvent]);
 
   // Reset Protocol Demo State and Start Afresh
   const resetProtocolState = () => {

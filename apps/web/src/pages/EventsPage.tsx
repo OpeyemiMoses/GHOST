@@ -109,8 +109,26 @@ export const EventsPage: React.FC = () => {
               <span className="text-base font-normal text-zinc-400">cUSDC</span>
             </div>
             <p className="text-zinc-400 text-xs sm:text-sm mt-2 max-w-md">
-              Accumulated prize yield evaluated blindly via Torus FHE coprocessor.
+              Accumulated yield compounds in 24h cycles. Requires a minimum <span className="text-amber-400 font-semibold">$25.00 cUSDC</span> jackpot threshold to trigger onchain execution.
             </p>
+
+            {/* Threshold Progress Bar */}
+            <div className="mt-4 max-w-sm">
+              <div className="flex items-center justify-between text-[11px] font-mono mb-1.5 text-zinc-400">
+                <span>Jackpot Threshold Progress</span>
+                <span className={activeEvent.prizeAmount >= 25 ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
+                  ${activeEvent.prizeAmount.toFixed(2)} / $25.00
+                </span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    activeEvent.prizeAmount >= 25 ? 'bg-emerald-500' : 'bg-linear-to-r from-amber-500 to-amber-400'
+                  }`}
+                  style={{ width: `${Math.min(100, (activeEvent.prizeAmount / 25) * 100)}%` }}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col items-start sm:items-end gap-3">
@@ -118,14 +136,16 @@ export const EventsPage: React.FC = () => {
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono">
               <Clock className="w-3.5 h-3.5 text-zinc-400" />
               <span className="text-zinc-400">Cycle Countdown:</span>
-              <span className="text-emerald-400 font-semibold">
+              <span className={activeEvent.prizeAmount >= 25 && timeLeft.isExpired ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'}>
                 {timeLeft.isExpired
-                  ? 'Ready for Draw'
+                  ? activeEvent.prizeAmount >= 25
+                    ? 'Threshold Met · Executing'
+                    : 'Rollover Active (Compounding)'
                   : `${String(timeLeft.hours).padStart(2, '0')}h ${String(timeLeft.minutes).padStart(2, '0')}m ${String(timeLeft.seconds).padStart(2, '0')}s`}
               </span>
             </div>
 
-            {/* Autonomous Network Keeper Status Indicator (Zero manual execution required) */}
+            {/* Autonomous Network Keeper Status Indicator */}
             {isComputingEvent ? (
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs font-mono shadow-md animate-pulse">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
@@ -138,7 +158,9 @@ export const EventsPage: React.FC = () => {
                   <span className="font-semibold">Autonomous Keeper Active</span>
                 </div>
                 <span className="text-[10px] font-mono text-zinc-400">
-                  Executed automatically onchain · Zero user gas required
+                  {activeEvent.prizeAmount >= 25
+                    ? 'Threshold reached · Autonomous trigger armed'
+                    : 'Auto-rolls over every 24h until $25.00 reached'}
                 </span>
               </div>
             )}
