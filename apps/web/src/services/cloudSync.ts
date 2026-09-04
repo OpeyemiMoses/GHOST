@@ -9,6 +9,7 @@ export interface GlobalSyncPayload {
     createdAt: number;
   }>;
   deposits: Record<string, number>;
+  transactions?: Record<string, any[]>;
   activeEvent: {
     eventId: number;
     status: 'OPEN' | 'COMPUTING_FHE' | 'FINALIZED';
@@ -24,6 +25,7 @@ export interface GlobalSyncPayload {
   };
   pastEvents: any[];
   prizePool: number;
+  isReset?: boolean;
   lastUpdated: number;
 }
 
@@ -32,14 +34,17 @@ const PUBLISH_URL = `https://ntfy.sh/${TOPIC}`;
 const POLL_URL = `https://ntfy.sh/${TOPIC}/json?poll=1&since=24h`;
 const SSE_URL = `https://ntfy.sh/${TOPIC}/sse`;
 
+const DEFAULT_START_TIME = 1725436800000;
+
 let cachedState: GlobalSyncPayload = {
   accountsDb: {},
   deposits: {},
+  transactions: {},
   activeEvent: {
     eventId: 1,
     status: 'OPEN',
-    startTime: Date.now() - 3600000 * 2,
-    endTime: Date.now() + 3600000 * 22,
+    startTime: DEFAULT_START_TIME,
+    endTime: DEFAULT_START_TIME + 3600000 * 24,
     prizeAmount: 0,
     encryptedPrizeHandle: '0x0000000000000000000000000000000000000000000000000000000000000000',
     winnerAddress: 'Pending Onchain Draw',
@@ -80,11 +85,25 @@ function processMessage(msgStr: string) {
     const parsed = JSON.parse(msgStr);
     if (!parsed || typeof parsed !== 'object') return;
 
+    if (parsed.isReset) {
+      cachedState.deposits = parsed.deposits || {};
+      cachedState.transactions = parsed.transactions || {};
+      cachedState.activeEvent = parsed.activeEvent || cachedState.activeEvent;
+      cachedState.pastEvents = parsed.pastEvents || [];
+      cachedState.prizePool = 0;
+      cachedState.lastUpdated = parsed.lastUpdated || Date.now();
+      notifyListeners();
+      return;
+    }
+
     if (parsed.accountsDb) {
       cachedState.accountsDb = { ...cachedState.accountsDb, ...parsed.accountsDb };
     }
     if (parsed.deposits) {
       cachedState.deposits = { ...cachedState.deposits, ...parsed.deposits };
+    }
+    if (parsed.transactions) {
+      cachedState.transactions = { ...cachedState.transactions, ...parsed.transactions };
     }
     if (parsed.activeEvent && typeof parsed.activeEvent.eventId === 'number') {
       if (parsed.activeEvent.eventId >= cachedState.activeEvent.eventId) {
