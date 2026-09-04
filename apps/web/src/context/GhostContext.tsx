@@ -58,6 +58,7 @@ export interface ToastItem {
 
 export interface TransactionRecord {
   id: string;
+  ownerAddress?: string;
   type: 'Deposit' | 'Withdraw' | 'Prize Won' | 'Mint cUSDC';
   amount: number;
   encryptedHandle: string;
@@ -190,12 +191,27 @@ async function hashPassword(password: string): Promise<string> {
 // Clean state reset for wallet isolation & privacy
 if (typeof window !== 'undefined') {
   try {
-    const version = localStorage.getItem('ghost_storage_v8_wallet_isolation');
+    const version = localStorage.getItem('ghost_storage_v10_clean_wallet_state');
     if (!version) {
-      // Remove legacy global prize keys that leaked across addresses
-      localStorage.removeItem('ghost_unclaimed_prizes');
-      localStorage.removeItem('ghost_claimed_prizes');
-      localStorage.setItem('ghost_storage_v8_wallet_isolation', 'active');
+      // Clear all legacy and cross-contaminated keys to guarantee 100% clean isolation
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (
+          k &&
+          (k.startsWith('ghost_balance_') ||
+           k.startsWith('ghost_yield_') ||
+           k.startsWith('ghost_txs_') ||
+           k.startsWith('ghost_wallet_tokens_') ||
+           k.startsWith('ghost_handle_') ||
+           k.startsWith('ghost_unclaimed_prizes') ||
+           k.startsWith('ghost_claimed_prizes'))
+        ) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+      localStorage.setItem('ghost_storage_v10_clean_wallet_state', 'active');
     }
   } catch (e) {
     // Ignore
@@ -542,7 +558,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (savedTxs) {
       try {
-        setTransactions(JSON.parse(savedTxs));
+        const parsed: TransactionRecord[] = JSON.parse(savedTxs);
+        setTransactions(parsed.filter((tx) => !tx.ownerAddress || tx.ownerAddress.toLowerCase() === key));
       } catch {
         setTransactions([]);
       }
@@ -585,6 +602,25 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     loadedAddressRef.current = key;
   }, [address]);
 
+  const disconnectWallet = () => {
+    try {
+      disconnect();
+    } catch {
+      // Ignore
+    }
+    loadedAddressRef.current = null;
+    setWalletTokenBalance(0);
+    setUserBalance(0);
+    setUserYield(0);
+    setEncryptedHandle('0x7f4e8b91c2d3a4b5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9');
+    setTransactions([]);
+    setUnclaimedPrizes([]);
+    setClaimedPrizes([]);
+    setIsSessionAuthorized(false);
+    setIsDecrypted(false);
+    setDecryptionSignature(null);
+  };
+
   const [isMinting, setIsMinting] = useState<boolean>(false);
 
   // Mint Testnet cUSDC Faucet Handler
@@ -625,6 +661,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const newWalletBalance = walletTokenBalance + amount;
       const newTx: TransactionRecord = {
         id: `tx_mint_${Date.now()}`,
+        ownerAddress: address.toLowerCase(),
         type: 'Mint cUSDC',
         amount,
         encryptedHandle: generateCiphertextHandle(amount, address),
@@ -787,6 +824,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const newTx: TransactionRecord = {
       id: `tx_${Date.now()}`,
+      ownerAddress: address.toLowerCase(),
       type: 'Deposit',
       amount,
       encryptedHandle: newHandle,
@@ -864,6 +902,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const newTx: TransactionRecord = {
       id: `tx_${Date.now()}`,
+      ownerAddress: address.toLowerCase(),
       type: 'Withdraw',
       amount,
       encryptedHandle: newHandle,
@@ -931,6 +970,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const claimTx: TransactionRecord = {
       id: `tx_claim_${Date.now()}`,
+      ownerAddress: address.toLowerCase(),
       type: 'Prize Won',
       amount: prize.amount,
       encryptedHandle: generateCiphertextHandle(prize.amount, address),
@@ -1076,7 +1116,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         walletConnected: isConnected,
         userAddress: formattedAddress,
         rawAddress: address,
-        disconnectWallet: disconnect,
+        disconnectWallet,
         isSessionAuthorized,
         requestSessionAuthorization,
         isDecrypted,
