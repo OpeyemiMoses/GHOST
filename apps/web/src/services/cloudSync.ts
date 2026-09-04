@@ -12,6 +12,8 @@ export interface GlobalSyncPayload {
   transactions?: Record<string, any[]>;
   unclaimedPrizes?: Record<string, any[]>;
   claimedPrizes?: Record<string, any[]>;
+  yieldCheckpoints?: Record<string, { accrued: number; lastTime: number; balance: number }>;
+  poolAccumulator?: { accrued: number; lastTime: number; lastTvl: number };
   activeEvent: {
     eventId: number;
     status: 'OPEN' | 'COMPUTING_FHE' | 'FINALIZED';
@@ -44,6 +46,8 @@ let cachedState: GlobalSyncPayload = {
   transactions: {},
   unclaimedPrizes: {},
   claimedPrizes: {},
+  yieldCheckpoints: {},
+  poolAccumulator: { accrued: 0, lastTime: Date.now(), lastTvl: 0 },
   activeEvent: {
     eventId: 1,
     status: 'OPEN',
@@ -94,6 +98,8 @@ function processMessage(msgStr: string) {
       cachedState.transactions = parsed.transactions || {};
       cachedState.unclaimedPrizes = {};
       cachedState.claimedPrizes = {};
+      cachedState.yieldCheckpoints = {};
+      cachedState.poolAccumulator = { accrued: 0, lastTime: Date.now(), lastTvl: 0 };
       cachedState.activeEvent = parsed.activeEvent || cachedState.activeEvent;
       cachedState.pastEvents = parsed.pastEvents || [];
       cachedState.prizePool = 0;
@@ -116,6 +122,12 @@ function processMessage(msgStr: string) {
     }
     if (parsed.claimedPrizes) {
       cachedState.claimedPrizes = { ...cachedState.claimedPrizes, ...parsed.claimedPrizes };
+    }
+    if (parsed.yieldCheckpoints && typeof parsed.yieldCheckpoints === 'object') {
+      cachedState.yieldCheckpoints = { ...cachedState.yieldCheckpoints, ...parsed.yieldCheckpoints };
+    }
+    if (parsed.poolAccumulator && typeof parsed.poolAccumulator.accrued === 'number') {
+      cachedState.poolAccumulator = parsed.poolAccumulator;
     }
     if (parsed.activeEvent && typeof parsed.activeEvent.eventId === 'number') {
       if (parsed.activeEvent.eventId >= cachedState.activeEvent.eventId) {

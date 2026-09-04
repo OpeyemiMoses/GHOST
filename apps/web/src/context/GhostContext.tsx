@@ -1056,9 +1056,70 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // 2. Sync deposits map across all devices
       if (data.deposits && typeof data.deposits === 'object') {
         setCloudDeposits((prev) => ({ ...prev, ...data.deposits }));
+        if (address) {
+          const myKey = address.toLowerCase();
+          if (typeof data.deposits[myKey] === 'number') {
+            const cloudBal = data.deposits[myKey];
+            setUserBalance(cloudBal);
+            setEncryptedHandle(generateCiphertextHandle(cloudBal, address));
+            try {
+              localStorage.setItem(`ghost_balance_${myKey}`, cloudBal.toString());
+            } catch {
+              // Ignore
+            }
+          }
+        }
       }
 
-      // 3. Sync transactions for active address
+      // 3. Sync yield checkpoints across devices
+      if (data.yieldCheckpoints && typeof data.yieldCheckpoints === 'object') {
+        for (const addr in data.yieldCheckpoints) {
+          const cp = data.yieldCheckpoints[addr];
+          if (cp && typeof cp.accrued === 'number') {
+            try {
+              localStorage.setItem(`ghost_accrued_yield_${addr}`, cp.accrued.toString());
+              localStorage.setItem(`ghost_yield_checkpoint_${addr}`, cp.lastTime.toString());
+              localStorage.setItem(`ghost_yield_${addr}`, cp.accrued.toFixed(4));
+              if (typeof cp.balance === 'number') {
+                localStorage.setItem(`ghost_balance_${addr}`, cp.balance.toString());
+              }
+            } catch {
+              // Ignore
+            }
+            if (address && address.toLowerCase() === addr.toLowerCase()) {
+              setUserYield(+cp.accrued.toFixed(4));
+              if (typeof cp.balance === 'number') {
+                setUserBalance(cp.balance);
+                setEncryptedHandle(generateCiphertextHandle(cp.balance, address));
+              }
+            }
+          }
+        }
+      }
+
+      // 4. Sync protocol pool accumulator across devices
+      if (data.poolAccumulator && typeof data.poolAccumulator.accrued === 'number') {
+        const cloudAcc = data.poolAccumulator;
+        if (
+          cloudAcc.lastTime >= poolAccumulatorRef.current.lastTime ||
+          cloudAcc.accrued >= poolAccumulatorRef.current.accrued ||
+          poolAccumulatorRef.current.lastTvl === 0
+        ) {
+          poolAccumulatorRef.current = {
+            accrued: cloudAcc.accrued,
+            lastTime: cloudAcc.lastTime,
+            lastTvl: cloudAcc.lastTvl > 0 ? cloudAcc.lastTvl : getVaultTotalDeposits(),
+          };
+          try {
+            localStorage.setItem('ghost_pool_accrued', cloudAcc.accrued.toString());
+            localStorage.setItem('ghost_pool_checkpoint_time', cloudAcc.lastTime.toString());
+          } catch {
+            // Ignore
+          }
+        }
+      }
+
+      // 5. Sync transactions for active address
       if (data.transactions && address && data.transactions[address.toLowerCase()]) {
         const cloudTxs = data.transactions[address.toLowerCase()];
         if (Array.isArray(cloudTxs)) {
@@ -1070,7 +1131,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       }
 
-      // 4. Sync active draw event
+      // 6. Sync active draw event
       if (data.activeEvent && typeof data.activeEvent.eventId === 'number') {
         setActiveEvent((prev) => {
           if (data.activeEvent.eventId >= prev.eventId) {
@@ -1084,12 +1145,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
       }
 
-      // 5. Sync past events
+      // 7. Sync past events
       if (Array.isArray(data.pastEvents) && data.pastEvents.length > 0) {
         setPastEvents(data.pastEvents);
       }
 
-      // 6. Sync unclaimed prizes for active address
+      // 8. Sync unclaimed prizes for active address
       if (data.unclaimedPrizes && address && data.unclaimedPrizes[address.toLowerCase()]) {
         const cloudPrizes = data.unclaimedPrizes[address.toLowerCase()];
         if (Array.isArray(cloudPrizes)) {
@@ -1101,7 +1162,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       }
 
-      // 7. Sync claimed prizes for active address
+      // 9. Sync claimed prizes for active address
       if (data.claimedPrizes && address && data.claimedPrizes[address.toLowerCase()]) {
         const cloudClaimed = data.claimedPrizes[address.toLowerCase()];
         if (Array.isArray(cloudClaimed)) {
@@ -1421,6 +1482,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       pushGlobalCloudState({
         deposits: { [key]: newBalance },
         transactions: { [key]: updatedTxs },
+        yieldCheckpoints: { [key]: { accrued: updatedAccrued, lastTime: now, balance: newBalance } },
+        poolAccumulator: {
+          accrued: poolAccumulatorRef.current.accrued,
+          lastTime: poolAccumulatorRef.current.lastTime,
+          lastTvl: poolAccumulatorRef.current.lastTvl,
+        },
         lastUpdated: Date.now(),
       }).catch(() => {});
 
@@ -1528,6 +1595,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       pushGlobalCloudState({
         deposits: { [key]: newBalance },
         transactions: { [key]: updatedTxs },
+        yieldCheckpoints: { [key]: { accrued: updatedAccrued, lastTime: now, balance: newBalance } },
+        poolAccumulator: {
+          accrued: poolAccumulatorRef.current.accrued,
+          lastTime: poolAccumulatorRef.current.lastTime,
+          lastTvl: poolAccumulatorRef.current.lastTvl,
+        },
         lastUpdated: Date.now(),
       }).catch(() => {});
 
