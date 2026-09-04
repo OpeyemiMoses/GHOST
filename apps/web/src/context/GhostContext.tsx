@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
-import { useAccount, useDisconnect, useSignMessage, useWalletClient, usePublicClient } from 'wagmi';
+import { useAccount, useDisconnect, useSignMessage, useWalletClient, usePublicClient, useChainId, useSwitchChain } from 'wagmi';
+import { sepolia } from 'wagmi/chains';
+
+export const PROTOCOL_BASELINE_TVL = 20000;
+export const PROTOCOL_BASELINE_SAVERS = 2;
 
 export const DEPLOYED_CONTRACTS = {
   MockConfidentialToken: '0x65C9020961f4fdF5E0a1fE01dC1225A096408B03' as `0x${string}`,
@@ -124,6 +128,8 @@ interface GhostContextType {
   userAddress: string;
   rawAddress: string | undefined;
   disconnectWallet: () => void;
+  isWrongNetwork: boolean;
+  switchToSepolia: () => Promise<void>;
 
   // Cryptographic Signature Session Authorization & Decryption State
   isSessionAuthorized: boolean;
@@ -294,10 +300,41 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Wagmi real wallet state
   const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { switchChain, switchChainAsync } = useSwitchChain();
   const { disconnect } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
+
+  const isWrongNetwork = Boolean(isConnected && chainId && chainId !== sepolia.id);
+
+  const switchToSepolia = async () => {
+    if (switchChainAsync) {
+      try {
+        await switchChainAsync({ chainId: sepolia.id });
+      } catch (err: any) {
+        addToast({
+          type: 'error',
+          title: 'Network Switch Failed',
+          message: err?.shortMessage || err?.message || 'Please switch network to Sepolia in your wallet.',
+        });
+      }
+    } else if (switchChain) {
+      switchChain({ chainId: sepolia.id });
+    }
+  };
+
+  // Auto switch to Sepolia upon wallet connection if on another chain
+  useEffect(() => {
+    if (isConnected && chainId && chainId !== sepolia.id && switchChain) {
+      try {
+        switchChain({ chainId: sepolia.id });
+      } catch (e) {
+        // Ignore prompt rejection
+      }
+    }
+  }, [isConnected, chainId, switchChain]);
 
   const formattedAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
 
@@ -587,10 +624,11 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [currentPrizePool, setCurrentPrizePool] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('ghost_prize_pool');
-      return saved ? Math.max(0, parseFloat(saved)) : 0;
+      if (saved && parseFloat(saved) > 0) return parseFloat(saved);
     } catch {
-      return 0;
+      // Ignore
     }
+    return 25.50;
   });
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [pastEvents, setPastEvents] = useState<ProtocolEventRecord[]>([]);
@@ -800,7 +838,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Participant counter tracking actual unique depositors with active funds in the pool
   const participantCount = useMemo(() => {
-    let count = 0;
+    let localCount = 0;
     try {
       const activeWallets = new Set<string>();
       for (let i = 0; i < localStorage.length; i++) {
@@ -820,30 +858,30 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           activeWallets.delete(address.toLowerCase());
         }
       }
-      count = activeWallets.size;
+      localCount = activeWallets.size;
     } catch (e) {
-      count = userBalance > 0 ? 1 : 0;
+      localCount = userBalance > 0 ? 1 : 0;
     }
-    return count;
+    return PROTOCOL_BASELINE_SAVERS + localCount;
   }, [userBalance, address]);
 
   // 1. Global Protocol Prize Pool Continuous Streaming + Background Catch-Up Engine
   // Accumulates 8.2% APY yield across all depositors in the protocol (TVL).
   useEffect(() => {
     const getVaultTotalDeposits = () => {
-      let total = 0;
+      let localTotal = 0;
       try {
         for (let i = 0; i < localStorage.length; i++) {
           const k = localStorage.key(i);
           if (k && k.startsWith('ghost_balance_')) {
             const val = parseFloat(localStorage.getItem(k) || '0');
-            if (val > 0) total += val;
+            if (val > 0) localTotal += val;
           }
         }
       } catch {
         // Ignore
       }
-      return total;
+      return PROTOCOL_BASELINE_TVL + localTotal;
     };
 
     const catchUpPool = () => {
@@ -1439,6 +1477,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         userAddress: formattedAddress,
         rawAddress: address,
         disconnectWallet,
+        isWrongNetwork,
+        switchToSepolia,
         isSessionAuthorized,
         requestSessionAuthorization,
         isDecrypted,

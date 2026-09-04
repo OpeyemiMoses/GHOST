@@ -21,7 +21,9 @@ export const ConnectGatewayPage: React.FC = () => {
     loginAccount,
     logoutAccount,
     bindWalletToAccount,
-    isWalletMatchingBound
+    isWalletMatchingBound,
+    isWrongNetwork,
+    switchToSepolia,
   } = useGhost();
 
   const { openConnectModal } = useConnectModal();
@@ -131,10 +133,21 @@ export const ConnectGatewayPage: React.FC = () => {
             />
           </button>
           
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-[10px] sm:text-[11px] font-mono text-zinc-400 shadow-md">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Sepolia Testnet</span>
-          </div>
+          {isWrongNetwork ? (
+            <button
+              onClick={switchToSepolia}
+              className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/90 border border-red-800 text-[10px] sm:text-[11px] font-mono text-red-300 shadow-md cursor-pointer hover:bg-red-900 transition-colors animate-pulse"
+              title="Click to switch to Ethereum Sepolia"
+            >
+              <span className="w-2 h-2 rounded-full bg-red-400" />
+              <span>Switch to Sepolia</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-[10px] sm:text-[11px] font-mono text-zinc-400 shadow-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Sepolia Testnet</span>
+            </div>
+          )}
         </div>
 
         {/* Center Visual Photograph / 3D Animated Vault Stage */}

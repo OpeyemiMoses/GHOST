@@ -45,6 +45,8 @@ export const VaultPage: React.FC = () => {
     activeEvent,
     transactions,
     participantCount,
+    isWrongNetwork,
+    switchToSepolia,
   } = useGhost();
 
   const { openConnectModal } = useConnectModal();
@@ -141,10 +143,21 @@ export const VaultPage: React.FC = () => {
           </div>
 
           {/* Network Indicator Pill */}
-          <div className="px-3 py-1 rounded-full bg-white border border-zinc-200 text-zinc-700 shadow-2xs flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Ethereum Sepolia</span>
-          </div>
+          {isWrongNetwork ? (
+            <button
+              onClick={switchToSepolia}
+              className="px-3 py-1 rounded-full bg-red-50 border border-red-300 text-red-700 font-semibold shadow-2xs hover:bg-red-100 flex items-center gap-1.5 cursor-pointer animate-pulse"
+              title="Click to switch to Ethereum Sepolia"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
+              <span>Switch to Sepolia</span>
+            </button>
+          ) : (
+            <div className="px-3 py-1 rounded-full bg-white border border-zinc-200 text-zinc-700 shadow-2xs flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Ethereum Sepolia</span>
+            </div>
+          )}
 
           {/* Connected Account / Disconnect Wallet Trigger */}
           {walletConnected ? (
