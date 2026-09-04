@@ -17,8 +17,7 @@ import {
   Check,
   Coins,
   RefreshCw,
-  LogOut,
-  RotateCcw
+  LogOut
 } from 'lucide-react';
 
 export const VaultPage: React.FC = () => {
@@ -179,20 +178,6 @@ export const VaultPage: React.FC = () => {
               Connect Wallet
             </button>
           )}
-
-          {/* Clean Slate Reset Button */}
-          <button
-            onClick={() => {
-              if (window.confirm('Reset all demo state, vault balances, and prize draws to start completely fresh?')) {
-                resetProtocolState();
-              }
-            }}
-            title="Reset demo state to start afresh"
-            className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-semibold border border-zinc-200 shadow-2xs transition-all cursor-pointer flex items-center gap-1.5 text-xs"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
-            <span className="hidden sm:inline">Reset State</span>
-          </button>
 
         </div>
 

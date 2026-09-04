@@ -218,12 +218,12 @@ export const getViewFromHash = (): string | null => {
 // One-time automatic clean slate purge across all clients and wallets
 if (typeof window !== 'undefined') {
   try {
-    const CLEAN_SLATE_KEY = 'ghost_clean_slate_v7';
+    const CLEAN_SLATE_KEY = 'ghost_clean_slate_v9_full_wipe';
     if (!localStorage.getItem(CLEAN_SLATE_KEY)) {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && k.startsWith('ghost_')) {
+        if (k && (k.startsWith('ghost_') || k.startsWith('wagmi') || k.startsWith('rk-'))) {
           keysToRemove.push(k);
         }
       }
