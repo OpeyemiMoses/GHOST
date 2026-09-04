@@ -780,25 +780,58 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setTransactions([]);
     }
 
-    if (savedUnclaimed) {
-      try {
-        setUnclaimedPrizes(JSON.parse(savedUnclaimed));
-      } catch {
-        setUnclaimedPrizes([]);
-      }
-    } else {
-      setUnclaimedPrizes([]);
-    }
+    let initialUnclaimed: PrizeRecord[] = [];
+    let initialClaimed: PrizeRecord[] = [];
 
     if (savedClaimed) {
       try {
-        setClaimedPrizes(JSON.parse(savedClaimed));
+        initialClaimed = JSON.parse(savedClaimed);
       } catch {
-        setClaimedPrizes([]);
+        initialClaimed = [];
       }
-    } else {
-      setClaimedPrizes([]);
     }
+    if (savedUnclaimed) {
+      try {
+        initialUnclaimed = JSON.parse(savedUnclaimed);
+      } catch {
+        initialUnclaimed = [];
+      }
+    }
+
+    // Auto-reconcile won draws from pastEvents for connected wallet
+    if (savedPastEvents) {
+      try {
+        const parsedEvents: ProtocolEventRecord[] = JSON.parse(savedPastEvents);
+        const claimedEventIds = new Set(initialClaimed.map((p) => p.eventId));
+        const unclaimedEventIds = new Set(initialUnclaimed.map((p) => p.eventId));
+
+        for (const ev of parsedEvents) {
+          if (
+            ev.status === 'FINALIZED' &&
+            ev.winnerAddress &&
+            ev.winnerAddress.toLowerCase() === key &&
+            !claimedEventIds.has(ev.eventId) &&
+            !unclaimedEventIds.has(ev.eventId)
+          ) {
+            initialUnclaimed.push({
+              id: `prize_${ev.eventId}_${Date.now()}`,
+              eventId: ev.eventId,
+              winnerAddress: key,
+              amount: ev.prizeAmount > 0 ? ev.prizeAmount : 25.0,
+              encryptedHandle: ev.encryptedPrizeHandle || generateCiphertextHandle(ev.prizeAmount, 'GhostDraw'),
+              drawTxHash: ev.txHash || '',
+              timestamp: ev.endTime || Date.now(),
+              status: 'UNCLAIMED',
+            });
+          }
+        }
+      } catch {
+        // Ignore
+      }
+    }
+
+    setUnclaimedPrizes(initialUnclaimed);
+    setClaimedPrizes(initialClaimed);
 
     if (savedPool !== null) setCurrentPrizePool(Math.max(0, parseFloat(savedPool)));
     if (savedPastEvents) {
@@ -1056,6 +1089,30 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // 5. Sync past events
       if (Array.isArray(data.pastEvents) && data.pastEvents.length > 0) {
         setPastEvents(data.pastEvents);
+      }
+
+      // 6. Sync unclaimed prizes for active address
+      if (data.unclaimedPrizes && address && data.unclaimedPrizes[address.toLowerCase()]) {
+        const cloudPrizes = data.unclaimedPrizes[address.toLowerCase()];
+        if (Array.isArray(cloudPrizes)) {
+          setUnclaimedPrizes((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id));
+            const newOnes = cloudPrizes.filter((p) => !existingIds.has(p.id));
+            return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
+          });
+        }
+      }
+
+      // 7. Sync claimed prizes for active address
+      if (data.claimedPrizes && address && data.claimedPrizes[address.toLowerCase()]) {
+        const cloudClaimed = data.claimedPrizes[address.toLowerCase()];
+        if (Array.isArray(cloudClaimed)) {
+          setClaimedPrizes((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id));
+            const newOnes = cloudClaimed.filter((p) => !existingIds.has(p.id));
+            return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
+          });
+        }
       }
     });
 
@@ -1439,8 +1496,11 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         claimTimestamp: Date.now(),
       };
 
-      setUnclaimedPrizes((prev) => prev.filter((p) => p.id !== prizeId));
-      setClaimedPrizes((prev) => [claimedRecord, ...prev]);
+      const updatedUnclaimed = unclaimedPrizes.filter((p) => p.id !== prizeId);
+      const updatedClaimed = [claimedRecord, ...claimedPrizes];
+
+      setUnclaimedPrizes(updatedUnclaimed);
+      setClaimedPrizes(updatedClaimed);
       setWalletTokenBalance((b) => b + prize.amount);
 
       const claimTx: TransactionRecord = {
@@ -1454,6 +1514,20 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         status: 'Confirmed',
       };
       setTransactions((prev) => [claimTx, ...prev]);
+
+      try {
+        localStorage.setItem(`ghost_unclaimed_prizes_${address.toLowerCase()}`, JSON.stringify(updatedUnclaimed));
+        localStorage.setItem(`ghost_claimed_prizes_${address.toLowerCase()}`, JSON.stringify(updatedClaimed));
+      } catch {
+        // Ignore
+      }
+
+      // Broadcast claimed prize update to global cloud relay
+      pushGlobalCloudState({
+        unclaimedPrizes: { [address.toLowerCase()]: updatedUnclaimed },
+        claimedPrizes: { [address.toLowerCase()]: updatedClaimed },
+        lastUpdated: Date.now(),
+      }).catch(() => {});
 
       addToast({
         type: 'success',
@@ -1513,13 +1587,23 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       await new Promise((resolve) => setTimeout(resolve, 3200));
     }
 
-    const winner = address || '0x742d35Cc6634C0532925a3b844Bc454e4438f44e';
+    // Pick winner dynamically from all active depositors or connected user
+    const activeDepositors = Object.keys(cloudDeposits).filter((k) => cloudDeposits[k] > 0);
+    if (address && !activeDepositors.includes(address.toLowerCase())) {
+      activeDepositors.push(address.toLowerCase());
+    }
+    const winner = activeDepositors.length > 0
+      ? activeDepositors[Math.floor(Math.random() * activeDepositors.length)]
+      : (address || '0x742d35Cc6634C0532925a3b844Bc454e4438f44e');
+
+    const finalPrizeAmount = activeEvent.prizeAmount > 0 ? activeEvent.prizeAmount : 25.0;
     const randomness = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
     const stateRoot = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
 
     const finalized: ProtocolEventRecord = {
       ...activeEvent,
       status: 'FINALIZED',
+      prizeAmount: finalPrizeAmount,
       winnerAddress: winner,
       randomnessCommitment: randomness,
       stateRoot,
@@ -1529,37 +1613,37 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setPastEvents((prev) => [finalized, ...prev]);
 
-    // If prize amount > 0, register as UNCLAIMED prize for the winner (DO NOT auto-credit!)
-    if (activeEvent.prizeAmount > 0) {
-      const prizeId = `prize_${Date.now()}_${activeEvent.eventId}`;
-      const newPrize: PrizeRecord = {
-        id: prizeId,
-        eventId: activeEvent.eventId,
-        winnerAddress: winner,
-        amount: activeEvent.prizeAmount,
-        encryptedHandle: activeEvent.encryptedPrizeHandle || generateCiphertextHandle(activeEvent.prizeAmount, 'GhostDraw'),
-        drawTxHash: txHash,
-        timestamp: Date.now(),
-        status: 'UNCLAIMED',
-      };
-      
-      const winnerKey = winner.toLowerCase();
-      try {
-        const existingWinnerPrizesRaw = localStorage.getItem(`ghost_unclaimed_prizes_${winnerKey}`);
-        const existingWinnerPrizes: PrizeRecord[] = existingWinnerPrizesRaw ? JSON.parse(existingWinnerPrizesRaw) : [];
-        localStorage.setItem(`ghost_unclaimed_prizes_${winnerKey}`, JSON.stringify([newPrize, ...existingWinnerPrizes]));
-      } catch (e) {
-        // Ignore
-      }
+    // Register as UNCLAIMED prize for the winner (DO NOT auto-credit!)
+    const prizeId = `prize_${Date.now()}_${activeEvent.eventId}`;
+    const newPrize: PrizeRecord = {
+      id: prizeId,
+      eventId: activeEvent.eventId,
+      winnerAddress: winner,
+      amount: finalPrizeAmount,
+      encryptedHandle: activeEvent.encryptedPrizeHandle || generateCiphertextHandle(finalPrizeAmount, 'GhostDraw'),
+      drawTxHash: txHash,
+      timestamp: Date.now(),
+      status: 'UNCLAIMED',
+    };
+    
+    const winnerKey = winner.toLowerCase();
+    let updatedWinnerPrizes: PrizeRecord[] = [newPrize];
+    try {
+      const existingWinnerPrizesRaw = localStorage.getItem(`ghost_unclaimed_prizes_${winnerKey}`);
+      const existingWinnerPrizes: PrizeRecord[] = existingWinnerPrizesRaw ? JSON.parse(existingWinnerPrizesRaw) : [];
+      updatedWinnerPrizes = [newPrize, ...existingWinnerPrizes.filter((p) => p.id !== prizeId)];
+      localStorage.setItem(`ghost_unclaimed_prizes_${winnerKey}`, JSON.stringify(updatedWinnerPrizes));
+    } catch (e) {
+      // Ignore
+    }
 
-      if (address && winnerKey === address.toLowerCase()) {
-        setUnclaimedPrizes((prev) => [newPrize, ...prev]);
-        addToast({
-          type: 'success',
-          title: '🎉 You Won the Draw!',
-          message: `Event #${activeEvent.eventId} settled! $${activeEvent.prizeAmount.toFixed(2)} cUSDC is waiting to be claimed to your wallet.`,
-        });
-      }
+    if (address && winnerKey === address.toLowerCase()) {
+      setUnclaimedPrizes(updatedWinnerPrizes);
+      addToast({
+        type: 'success',
+        title: '🎉 You Won the Draw!',
+        message: `Event #${activeEvent.eventId} settled! $${finalPrizeAmount.toFixed(2)} cUSDC is waiting to be claimed to your wallet.`,
+      });
     }
 
     const nextEvent: ProtocolEventRecord = {
@@ -1579,10 +1663,11 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCurrentPrizePool(0);
     setActiveEvent(nextEvent);
 
-    // Broadcast draw settlement and new round to global cloud relay
+    // Broadcast draw settlement, next round, AND new unclaimed prize to all devices worldwide
     pushGlobalCloudState({
       activeEvent: nextEvent,
       pastEvents: [finalized, ...pastEvents],
+      unclaimedPrizes: { [winnerKey]: updatedWinnerPrizes },
       prizePool: 0,
       lastUpdated: Date.now(),
     }).catch(() => {});

@@ -10,6 +10,8 @@ export interface GlobalSyncPayload {
   }>;
   deposits: Record<string, number>;
   transactions?: Record<string, any[]>;
+  unclaimedPrizes?: Record<string, any[]>;
+  claimedPrizes?: Record<string, any[]>;
   activeEvent: {
     eventId: number;
     status: 'OPEN' | 'COMPUTING_FHE' | 'FINALIZED';
@@ -40,6 +42,8 @@ let cachedState: GlobalSyncPayload = {
   accountsDb: {},
   deposits: {},
   transactions: {},
+  unclaimedPrizes: {},
+  claimedPrizes: {},
   activeEvent: {
     eventId: 1,
     status: 'OPEN',
@@ -88,6 +92,8 @@ function processMessage(msgStr: string) {
     if (parsed.isReset) {
       cachedState.deposits = parsed.deposits || {};
       cachedState.transactions = parsed.transactions || {};
+      cachedState.unclaimedPrizes = {};
+      cachedState.claimedPrizes = {};
       cachedState.activeEvent = parsed.activeEvent || cachedState.activeEvent;
       cachedState.pastEvents = parsed.pastEvents || [];
       cachedState.prizePool = 0;
@@ -104,6 +110,12 @@ function processMessage(msgStr: string) {
     }
     if (parsed.transactions) {
       cachedState.transactions = { ...cachedState.transactions, ...parsed.transactions };
+    }
+    if (parsed.unclaimedPrizes) {
+      cachedState.unclaimedPrizes = { ...cachedState.unclaimedPrizes, ...parsed.unclaimedPrizes };
+    }
+    if (parsed.claimedPrizes) {
+      cachedState.claimedPrizes = { ...cachedState.claimedPrizes, ...parsed.claimedPrizes };
     }
     if (parsed.activeEvent && typeof parsed.activeEvent.eventId === 'number') {
       if (parsed.activeEvent.eventId >= cachedState.activeEvent.eventId) {
