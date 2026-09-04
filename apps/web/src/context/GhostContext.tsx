@@ -191,30 +191,24 @@ async function hashPassword(password: string): Promise<string> {
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Clean state reset for wallet isolation & privacy
+// One-time clean state reset to start all rounds, balances, and tickets completely afresh
 if (typeof window !== 'undefined') {
   try {
-    const version = localStorage.getItem('ghost_storage_v10_clean_wallet_state');
+    const version = localStorage.getItem('ghost_storage_v11_fresh_round_reset');
     if (!version) {
-      // Clear all legacy and cross-contaminated keys to guarantee 100% clean isolation
+      // Clear all historical round data, contaminated balances, and previous events
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (
-          k &&
-          (k.startsWith('ghost_balance_') ||
-           k.startsWith('ghost_yield_') ||
-           k.startsWith('ghost_txs_') ||
-           k.startsWith('ghost_wallet_tokens_') ||
-           k.startsWith('ghost_handle_') ||
-           k.startsWith('ghost_unclaimed_prizes') ||
-           k.startsWith('ghost_claimed_prizes'))
-        ) {
+        if (k && k.startsWith('ghost_')) {
           keysToRemove.push(k);
         }
       }
       keysToRemove.forEach((k) => localStorage.removeItem(k));
-      localStorage.setItem('ghost_storage_v10_clean_wallet_state', 'active');
+      localStorage.setItem('ghost_storage_v11_fresh_round_reset', 'active');
+      localStorage.setItem('ghost_prize_pool', '25.00');
+      localStorage.setItem('ghost_past_events', '[]');
+      localStorage.setItem('ghost_last_pool_time', Date.now().toString());
     }
   } catch (e) {
     // Ignore

@@ -17,7 +17,6 @@ import {
   Check,
   Coins,
   RefreshCw,
-  RotateCcw,
   LogOut
 } from 'lucide-react';
 
@@ -46,7 +45,6 @@ export const VaultPage: React.FC = () => {
     activeEvent,
     transactions,
     participantCount,
-    resetProtocolState,
   } = useGhost();
 
   const { openConnectModal } = useConnectModal();
@@ -103,16 +101,6 @@ export const VaultPage: React.FC = () => {
         {/* Top Right Control Pills */}
         <div className="flex flex-wrap items-center justify-end gap-2 text-xs font-mono">
           
-          {/* Reset Demo State Button */}
-          <button
-            onClick={resetProtocolState}
-            className="px-3 py-1 rounded-full bg-zinc-100 hover:bg-red-50 hover:text-red-700 hover:border-red-200 border border-zinc-200 text-zinc-600 text-[11px] font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
-            title="Reset round & demo state to start completely afresh"
-          >
-            <RotateCcw className="w-3 h-3 opacity-70" />
-            <span>Reset Demo</span>
-          </button>
-
           {/* Quick Faucet Mint Button */}
           <button
             onClick={() => onMint(1000)}
