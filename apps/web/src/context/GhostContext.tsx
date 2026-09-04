@@ -1073,24 +1073,37 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       // 3. Sync yield checkpoints across devices
       if (data.yieldCheckpoints && typeof data.yieldCheckpoints === 'object') {
+        const now = Date.now();
         for (const addr in data.yieldCheckpoints) {
           const cp = data.yieldCheckpoints[addr];
-          if (cp && typeof cp.accrued === 'number') {
-            try {
-              localStorage.setItem(`ghost_accrued_yield_${addr}`, cp.accrued.toString());
-              localStorage.setItem(`ghost_yield_checkpoint_${addr}`, cp.lastTime.toString());
-              localStorage.setItem(`ghost_yield_${addr}`, cp.accrued.toFixed(4));
-              if (typeof cp.balance === 'number') {
-                localStorage.setItem(`ghost_balance_${addr}`, cp.balance.toString());
+          if (cp && typeof cp.accrued === 'number' && typeof cp.lastTime === 'number') {
+            const currentLocalCheckpointStr = localStorage.getItem(`ghost_yield_checkpoint_${addr}`);
+            const currentLocalCheckpoint = currentLocalCheckpointStr ? parseInt(currentLocalCheckpointStr, 10) : 0;
+
+            // Only update storage if incoming checkpoint is strictly newer or initial
+            if (cp.lastTime >= currentLocalCheckpoint) {
+              try {
+                localStorage.setItem(`ghost_accrued_yield_${addr}`, cp.accrued.toString());
+                localStorage.setItem(`ghost_yield_checkpoint_${addr}`, cp.lastTime.toString());
+                if (typeof cp.balance === 'number') {
+                  localStorage.setItem(`ghost_balance_${addr}`, cp.balance.toString());
+                }
+              } catch {
+                // Ignore
               }
-            } catch {
-              // Ignore
-            }
-            if (address && address.toLowerCase() === addr.toLowerCase()) {
-              setUserYield(+cp.accrued.toFixed(4));
-              if (typeof cp.balance === 'number') {
-                setUserBalance(cp.balance);
-                setEncryptedHandle(generateCiphertextHandle(cp.balance, address));
+
+              if (address && address.toLowerCase() === addr.toLowerCase()) {
+                const bal = typeof cp.balance === 'number' ? cp.balance : userBalance;
+                if (typeof cp.balance === 'number' && cp.balance !== userBalance) {
+                  setUserBalance(cp.balance);
+                  setEncryptedHandle(generateCiphertextHandle(cp.balance, address));
+                }
+                if (bal > 0) {
+                  const elapsed = Math.max(0, (now - cp.lastTime) / 1000);
+                  const liveEarned = (bal * 0.082 * elapsed) / (365 * 86400);
+                  const totalLive = +(cp.accrued + liveEarned).toFixed(4);
+                  setUserYield((prev) => Math.max(prev, totalLive));
+                }
               }
             }
           }
@@ -1101,8 +1114,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (data.poolAccumulator && typeof data.poolAccumulator.accrued === 'number') {
         const cloudAcc = data.poolAccumulator;
         if (
-          cloudAcc.lastTime >= poolAccumulatorRef.current.lastTime ||
-          cloudAcc.accrued >= poolAccumulatorRef.current.accrued ||
+          cloudAcc.lastTime > poolAccumulatorRef.current.lastTime ||
+          cloudAcc.accrued > poolAccumulatorRef.current.accrued ||
           poolAccumulatorRef.current.lastTvl === 0
         ) {
           poolAccumulatorRef.current = {
@@ -1279,8 +1292,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         poolAccumulatorRef.current.lastTvl = tvl;
       }
       const earnedSinceCheckpoint = (tvl * 0.082 * elapsed) / (365 * 86400);
-      const exactYield = poolAccumulatorRef.current.accrued + earnedSinceCheckpoint;
-      setCurrentPrizePool(+exactYield.toFixed(4));
+      const exactYield = +(poolAccumulatorRef.current.accrued + earnedSinceCheckpoint).toFixed(4);
+      setCurrentPrizePool((prev) => Math.max(prev, exactYield));
     };
 
     calculateExactPool();
@@ -1334,7 +1347,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       const elapsed = Math.max(0, (now - checkpoint) / 1000);
       const earnedSinceCheckpoint = (userBalance * 0.082 * elapsed) / (365 * 86400);
-      setUserYield(+(accrued + earnedSinceCheckpoint).toFixed(4));
+      const nextYield = +(accrued + earnedSinceCheckpoint).toFixed(4);
+      setUserYield((prev) => Math.max(prev, nextYield));
     };
 
     calculateUserYield();
