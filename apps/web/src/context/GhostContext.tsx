@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { useAccount, useDisconnect, useSignMessage, useWalletClient, usePublicClient } from 'wagmi';
 
 export const DEPLOYED_CONTRACTS = {
@@ -187,21 +187,15 @@ async function hashPassword(password: string): Promise<string> {
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Clean state reset for fresh testing
+// Clean state reset for wallet isolation & privacy
 if (typeof window !== 'undefined') {
   try {
-    const version = localStorage.getItem('ghost_storage_v7_clean_reset');
+    const version = localStorage.getItem('ghost_storage_v8_wallet_isolation');
     if (!version) {
-      // Clear all historical transaction records, balances, yields, and prize pool
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && (k.startsWith('ghost_balance_') || k.startsWith('ghost_yield_') || k.startsWith('ghost_txs_') || k.startsWith('ghost_wallet_tokens_') || k.startsWith('ghost_handle_') || k === 'ghost_prize_pool' || k === 'ghost_past_events')) {
-          keysToRemove.push(k);
-        }
-      }
-      keysToRemove.forEach((k) => localStorage.removeItem(k));
-      localStorage.setItem('ghost_storage_v7_clean_reset', 'active');
+      // Remove legacy global prize keys that leaked across addresses
+      localStorage.removeItem('ghost_unclaimed_prizes');
+      localStorage.removeItem('ghost_claimed_prizes');
+      localStorage.setItem('ghost_storage_v8_wallet_isolation', 'active');
     }
   } catch (e) {
     // Ignore
@@ -494,10 +488,11 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // Ref to track which address is actively loaded in state to prevent cross-wallet storage race conditions
+  const loadedAddressRef = useRef<string | null>(null);
+
   // Connected Wallet Balance (cUSDC in connected wallet)
-  const [walletTokenBalance, setWalletTokenBalance] = useState<number>(() => {
-    return 0;
-  });
+  const [walletTokenBalance, setWalletTokenBalance] = useState<number>(0);
 
   // Vault Position State
   const [userBalance, setUserBalance] = useState<number>(0);
@@ -507,43 +502,87 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [pastEvents, setPastEvents] = useState<ProtocolEventRecord[]>([]);
 
-  // Load user data on address connect
+  // Unclaimed & Claimed Prize System strictly isolated per wallet
+  const [unclaimedPrizes, setUnclaimedPrizes] = useState<PrizeRecord[]>([]);
+  const [claimedPrizes, setClaimedPrizes] = useState<PrizeRecord[]>([]);
+
+  // Load user data strictly scoped to the newly connected address
   useEffect(() => {
     if (!address) {
+      loadedAddressRef.current = null;
       setWalletTokenBalance(0);
       setUserBalance(0);
       setUserYield(0);
+      setEncryptedHandle('0x7f4e8b91c2d3a4b5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9');
       setTransactions([]);
+      setUnclaimedPrizes([]);
+      setClaimedPrizes([]);
+      setIsSessionAuthorized(false);
+      setIsDecrypted(false);
+      setDecryptionSignature(null);
       return;
     }
+
     const key = address.toLowerCase();
     const savedWalletTokens = localStorage.getItem(`ghost_wallet_tokens_${key}`);
     const savedBal = localStorage.getItem(`ghost_balance_${key}`);
     const savedYield = localStorage.getItem(`ghost_yield_${key}`);
     const savedHandle = localStorage.getItem(`ghost_handle_${key}`);
     const savedTxs = localStorage.getItem(`ghost_txs_${key}`);
+    const savedUnclaimed = localStorage.getItem(`ghost_unclaimed_prizes_${key}`);
+    const savedClaimed = localStorage.getItem(`ghost_claimed_prizes_${key}`);
     const savedPool = localStorage.getItem('ghost_prize_pool');
     const savedPastEvents = localStorage.getItem('ghost_past_events');
 
-    if (savedWalletTokens) setWalletTokenBalance(parseFloat(savedWalletTokens));
-    if (savedBal) setUserBalance(parseFloat(savedBal));
-    if (savedYield) setUserYield(parseFloat(savedYield));
-    if (savedHandle) setEncryptedHandle(savedHandle);
+    // Strictly apply values or clean defaults for the connected address (ZERO cross-contamination)
+    setWalletTokenBalance(savedWalletTokens !== null ? parseFloat(savedWalletTokens) : 0);
+    setUserBalance(savedBal !== null ? parseFloat(savedBal) : 0);
+    setUserYield(savedYield !== null ? parseFloat(savedYield) : 0);
+    setEncryptedHandle(savedHandle || generateCiphertextHandle(0, key));
+
     if (savedTxs) {
       try {
         setTransactions(JSON.parse(savedTxs));
-      } catch (e) {
+      } catch {
         setTransactions([]);
       }
+    } else {
+      setTransactions([]);
     }
+
+    if (savedUnclaimed) {
+      try {
+        setUnclaimedPrizes(JSON.parse(savedUnclaimed));
+      } catch {
+        setUnclaimedPrizes([]);
+      }
+    } else {
+      setUnclaimedPrizes([]);
+    }
+
+    if (savedClaimed) {
+      try {
+        setClaimedPrizes(JSON.parse(savedClaimed));
+      } catch {
+        setClaimedPrizes([]);
+      }
+    } else {
+      setClaimedPrizes([]);
+    }
+
     if (savedPool) setCurrentPrizePool(parseFloat(savedPool));
     if (savedPastEvents) {
       try {
         setPastEvents(JSON.parse(savedPastEvents));
-      } catch (e) {
+      } catch {
         setPastEvents([]);
       }
     }
+
+    setIsSessionAuthorized(false);
+    setIsDecrypted(false);
+    setDecryptionSignature(null);
+    loadedAddressRef.current = key;
   }, [address]);
 
   const [isMinting, setIsMinting] = useState<boolean>(false);
@@ -656,18 +695,23 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => clearInterval(interval);
   }, [userBalance]);
 
-  // Sync state to local storage
+  // Sync state to local storage strictly scoped to the active connected address
   useEffect(() => {
     if (!address) return;
     const key = address.toLowerCase();
+    // Guard against race conditions where stale state from previous wallet gets saved to new wallet key
+    if (loadedAddressRef.current !== key) return;
+
     localStorage.setItem(`ghost_wallet_tokens_${key}`, walletTokenBalance.toString());
     localStorage.setItem(`ghost_balance_${key}`, userBalance.toString());
     localStorage.setItem(`ghost_yield_${key}`, userYield.toString());
     localStorage.setItem(`ghost_handle_${key}`, encryptedHandle);
     localStorage.setItem(`ghost_txs_${key}`, JSON.stringify(transactions));
+    localStorage.setItem(`ghost_unclaimed_prizes_${key}`, JSON.stringify(unclaimedPrizes));
+    localStorage.setItem(`ghost_claimed_prizes_${key}`, JSON.stringify(claimedPrizes));
     localStorage.setItem('ghost_prize_pool', currentPrizePool.toString());
     localStorage.setItem('ghost_past_events', JSON.stringify(pastEvents));
-  }, [address, walletTokenBalance, userBalance, userYield, encryptedHandle, currentPrizePool, transactions, pastEvents]);
+  }, [address, walletTokenBalance, userBalance, userYield, encryptedHandle, currentPrizePool, transactions, unclaimedPrizes, claimedPrizes, pastEvents]);
 
   // Protocol-level Event
   const [activeEvent, setActiveEvent] = useState<ProtocolEventRecord>({
@@ -840,33 +884,6 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
-  // Unclaimed & Claimed Prize System
-  const [unclaimedPrizes, setUnclaimedPrizes] = useState<PrizeRecord[]>(() => {
-    try {
-      const saved = localStorage.getItem('ghost_unclaimed_prizes');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [claimedPrizes, setClaimedPrizes] = useState<PrizeRecord[]>(() => {
-    try {
-      const saved = localStorage.getItem('ghost_claimed_prizes');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem('ghost_unclaimed_prizes', JSON.stringify(unclaimedPrizes));
-  }, [unclaimedPrizes]);
-
-  useEffect(() => {
-    localStorage.setItem('ghost_claimed_prizes', JSON.stringify(claimedPrizes));
-  }, [claimedPrizes]);
-
   // Claim Won Prize directly to wallet
   const claimPrize = async (prizeId: string): Promise<boolean> => {
     const prize = unclaimedPrizes.find((p) => p.id === prizeId);
@@ -986,13 +1003,24 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         timestamp: Date.now(),
         status: 'UNCLAIMED',
       };
-      setUnclaimedPrizes((prev) => [newPrize, ...prev]);
+      
+      const winnerKey = winner.toLowerCase();
+      try {
+        const existingWinnerPrizesRaw = localStorage.getItem(`ghost_unclaimed_prizes_${winnerKey}`);
+        const existingWinnerPrizes: PrizeRecord[] = existingWinnerPrizesRaw ? JSON.parse(existingWinnerPrizesRaw) : [];
+        localStorage.setItem(`ghost_unclaimed_prizes_${winnerKey}`, JSON.stringify([newPrize, ...existingWinnerPrizes]));
+      } catch (e) {
+        // Ignore
+      }
 
-      addToast({
-        type: 'success',
-        title: '🎉 You Won the Draw!',
-        message: `Event #${activeEvent.eventId} settled! $${activeEvent.prizeAmount.toFixed(2)} cUSDC is waiting to be claimed to your wallet.`,
-      });
+      if (address && winnerKey === address.toLowerCase()) {
+        setUnclaimedPrizes((prev) => [newPrize, ...prev]);
+        addToast({
+          type: 'success',
+          title: '🎉 You Won the Draw!',
+          message: `Event #${activeEvent.eventId} settled! $${activeEvent.prizeAmount.toFixed(2)} cUSDC is waiting to be claimed to your wallet.`,
+        });
+      }
     }
 
     setCurrentPrizePool(0);
