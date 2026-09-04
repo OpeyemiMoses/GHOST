@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useRef 
 import { useAccount, useDisconnect, useSignMessage, useWalletClient, usePublicClient, useChainId, useSwitchChain } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
 
-export const PROTOCOL_BASELINE_TVL = 20000;
-export const PROTOCOL_BASELINE_SAVERS = 2;
+export const PROTOCOL_BASELINE_TVL = 0;
+export const PROTOCOL_BASELINE_SAVERS = 0;
 
 export const DEPLOYED_CONTRACTS = {
   MockConfidentialToken: '0x65C9020961f4fdF5E0a1fE01dC1225A096408B03' as `0x${string}`,
@@ -212,6 +212,25 @@ export const getViewFromHash = (): string | null => {
   }
   return null;
 };
+// One-time automatic clean slate purge across all clients and wallets
+if (typeof window !== 'undefined') {
+  try {
+    const CLEAN_SLATE_KEY = 'ghost_clean_slate_v4';
+    if (!localStorage.getItem(CLEAN_SLATE_KEY)) {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('ghost_')) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+      localStorage.setItem(CLEAN_SLATE_KEY, 'true');
+    }
+  } catch {
+    // Ignore
+  }
+}
 
 export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, _setCurrentView] = useState<string>(() => {
@@ -628,7 +647,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {
       // Ignore
     }
-    return 25.50;
+    return 0;
   });
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [pastEvents, setPastEvents] = useState<ProtocolEventRecord[]>([]);
