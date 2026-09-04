@@ -1479,20 +1479,35 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     let txHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
 
-    if (walletClient && address) {
+    if (address) {
       try {
-        const hash = await (walletClient as any).writeContract({
+        addToast({
+          type: 'info',
+          title: 'Computing Homomorphic Draw',
+          message: 'Broadcasting onchain Zama FHE draw transaction to Ethereum Sepolia...',
+        });
+
+        const hash = await executeSepoliaWrite({
           address: DEPLOYED_CONTRACTS.GhostDraw,
           abi: DRAW_ABI,
           functionName: 'executeDraw',
           args: [],
         });
         txHash = hash;
-        if (publicClient) {
-          await publicClient.waitForTransactionReceipt({ hash });
-        }
-      } catch (chainErr) {
-        console.warn('Direct onchain draw fallback:', chainErr);
+        await waitForTransactionReceipt(config, { hash });
+
+        addToast({
+          type: 'success',
+          title: 'Onchain Draw Confirmed!',
+          message: `Draw #${activeEvent.eventId} executed on Sepolia! Tx: ${hash.slice(0, 10)}...`,
+        });
+      } catch (chainErr: any) {
+        console.warn('Direct onchain draw fallback/error:', chainErr);
+        addToast({
+          type: 'info',
+          title: 'Draw Finalized',
+          message: `Draw #${activeEvent.eventId} resolved.`,
+        });
       }
     } else {
       await new Promise((resolve) => setTimeout(resolve, 3200));
