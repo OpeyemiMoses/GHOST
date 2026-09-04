@@ -815,7 +815,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               id: `prize_${ev.eventId}_${Date.now()}`,
               eventId: ev.eventId,
               winnerAddress: key,
-              amount: ev.prizeAmount > 0 ? ev.prizeAmount : 25.0,
+              amount: ev.prizeAmount > 0 ? ev.prizeAmount : 500.0,
               encryptedHandle: ev.encryptedPrizeHandle || generateCiphertextHandle(ev.prizeAmount, 'GhostDraw'),
               drawTxHash: ev.txHash || '',
               timestamp: ev.endTime || Date.now(),
@@ -1764,7 +1764,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ? activeDepositors[Math.floor(Math.random() * activeDepositors.length)]
       : (address || '0x742d35Cc6634C0532925a3b844Bc454e4438f44e');
 
-    const finalPrizeAmount = activeEvent.prizeAmount > 0 ? activeEvent.prizeAmount : 25.0;
+    const finalPrizeAmount = activeEvent.prizeAmount > 0 ? activeEvent.prizeAmount : 500.0;
     const randomness = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
     const stateRoot = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
 
@@ -1848,9 +1848,9 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
-  // Autonomous Background Network Keeper Loop with $25.00 Minimum Prize Threshold (Jackpot Rollover)
+  // Autonomous Background Network Keeper Loop with $500.00 Minimum Prize Threshold (Jackpot Rollover)
   useEffect(() => {
-    const MINIMUM_PRIZE_THRESHOLD = 25.0;
+    const MINIMUM_PRIZE_THRESHOLD = 500.0;
 
     const keeperInterval = setInterval(() => {
       const now = Date.now();
@@ -1878,8 +1878,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
           addToast({
             type: 'info',
-            title: 'Prize Rollover (Under $25.00 Threshold)',
-            message: `Current yield is $${currentPrizePool.toFixed(2)}. Compounding into next 24h window until the $25.00 minimum prize is reached.`,
+            title: 'Prize Rollover (Under $500.00 Threshold)',
+            message: `Current yield is $${currentPrizePool.toFixed(2)}. Compounding into next 24h window until the $500.00 minimum prize is reached.`,
           });
         }
       }

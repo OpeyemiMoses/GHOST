@@ -981,7 +981,7 @@ export const DocsPage: React.FC = () => {
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.6 · Events</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                      Zero-Loss Blind Draws & $25 Jackpot Rollover
+                      Zero-Loss Blind Draws & $500 Jackpot Rollover
                     </h2>
                     <p className="text-xs text-zinc-500 mt-1">
                       Verifiable cryptographic prize distribution and 24-hour jackpot compounding threshold.
@@ -991,27 +991,27 @@ export const DocsPage: React.FC = () => {
                   <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
                     <p>
                       Ghost prize draws are funded entirely by pooled yield without risking depositor principal. 
-                      To guarantee substantial prize distributions, Ghost enforces a <strong>$25.00 Minimum Prize Threshold</strong> rule.
+                      To guarantee substantial prize distributions, Ghost enforces a <strong>$500.00 Minimum Prize Threshold</strong> rule.
                     </p>
 
                     {/* Jackpot Rollover Mechanism */}
                     <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
                       <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
                         <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">★</span>
-                        <span>$25.00 Jackpot Rollover Mechanism</span>
+                        <span>$500.00 Jackpot Rollover Mechanism</span>
                       </h3>
                       <ul className="list-disc pl-5 space-y-1.5 text-xs text-zinc-600">
                         <li><strong>24-Hour Cycle Timer:</strong> Draws run on a continuous 24-hour evaluation window.</li>
-                        <li><strong>Threshold Guard:</strong> If the accumulated prize pool is under <strong>$25.00 cUSDC</strong> when the 24h timer reaches 00:00:00, the autonomous keeper does <em>not</em> trigger execution and the round does <em>not</em> increment.</li>
+                        <li><strong>Threshold Guard:</strong> If the accumulated prize pool is under <strong>$500.00 cUSDC</strong> when the 24h timer reaches 00:00:00, the autonomous keeper does <em>not</em> trigger execution and the round does <em>not</em> increment.</li>
                         <li><strong>Compounding Rollover:</strong> The round automatically rolls over into an extended 24-hour cycle, continuously compounding yield into the jackpot.</li>
-                        <li><strong>Autonomous Execution:</strong> As soon as the yield reaches $\ge \$25.00$ at cycle expiration, the keeper broadcasts onchain execution with Zama FHE randomness.</li>
+                        <li><strong>Autonomous Execution:</strong> When the 24h cycle timer reaches 00:00:00 and yield reaches $\ge \$500.00$, the keeper broadcasts onchain execution with Zama FHE randomness.</li>
                       </ul>
                     </div>
 
                     <div className="p-5 rounded-2xl bg-zinc-900 text-white space-y-2">
                       <h3 className="font-bold text-xs text-amber-400">Event Execution Pipeline</h3>
                       <div className="font-mono text-[11px] text-zinc-300">
-                        OPEN (24h Window) → THRESHOLD CHECK (≥ $25.00) → ONCHAIN FHE RANDOMNESS → BLIND WINNER SELECTION → VERIFIED MERKLE SETTLEMENT → CLAIM CARD ONCHAIN
+                        OPEN (24h Window) → TIMER EXPIRED (00:00:00) → THRESHOLD CHECK (≥ $500.00) → ONCHAIN FHE RANDOMNESS → BLIND WINNER SELECTION → VERIFIED MERKLE SETTLEMENT → CLAIM CARD ONCHAIN
                       </div>
                     </div>
                   </div>
@@ -2068,7 +2068,7 @@ export const DocsPage: React.FC = () => {
                     </div>
                     <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <div className="font-bold text-zinc-950">function executeDraw() external</div>
-                      <div className="text-[11px] text-zinc-500 font-sans">Permissionless draw execution called by keeper bot when round expires and prize pool satisfies $\ge \$25.00$ threshold. Uses Zama FHE randomness.</div>
+                      <div className="text-[11px] text-zinc-500 font-sans">Permissionless draw execution called by keeper bot when 24-hour round expires (timer hits 00:00:00) and prize pool satisfies $\ge \$500.00$ threshold. Uses Zama FHE randomness.</div>
                     </div>
                     <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
                       <div className="font-bold text-zinc-950">function claimPrize(uint256 eventId) external</div>

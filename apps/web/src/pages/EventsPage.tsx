@@ -109,23 +109,23 @@ export const EventsPage: React.FC = () => {
               <span className="text-base font-normal text-zinc-400">cUSDC</span>
             </div>
             <p className="text-zinc-400 text-xs sm:text-sm mt-2 max-w-md">
-              Accumulated yield compounds in 24h cycles. Requires a minimum <span className="text-amber-400 font-semibold">$25.00 cUSDC</span> jackpot threshold to trigger onchain execution.
+              Accumulated yield compounds in 24h cycles. Requires a minimum <span className="text-amber-400 font-semibold">$500.00 cUSDC</span> jackpot threshold to trigger onchain execution.
             </p>
 
             {/* Threshold Progress Bar */}
             <div className="mt-4 max-w-sm">
               <div className="flex items-center justify-between text-[11px] font-mono mb-1.5 text-zinc-400">
                 <span>Jackpot Threshold Progress</span>
-                <span className={activeEvent.prizeAmount >= 25 ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
-                  ${activeEvent.prizeAmount.toFixed(2)} / $25.00
+                <span className={activeEvent.prizeAmount >= 500 ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
+                  ${activeEvent.prizeAmount.toFixed(2)} / $500.00
                 </span>
               </div>
               <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
-                    activeEvent.prizeAmount >= 25 ? 'bg-emerald-500' : 'bg-linear-to-r from-amber-500 to-amber-400'
+                    activeEvent.prizeAmount >= 500 ? 'bg-emerald-500' : 'bg-linear-to-r from-amber-500 to-amber-400'
                   }`}
-                  style={{ width: `${Math.min(100, (activeEvent.prizeAmount / 25) * 100)}%` }}
+                  style={{ width: `${Math.min(100, (activeEvent.prizeAmount / 500) * 100)}%` }}
                 />
               </div>
             </div>
@@ -136,9 +136,9 @@ export const EventsPage: React.FC = () => {
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono">
               <Clock className="w-3.5 h-3.5 text-zinc-400" />
               <span className="text-zinc-400">Cycle Countdown:</span>
-              <span className={activeEvent.prizeAmount >= 25 && timeLeft.isExpired ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'}>
+              <span className={activeEvent.prizeAmount >= 500 && timeLeft.isExpired ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'}>
                 {timeLeft.isExpired
-                  ? activeEvent.prizeAmount >= 25
+                  ? activeEvent.prizeAmount >= 500
                     ? 'Threshold Met · Executing'
                     : 'Rollover Active (Compounding)'
                   : `${String(timeLeft.hours).padStart(2, '0')}h ${String(timeLeft.minutes).padStart(2, '0')}m ${String(timeLeft.seconds).padStart(2, '0')}s`}
@@ -158,9 +158,9 @@ export const EventsPage: React.FC = () => {
                   <span className="font-semibold">Autonomous Keeper Active</span>
                 </div>
                 <span className="text-[10px] font-mono text-zinc-400">
-                  {activeEvent.prizeAmount >= 25
+                  {activeEvent.prizeAmount >= 500
                     ? 'Threshold reached · Autonomous trigger armed'
-                    : 'Auto-rolls over every 24h until $25.00 reached'}
+                    : 'Auto-rolls over every 24h until $500.00 reached'}
                 </span>
               </div>
             )}
