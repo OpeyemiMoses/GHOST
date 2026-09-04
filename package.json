@@ -11,7 +11,6 @@
   },
   "scripts": {
     "start": "ts-node scripts/keeper-server.ts",
-    "postinstall": "npm install --prefix apps/web",
     "build": "npm run build --prefix apps/web",
     "keeper": "npx ts-node scripts/keeper-bot.ts",
     "compile": "hardhat compile",
