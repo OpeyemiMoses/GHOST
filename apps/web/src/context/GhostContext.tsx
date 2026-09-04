@@ -216,7 +216,7 @@ export const getViewFromHash = (): string | null => {
 // One-time automatic clean slate purge across all clients and wallets
 if (typeof window !== 'undefined') {
   try {
-    const CLEAN_SLATE_KEY = 'ghost_clean_slate_v4';
+    const CLEAN_SLATE_KEY = 'ghost_clean_slate_v5';
     if (!localStorage.getItem(CLEAN_SLATE_KEY)) {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -666,7 +666,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {
       // Ignore
     }
-    return 18.50;
+    return 0;
   });
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [pastEvents, setPastEvents] = useState<ProtocolEventRecord[]>([]);
