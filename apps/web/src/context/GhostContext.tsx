@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { useAccount, useDisconnect, useSignMessage, useWalletClient, usePublicClient, useChainId, useSwitchChain } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
-import { fetchGlobalCloudState, pushGlobalCloudState } from '../services/cloudSync';
+import { fetchGlobalCloudState, pushGlobalCloudState, subscribeToGlobalState } from '../services/cloudSync';
 
 export const PROTOCOL_BASELINE_TVL = 0;
 export const PROTOCOL_BASELINE_SAVERS = 0;
@@ -877,12 +877,10 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Global Cloud Synchronized Deposits Map across all devices (Desktop, Mobile, etc.)
   const [cloudDeposits, setCloudDeposits] = useState<Record<string, number>>({});
 
-  // Continuous Cloud Synchronization Loop (Every 3.5s)
+  // Instant Real-Time Cross-Device Synchronization via PubSub & Server-Sent Events (SSE)
   useEffect(() => {
-    let mounted = true;
-    const syncWithCloud = async () => {
-      const data = await fetchGlobalCloudState();
-      if (!data || !mounted) return;
+    const unsubscribe = subscribeToGlobalState((data) => {
+      if (!data) return;
 
       // 1. Sync accounts DB
       if (data.accountsDb && Object.keys(data.accountsDb).length > 0) {
@@ -897,13 +895,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       // 2. Sync deposits map across all devices
       if (data.deposits && typeof data.deposits === 'object') {
-        setCloudDeposits(data.deposits);
+        setCloudDeposits((prev) => ({ ...prev, ...data.deposits }));
       }
 
       // 3. Sync active draw event
       if (data.activeEvent && typeof data.activeEvent.eventId === 'number') {
         setActiveEvent((prev) => {
-          if (data.activeEvent.eventId > prev.eventId) {
+          if (data.activeEvent.eventId >= prev.eventId) {
             return {
               ...prev,
               ...data.activeEvent,
@@ -918,13 +916,10 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (Array.isArray(data.pastEvents) && data.pastEvents.length > 0) {
         setPastEvents(data.pastEvents);
       }
-    };
+    });
 
-    syncWithCloud();
-    const interval = setInterval(syncWithCloud, 3500);
     return () => {
-      mounted = false;
-      clearInterval(interval);
+      unsubscribe();
     };
   }, [currentPrizePool]);
 

@@ -91,8 +91,75 @@ async function runKeeperLoop() {
   setInterval(poll, 15000);
 }
 
-// Start HTTP Healthcheck Server for Railway
+// In-memory global state cache on Railway keeper server
+let globalProtocolState = {
+  accountsDb: {} as Record<string, any>,
+  deposits: {} as Record<string, number>,
+  activeEvent: {
+    eventId: 1,
+    status: 'OPEN',
+    startTime: Date.now() - 3600000 * 2,
+    endTime: Date.now() + 3600000 * 22,
+    prizeAmount: 0,
+    encryptedPrizeHandle: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    winnerAddress: 'Pending Onchain Draw',
+    randomnessCommitment: '',
+    stateRoot: '',
+    txHash: '',
+    isVerified: false,
+  },
+  pastEvents: [] as any[],
+  prizePool: 0,
+  tvl: 0,
+  savers: 0,
+  lastUpdated: Date.now(),
+};
+
+// Start HTTP Healthcheck & Global Sync Server for Railway
 const server = http.createServer((req, res) => {
+  // Global CORS Headers for all devices (Mobile, Desktop, etc.)
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization");
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  if (req.url === "/api/state" && req.method === "GET") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "success", data: globalProtocolState }));
+    return;
+  }
+
+  if (req.url === "/api/state" && req.method === "POST") {
+    let body = "";
+    req.on("data", (chunk) => { body += chunk; });
+    req.on("end", () => {
+      try {
+        const payload = JSON.parse(body || "{}");
+        globalProtocolState = {
+          accountsDb: { ...globalProtocolState.accountsDb, ...(payload.accountsDb || {}) },
+          deposits: { ...globalProtocolState.deposits, ...(payload.deposits || {}) },
+          activeEvent: payload.activeEvent ? { ...globalProtocolState.activeEvent, ...payload.activeEvent } : globalProtocolState.activeEvent,
+          pastEvents: payload.pastEvents || globalProtocolState.pastEvents,
+          prizePool: typeof payload.prizePool === "number" ? payload.prizePool : globalProtocolState.prizePool,
+          tvl: Object.values(globalProtocolState.deposits).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0),
+          savers: Object.values(globalProtocolState.deposits).filter(val => typeof val === 'number' && val > 0).length,
+          lastUpdated: Date.now(),
+        };
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ status: "success", data: globalProtocolState }));
+      } catch (err: any) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ status: "error", message: err.message }));
+      }
+    });
+    return;
+  }
+
   if (req.url === "/health" || req.url === "/") {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(
@@ -116,7 +183,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(Number(PORT), "0.0.0.0", () => {
-  console.log(`🌐 HTTP Healthcheck Server listening on http://0.0.0.0:${PORT}`);
+  console.log(`🌐 HTTP Server with Global Sync API listening on http://0.0.0.0:${PORT}`);
   runKeeperLoop().catch((err) => {
     console.error("Fatal Keeper Error:", err);
   });

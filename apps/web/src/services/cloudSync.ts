@@ -1,5 +1,5 @@
-// Global Cloud Synchronization Service for Ghost Protocol
-// Enables cross-device (Desktop <-> Mobile <-> Tablet) real-time state synchronization
+// Universal Real-Time Cloud Synchronization Service for Ghost Protocol
+// High-speed PubSub & Server-Sent Events (SSE) relay enabling sub-second cross-device synchronization (PC <-> Mobile)
 
 export interface GlobalSyncPayload {
   accountsDb: Record<string, {
@@ -27,83 +27,142 @@ export interface GlobalSyncPayload {
   lastUpdated: number;
 }
 
-const CLOUD_OBJECT_ID = 'ff808181a067127101a06b4d290f0d21';
-const CLOUD_ENDPOINT = `https://api.restful-api.dev/objects/${CLOUD_OBJECT_ID}`;
+const TOPIC = 'ghost_protocol_global_sync_v2';
+const PUBLISH_URL = `https://ntfy.sh/${TOPIC}`;
+const POLL_URL = `https://ntfy.sh/${TOPIC}/json?poll=1&since=24h`;
+const SSE_URL = `https://ntfy.sh/${TOPIC}/sse`;
 
-let isSyncing = false;
-let lastSyncedData: GlobalSyncPayload | null = null;
+let cachedState: GlobalSyncPayload = {
+  accountsDb: {},
+  deposits: {},
+  activeEvent: {
+    eventId: 1,
+    status: 'OPEN',
+    startTime: Date.now() - 3600000 * 2,
+    endTime: Date.now() + 3600000 * 22,
+    prizeAmount: 0,
+    encryptedPrizeHandle: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    winnerAddress: 'Pending Onchain Draw',
+    randomnessCommitment: '',
+    stateRoot: '',
+    txHash: '',
+    isVerified: false,
+  },
+  pastEvents: [],
+  prizePool: 0,
+  lastUpdated: Date.now(),
+};
 
-export async function fetchGlobalCloudState(): Promise<GlobalSyncPayload | null> {
-  try {
-    const res = await fetch(CLOUD_ENDPOINT, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (json && json.data) {
-      lastSyncedData = json.data as GlobalSyncPayload;
-      return json.data;
+type StateListener = (state: GlobalSyncPayload) => void;
+const listeners: Set<StateListener> = new Set();
+
+export function subscribeToGlobalState(callback: StateListener): () => void {
+  listeners.add(callback);
+  callback(cachedState);
+  return () => {
+    listeners.delete(callback);
+  };
+}
+
+function notifyListeners() {
+  for (const cb of listeners) {
+    try {
+      cb(cachedState);
+    } catch {
+      // Ignore
     }
-    return null;
-  } catch (err) {
-    console.warn('[CloudSync] Fetch failed, fallback to local state:', err);
-    return null;
   }
 }
 
-export async function pushGlobalCloudState(partialState: Partial<GlobalSyncPayload>): Promise<boolean> {
-  if (isSyncing) return false;
-  isSyncing = true;
+// Ingest and merge message into cachedState
+function processMessage(msgStr: string) {
   try {
-    const current = lastSyncedData || await fetchGlobalCloudState() || {
-      accountsDb: {},
-      deposits: {},
-      activeEvent: {
-        eventId: 1,
-        status: 'OPEN',
-        startTime: Date.now() - 3600000 * 2,
-        endTime: Date.now() + 3600000 * 22,
-        prizeAmount: 0,
-        encryptedPrizeHandle: '',
-        winnerAddress: 'Pending Onchain Draw',
-        randomnessCommitment: '',
-        stateRoot: '',
-        txHash: '',
-        isVerified: false,
-      },
-      pastEvents: [],
-      prizePool: 0,
+    const parsed = JSON.parse(msgStr);
+    if (!parsed || typeof parsed !== 'object') return;
+
+    if (parsed.accountsDb) {
+      cachedState.accountsDb = { ...cachedState.accountsDb, ...parsed.accountsDb };
+    }
+    if (parsed.deposits) {
+      cachedState.deposits = { ...cachedState.deposits, ...parsed.deposits };
+    }
+    if (parsed.activeEvent && typeof parsed.activeEvent.eventId === 'number') {
+      if (parsed.activeEvent.eventId >= cachedState.activeEvent.eventId) {
+        cachedState.activeEvent = { ...cachedState.activeEvent, ...parsed.activeEvent };
+      }
+    }
+    if (Array.isArray(parsed.pastEvents) && parsed.pastEvents.length > 0) {
+      cachedState.pastEvents = parsed.pastEvents;
+    }
+    if (typeof parsed.prizePool === 'number') {
+      cachedState.prizePool = Math.max(cachedState.prizePool, parsed.prizePool);
+    }
+    cachedState.lastUpdated = parsed.lastUpdated || Date.now();
+    notifyListeners();
+  } catch {
+    // Ignore
+  }
+}
+
+// Initial backlog poll
+if (typeof window !== 'undefined') {
+  fetch(POLL_URL)
+    .then((r) => r.text())
+    .then((text) => {
+      const lines = text.trim().split('\n');
+      for (const line of lines) {
+        if (!line) continue;
+        try {
+          const item = JSON.parse(line);
+          if (item.message) processMessage(item.message);
+        } catch {
+          // Ignore
+        }
+      }
+    })
+    .catch(() => {});
+
+  // Realtime SSE Stream connecting all devices
+  try {
+    const es = new EventSource(SSE_URL);
+    es.onmessage = (event) => {
+      try {
+        const item = JSON.parse(event.data);
+        if (item.message) {
+          processMessage(item.message);
+        }
+      } catch {
+        // Ignore
+      }
+    };
+  } catch (err) {
+    console.warn('[CloudSync] SSE initialization fallback:', err);
+  }
+}
+
+export async function fetchGlobalCloudState(): Promise<GlobalSyncPayload> {
+  return cachedState;
+}
+
+export async function pushGlobalCloudState(partialState: Partial<GlobalSyncPayload>): Promise<boolean> {
+  try {
+    const payload = {
+      ...partialState,
       lastUpdated: Date.now(),
     };
 
-    const merged: GlobalSyncPayload = {
-      accountsDb: { ...current.accountsDb, ...(partialState.accountsDb || {}) },
-      deposits: { ...current.deposits, ...(partialState.deposits || {}) },
-      activeEvent: partialState.activeEvent ? { ...current.activeEvent, ...partialState.activeEvent } : current.activeEvent,
-      pastEvents: partialState.pastEvents || current.pastEvents || [],
-      prizePool: typeof partialState.prizePool === 'number' ? partialState.prizePool : current.prizePool,
-      lastUpdated: Date.now(),
-    };
+    // Update local cache immediately
+    processMessage(JSON.stringify(payload));
 
-    lastSyncedData = merged;
-
-    await fetch(CLOUD_ENDPOINT, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: 'ghost_protocol_global_state_v1',
-        data: merged,
-      }),
+    // Broadcast over high-speed pubsub relay to all devices
+    await fetch(PUBLISH_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
 
     return true;
   } catch (err) {
-    console.warn('[CloudSync] Push failed:', err);
+    console.warn('[CloudSync] Broadcast failed:', err);
     return false;
-  } finally {
-    isSyncing = false;
   }
 }
