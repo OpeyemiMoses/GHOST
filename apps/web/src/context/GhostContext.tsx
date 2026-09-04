@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { useAccount, useDisconnect, useSignMessage, useWalletClient, usePublicClient, useChainId, useSwitchChain } from 'wagmi';
-import { writeContract, waitForTransactionReceipt } from 'wagmi/actions';
+import { writeContract, waitForTransactionReceipt, getAccount } from 'wagmi/actions';
 import { sepolia } from 'wagmi/chains';
 import { config } from '../lib/wagmi';
 import { fetchGlobalCloudState, pushGlobalCloudState, subscribeToGlobalState } from '../services/cloudSync';
@@ -838,6 +838,71 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setDecryptionSignature(null);
   };
 
+  // Network Guard & Auto-Switch to Sepolia
+  const ensureSepoliaNetwork = async (): Promise<boolean> => {
+    try {
+      const account = getAccount(config);
+      if (account.chainId !== sepolia.id) {
+        addToast({
+          type: 'info',
+          title: 'Switching Network',
+          message: 'Switching your wallet to Ethereum Sepolia...',
+        });
+        if (switchChainAsync) {
+          await switchChainAsync({ chainId: sepolia.id });
+        } else if (switchChain) {
+          switchChain({ chainId: sepolia.id });
+        }
+        await new Promise((r) => setTimeout(r, 600));
+      }
+      return true;
+    } catch (err: any) {
+      console.warn('Network switch failed or rejected:', err);
+      addToast({
+        type: 'error',
+        title: 'Sepolia Required',
+        message: err?.shortMessage || err?.message || 'Please switch your wallet to Ethereum Sepolia to proceed.',
+      });
+      return false;
+    }
+  };
+
+  // Safe wrapper for all onchain write transactions that enforces Sepolia
+  const executeSepoliaWrite = async (args: any): Promise<`0x${string}`> => {
+    await ensureSepoliaNetwork();
+    try {
+      return await writeContract(config, {
+        ...args,
+        chainId: sepolia.id,
+      });
+    } catch (err: any) {
+      const msg = (err?.shortMessage || err?.message || '').toLowerCase();
+      // If wallet is still on wrong chain or rejected earlier, switch and retry
+      if (
+        msg.includes('chain') ||
+        msg.includes('target chain') ||
+        msg.includes('does not match') ||
+        msg.includes('chainmismatch')
+      ) {
+        try {
+          if (switchChainAsync) {
+            await switchChainAsync({ chainId: sepolia.id });
+          } else if (switchChain) {
+            switchChain({ chainId: sepolia.id });
+          }
+          await new Promise((r) => setTimeout(r, 800));
+          return await writeContract(config, {
+            ...args,
+            chainId: sepolia.id,
+          });
+        } catch (retryErr) {
+          throw retryErr;
+        }
+      }
+      throw err;
+    }
+  };
+
   const [isMinting, setIsMinting] = useState<boolean>(false);
 
   // Mint Testnet cUSDC Faucet Handler with Real Onchain Sepolia Execution
@@ -855,13 +920,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         message: 'Please confirm the onchain mint transaction in your wallet.',
       });
 
-      const hash = await writeContract(config, {
+      const hash = await executeSepoliaWrite({
         address: DEPLOYED_CONTRACTS.MockConfidentialToken,
         abi: TOKEN_ABI,
         functionName: 'mintPlaintext',
         args: [address, BigInt(amount * 1e6)],
-        chainId: sepolia.id,
-      } as any);
+      });
 
       // Wait for real onchain confirmation on Sepolia
       await waitForTransactionReceipt(config, { hash });
@@ -1182,13 +1246,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         message: 'Please confirm the onchain deposit transaction in your wallet.',
       });
 
-      const hash = await writeContract(config, {
+      const hash = await executeSepoliaWrite({
         address: DEPLOYED_CONTRACTS.GhostPool,
         abi: POOL_ABI,
         functionName: 'depositPlaintext',
         args: [BigInt(Math.floor(amount * 1e6))],
-        chainId: sepolia.id,
-      } as any);
+      });
 
       // Wait for real onchain confirmation on Sepolia
       await waitForTransactionReceipt(config, { hash });
@@ -1277,13 +1340,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         message: 'Please confirm the onchain withdrawal transaction in your wallet.',
       });
 
-      const hash = await writeContract(config, {
+      const hash = await executeSepoliaWrite({
         address: DEPLOYED_CONTRACTS.MockConfidentialToken,
         abi: TOKEN_ABI,
         functionName: 'mintPlaintext',
         args: [address, BigInt(Math.floor(amount * 1e6))],
-        chainId: sepolia.id,
-      } as any);
+      });
 
       await waitForTransactionReceipt(config, { hash });
 
@@ -1361,13 +1423,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         message: 'Please confirm the prize claim transaction in your wallet.',
       });
 
-      const hash = await writeContract(config, {
+      const hash = await executeSepoliaWrite({
         address: DEPLOYED_CONTRACTS.MockConfidentialToken,
         abi: TOKEN_ABI,
         functionName: 'mintPlaintext',
         args: [address as `0x${string}`, BigInt(Math.floor(prize.amount * 1e6))],
-        chainId: sepolia.id,
-      } as any);
+      });
 
       await waitForTransactionReceipt(config, { hash });
 
