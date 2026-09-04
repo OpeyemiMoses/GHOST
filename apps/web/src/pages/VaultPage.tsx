@@ -350,7 +350,7 @@ export const VaultPage: React.FC = () => {
                 </p>
               </div>
               <div className="text-right font-mono font-bold text-sm text-zinc-950">
-                {isDecrypted ? `+$${userYield.toFixed(2)}` : '••••••••'}
+                {isDecrypted ? `+$${userYield.toFixed(2)}` : (encryptedHandle ? `0x${encryptedHandle.slice(10, 18)}...${encryptedHandle.slice(-6)}` : '0x3c2a...4d8e')}
               </div>
             </div>
 

@@ -228,7 +228,7 @@ export const EventsPage: React.FC = () => {
                       ) : isDecrypted ? (
                         <span>${e.prizeAmount.toLocaleString()} cUSDC</span>
                       ) : (
-                        <span className="font-mono text-zinc-400 tracking-wider">•••••••• cUSDC</span>
+                        <span className="font-mono text-[11px] text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-md">0x7f4e...9b12 (Sealed)</span>
                       )}
                     </td>
                     <td className="py-3.5 font-mono">

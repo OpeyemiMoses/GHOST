@@ -83,9 +83,16 @@ export const ClaimPage: React.FC = () => {
             Unclaimed Prizes
           </span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold text-amber-600">
-              {isDecrypted ? `$${totalUnclaimedAmount.toFixed(2)}` : '••••••••'}
-            </span>
+            {isDecrypted ? (
+              <span className="text-2xl sm:text-3xl font-bold text-amber-600">
+                ${totalUnclaimedAmount.toFixed(2)}
+              </span>
+            ) : (
+              <span className="font-mono text-sm sm:text-base font-semibold text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg inline-flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-amber-600" />
+                <span>0x7f4e...9b12</span>
+              </span>
+            )}
             <span className="text-xs text-zinc-500 font-mono">
               {isDecrypted ? 'cUSDC' : 'cUSDC (Sealed)'}
             </span>
@@ -100,9 +107,16 @@ export const ClaimPage: React.FC = () => {
             Lifetime Claimed
           </span>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold text-zinc-900">
-              {isDecrypted ? `$${totalClaimedAmount.toFixed(2)}` : '••••••••'}
-            </span>
+            {isDecrypted ? (
+              <span className="text-2xl sm:text-3xl font-bold text-zinc-900">
+                ${totalClaimedAmount.toFixed(2)}
+              </span>
+            ) : (
+              <span className="font-mono text-sm sm:text-base font-semibold text-zinc-700 bg-zinc-100 border border-zinc-200 px-2 py-0.5 rounded-lg inline-flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-zinc-400" />
+                <span>0x3c2a...4d8e</span>
+              </span>
+            )}
             <span className="text-xs text-zinc-500 font-mono">cUSDC</span>
           </div>
           <span className="text-[11px] text-zinc-400 mt-2 block">
@@ -179,16 +193,13 @@ export const ClaimPage: React.FC = () => {
                         </span>
                       </h3>
                     ) : (
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl sm:text-3xl font-bold font-mono tracking-widest text-zinc-400">
-                            ••••••••
+                          <span className="font-mono text-sm sm:text-base font-bold text-amber-800 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg inline-flex items-center gap-2">
+                            <Lock className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{prize.encryptedHandle ? `${prize.encryptedHandle.slice(0, 10)}...${prize.encryptedHandle.slice(-6)}` : '0x7f4e...9b12'}</span>
                           </span>
-                          <span className="text-xs text-zinc-400 font-mono">cUSDC (Sealed)</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[11px] font-mono text-amber-800 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg w-fit">
-                          <Lock className="w-3.5 h-3.5 text-amber-600" />
-                          <span>Ciphertext: {prize.encryptedHandle ? `${prize.encryptedHandle.slice(0, 10)}...${prize.encryptedHandle.slice(-6)}` : '0x7f4e...9b12 (euint64)'}</span>
+                          <span className="text-xs text-zinc-400 font-mono">cUSDC (euint64 Sealed)</span>
                         </div>
                       </div>
                     )}

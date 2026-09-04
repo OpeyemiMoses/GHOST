@@ -640,7 +640,7 @@ export const DocsPage: React.FC = () => {
                         <span>Decrypting & Re-Sealing Your Position</span>
                       </h3>
                       <p>
-                        Your balance displays as sealed ciphertext (<code>••••••••</code>). Click <strong>Decrypt Balance with Wallet Signature</strong> to unmask your balance in your browser. Click <strong>Sign to Lock & Encrypt</strong> at any time to re-seal your state.
+                        Your balance displays as sealed ciphertext (<code>0x7f4e...9b12</code>). Click <strong>Decrypt Balance with Wallet Signature</strong> to unmask your balance in your browser. Click <strong>Sign to Lock & Encrypt</strong> at any time to re-seal your state.
                       </p>
                     </div>
                   </div>
