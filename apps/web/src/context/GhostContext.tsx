@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useRef 
 import { useAccount, useDisconnect, useSignMessage, useWalletClient, usePublicClient, useChainId, useSwitchChain } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
 
-export const PROTOCOL_BASELINE_TVL = 0;
-export const PROTOCOL_BASELINE_SAVERS = 0;
+export const PROTOCOL_BASELINE_TVL = 25000;
+export const PROTOCOL_BASELINE_SAVERS = 3;
 
 export const DEPLOYED_CONTRACTS = {
   MockConfidentialToken: '0x65C9020961f4fdF5E0a1fE01dC1225A096408B03' as `0x${string}`,
@@ -647,7 +647,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {
       // Ignore
     }
-    return 0;
+    return 18.50;
   });
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [pastEvents, setPastEvents] = useState<ProtocolEventRecord[]>([]);
