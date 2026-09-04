@@ -37,7 +37,14 @@ const AppContent: React.FC = () => {
   }
 
   // Public Informational Views: Always accessible without signing in
-  const isPublicView = currentView === 'landing' || currentView === 'docs' || currentView === 'help';
+  const isPublicView = 
+    currentView === 'landing' || 
+    currentView === 'docs' || 
+    currentView === 'help' || 
+    currentView === 'how-it-works' || 
+    currentView === 'security' || 
+    currentView === 'contracts' ||
+    currentView === 'verify';
 
   // All Other In-App Views: Require Email Login + Bound Wallet + Session Authorization
   if (!isPublicView && (!currentUser || !currentUser.boundWalletAddress || !isWalletMatchingBound || !isSessionAuthorized)) {

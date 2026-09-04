@@ -193,8 +193,24 @@ async function hashPassword(password: string): Promise<string> {
 
 
 
+export const getViewFromHash = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  const hash = window.location.hash.replace(/^#\/?/, '').trim().toLowerCase();
+  const validViews = [
+    'landing', 'vault', 'dashboard', 'activity', 'events', 'draws',
+    'verify', 'how-it-works', 'security', 'contracts', 'connect',
+    'docs', 'help', 'claim'
+  ];
+  if (hash && validViews.includes(hash)) {
+    return hash === 'dashboard' ? 'vault' : hash === 'draws' ? 'events' : hash;
+  }
+  return null;
+};
+
 export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, _setCurrentView] = useState<string>(() => {
+    const fromHash = getViewFromHash();
+    if (fromHash) return fromHash;
     try {
       const saved = localStorage.getItem('ghost_current_view');
       if (saved) return saved;
@@ -205,13 +221,46 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   const setCurrentView = (view: string) => {
-    _setCurrentView(view);
+    const normalized = view === 'dashboard' ? 'vault' : view === 'draws' ? 'events' : view;
+    _setCurrentView(normalized);
     try {
-      localStorage.setItem('ghost_current_view', view);
+      localStorage.setItem('ghost_current_view', normalized);
+      if (normalized === 'landing') {
+        if (window.location.hash) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      } else {
+        window.location.hash = `/${normalized}`;
+      }
     } catch {
       // Ignore
     }
   };
+
+  // Sync with browser forward/back buttons and hash changes
+  useEffect(() => {
+    const onHashChange = () => {
+      const fromHash = getViewFromHash();
+      if (fromHash) {
+        _setCurrentView(fromHash);
+        try {
+          localStorage.setItem('ghost_current_view', fromHash);
+        } catch {
+          // Ignore
+        }
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  // Ensure current URL hash matches currentView on first mount
+  useEffect(() => {
+    const fromHash = getViewFromHash();
+    if (!fromHash && currentView && currentView !== 'landing') {
+      window.location.hash = `/${currentView}`;
+    }
+  }, [currentView]);
 
   // Global Toast Notifications State
   const [toasts, setToasts] = useState<ToastItem[]>([]);
