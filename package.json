@@ -10,6 +10,7 @@
     "node": ">=20.18.0"
   },
   "scripts": {
+    "start": "ts-node scripts/keeper-server.ts",
     "postinstall": "npm install --prefix apps/web",
     "build": "npm run build --prefix apps/web",
     "keeper": "npx ts-node scripts/keeper-bot.ts",
@@ -30,6 +31,13 @@
   ],
   "author": "Ghost Protocol Team",
   "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.2",
+    "@types/node": "^20.14.9"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
@@ -42,15 +50,10 @@
     "@typechain/hardhat": "^9.1.0",
     "@types/chai": "^4.3.16",
     "@types/mocha": "^10.0.7",
-    "@types/node": "^20.14.9",
     "chai": "^4.3.10",
-    "dotenv": "^16.4.5",
-    "ethers": "^6.13.1",
     "hardhat": "^2.22.6",
     "hardhat-gas-reporter": "^1.0.10",
     "solidity-coverage": "^0.8.12",
-    "ts-node": "^10.9.2",
-    "typechain": "^8.3.2",
-    "typescript": "^5.5.2"
+    "typechain": "^8.3.2"
   }
 }
