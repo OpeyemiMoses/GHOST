@@ -353,7 +353,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           emailKey !== currentUser.email.toLowerCase() &&
           accountsDb[emailKey].boundWalletAddress?.toLowerCase() === walletAddress.toLowerCase()
         ) {
-          const errMsg = `This wallet is already bound to another account (${accountsDb[emailKey].email}).`;
+          const errMsg = 'This wallet is already bound to another account.';
           addToast({ type: 'error', title: 'Wallet Already Bound', message: errMsg });
           return { success: false, error: errMsg };
         }
@@ -369,7 +369,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addToast({
         type: 'success',
         title: 'Wallet Bound (1:1)',
-        message: `Bound ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} exclusively to ${currentUser.email}.`,
+        message: `Bound ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} exclusively to your account.`,
       });
       return { success: true };
     } catch (e: any) {
