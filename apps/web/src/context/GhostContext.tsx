@@ -218,7 +218,7 @@ export const getViewFromHash = (): string | null => {
 // One-time automatic clean slate purge across all clients and wallets
 if (typeof window !== 'undefined') {
   try {
-    const CLEAN_SLATE_KEY = 'ghost_clean_slate_v6';
+    const CLEAN_SLATE_KEY = 'ghost_clean_slate_v7';
     if (!localStorage.getItem(CLEAN_SLATE_KEY)) {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -917,6 +917,35 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const unsubscribe = subscribeToGlobalState((data) => {
       if (!data) return;
+
+      // Handle Global Reset Signal across all devices
+      if (data.isReset) {
+        setCloudDeposits({});
+        setTransactions([]);
+        setUserBalance(0);
+        setUserYield(0);
+        setWalletTokenBalance(0);
+        setUnclaimedPrizes([]);
+        setClaimedPrizes([]);
+        setPastEvents([]);
+        setCurrentPrizePool(0);
+        if (data.activeEvent) {
+          setActiveEvent(data.activeEvent);
+        }
+        try {
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('ghost_') && k !== 'ghost_clean_slate_v7' && k !== 'ghost_current_view') {
+              keysToRemove.push(k);
+            }
+          }
+          keysToRemove.forEach((k) => localStorage.removeItem(k));
+        } catch {
+          // Ignore
+        }
+        return;
+      }
 
       // 1. Sync accounts DB
       if (data.accountsDb && Object.keys(data.accountsDb).length > 0) {

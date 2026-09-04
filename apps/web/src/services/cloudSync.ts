@@ -29,7 +29,7 @@ export interface GlobalSyncPayload {
   lastUpdated: number;
 }
 
-const TOPIC = 'ghost_protocol_global_sync_v2';
+const TOPIC = 'ghost_protocol_global_sync_v3';
 const PUBLISH_URL = `https://ntfy.sh/${TOPIC}`;
 const POLL_URL = `https://ntfy.sh/${TOPIC}/json?poll=1&since=24h`;
 const SSE_URL = `https://ntfy.sh/${TOPIC}/sse`;
