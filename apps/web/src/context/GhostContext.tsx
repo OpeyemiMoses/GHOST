@@ -194,7 +194,24 @@ async function hashPassword(password: string): Promise<string> {
 
 
 export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentView, setCurrentView] = useState<string>('landing');
+  const [currentView, _setCurrentView] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('ghost_current_view');
+      if (saved) return saved;
+    } catch {
+      // Ignore
+    }
+    return 'landing';
+  });
+
+  const setCurrentView = (view: string) => {
+    _setCurrentView(view);
+    try {
+      localStorage.setItem('ghost_current_view', view);
+    } catch {
+      // Ignore
+    }
+  };
 
   // Global Toast Notifications State
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -242,8 +259,19 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return address.toLowerCase() === currentUser.boundWalletAddress.toLowerCase();
   }, [currentUser, address]);
 
-  // Cryptographic Signature Decryption & Session Authorization State
-  const [isSessionAuthorized, setIsSessionAuthorized] = useState<boolean>(false);
+  // Cryptographic Signature Decryption & Session Authorization State (Persists across reloads)
+  const [isSessionAuthorized, setIsSessionAuthorized] = useState<boolean>(() => {
+    try {
+      const savedEmail = localStorage.getItem('ghost_current_user_email');
+      if (savedEmail) {
+        const authKey = `ghost_session_auth_${savedEmail.toLowerCase()}`;
+        return localStorage.getItem(authKey) === 'true';
+      }
+    } catch {
+      // Ignore
+    }
+    return false;
+  });
   const [isDecrypted, setIsDecrypted] = useState<boolean>(false);
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [decryptionSignature, setDecryptionSignature] = useState<string | null>(null);
@@ -313,6 +341,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const logoutAccount = () => {
+    if (currentUser?.email) {
+      try {
+        localStorage.removeItem(`ghost_session_auth_${currentUser.email.toLowerCase()}`);
+      } catch {
+        // Ignore
+      }
+    }
     localStorage.removeItem('ghost_current_user_email');
     setCurrentUser(null);
     setIsSessionAuthorized(false);
@@ -363,12 +398,16 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Re-lock session on account/wallet change
+  // Re-lock session only if active wallet does not match bound wallet
   useEffect(() => {
-    setIsSessionAuthorized(false);
-    setIsDecrypted(false);
-    setDecryptionSignature(null);
-  }, [address, isConnected, currentUser?.email]);
+    if (currentUser?.boundWalletAddress && address) {
+      if (currentUser.boundWalletAddress.toLowerCase() !== address.toLowerCase()) {
+        setIsSessionAuthorized(false);
+        setIsDecrypted(false);
+        setDecryptionSignature(null);
+      }
+    }
+  }, [address, currentUser]);
 
   const requestSessionAuthorization = async (): Promise<boolean> => {
     if (!isConnected || !address) {
@@ -398,6 +437,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setDecryptionSignature(sig);
       setIsDecrypted(false); // Balances sealed by default on entry
       setIsSessionAuthorized(true);
+      if (currentUser?.email) {
+        try {
+          localStorage.setItem(`ghost_session_auth_${currentUser.email.toLowerCase()}`, 'true');
+        } catch {
+          // Ignore
+        }
+      }
       addToast({
         type: 'success',
         title: 'Session Authorized',
@@ -532,10 +578,39 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const savedPool = localStorage.getItem('ghost_prize_pool');
     const savedPastEvents = localStorage.getItem('ghost_past_events');
 
+    const loadedBal = savedBal !== null ? parseFloat(savedBal) : 0;
+    let loadedYield = savedYield !== null ? parseFloat(savedYield) : 0;
+
+    // Background catch-up on load for personal yield
+    const lastYieldTimeStr = localStorage.getItem(`ghost_last_yield_time_${key}`);
+    const now = Date.now();
+    if (loadedBal > 0 && lastYieldTimeStr) {
+      const lastTime = parseInt(lastYieldTimeStr, 10);
+      const elapsedSeconds = Math.max(0, (now - lastTime) / 1000);
+      if (elapsedSeconds > 0 && elapsedSeconds < 3600 * 24 * 30) {
+        const catchUpEarned = (loadedBal * 0.082 * elapsedSeconds) / (365 * 86400);
+        if (catchUpEarned > 0) {
+          loadedYield = +(loadedYield + catchUpEarned).toFixed(4);
+          try {
+            localStorage.setItem(`ghost_yield_${key}`, loadedYield.toString());
+            localStorage.setItem(`ghost_last_yield_time_${key}`, now.toString());
+          } catch {
+            // Ignore
+          }
+        }
+      }
+    } else if (loadedBal > 0 && !lastYieldTimeStr) {
+      try {
+        localStorage.setItem(`ghost_last_yield_time_${key}`, now.toString());
+      } catch {
+        // Ignore
+      }
+    }
+
     // Strictly apply values or clean defaults for the connected address (ZERO cross-contamination)
     setWalletTokenBalance(savedWalletTokens !== null ? parseFloat(savedWalletTokens) : 0);
-    setUserBalance(savedBal !== null ? parseFloat(savedBal) : 0);
-    setUserYield(savedYield !== null ? parseFloat(savedYield) : 0);
+    setUserBalance(loadedBal);
+    setUserYield(loadedYield);
     setEncryptedHandle(savedHandle || generateCiphertextHandle(0, key));
 
     if (savedTxs) {
@@ -578,9 +653,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
 
-    setIsSessionAuthorized(false);
-    setIsDecrypted(false);
-    setDecryptionSignature(null);
+    const savedEmail = localStorage.getItem('ghost_current_user_email');
+    const isAuth = savedEmail && localStorage.getItem(`ghost_session_auth_${savedEmail.toLowerCase()}`) === 'true';
+    if (!isAuth) {
+      setIsSessionAuthorized(false);
+      setIsDecrypted(false);
+      setDecryptionSignature(null);
+    }
     loadedAddressRef.current = key;
   }, [address]);
 
@@ -943,10 +1022,20 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newBalance = userBalance + amount;
     const newWalletBalance = Math.max(0, walletTokenBalance - amount);
     const newHandle = generateCiphertextHandle(newBalance, address);
+    const key = address.toLowerCase();
+
+    try {
+      localStorage.setItem(`ghost_balance_${key}`, newBalance.toString());
+      localStorage.setItem(`ghost_wallet_tokens_${key}`, newWalletBalance.toString());
+      localStorage.setItem(`ghost_last_yield_time_${key}`, Date.now().toString());
+      localStorage.setItem('ghost_last_pool_time', Date.now().toString());
+    } catch {
+      // Ignore
+    }
 
     const newTx: TransactionRecord = {
       id: `tx_${Date.now()}`,
-      ownerAddress: address.toLowerCase(),
+      ownerAddress: key,
       type: 'Deposit',
       amount,
       encryptedHandle: newHandle,
@@ -1018,6 +1107,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       localStorage.setItem(`ghost_balance_${address.toLowerCase()}`, newBalance.toString());
       localStorage.setItem(`ghost_wallet_tokens_${address.toLowerCase()}`, newWalletBalance.toString());
+      localStorage.setItem(`ghost_last_yield_time_${address.toLowerCase()}`, Date.now().toString());
+      localStorage.setItem('ghost_last_pool_time', Date.now().toString());
     } catch (e) {
       // Ignore
     }
