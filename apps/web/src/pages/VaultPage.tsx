@@ -17,6 +17,7 @@ import {
   Check,
   Coins,
   RefreshCw,
+  RotateCcw,
   LogOut
 } from 'lucide-react';
 
@@ -45,6 +46,7 @@ export const VaultPage: React.FC = () => {
     activeEvent,
     transactions,
     participantCount,
+    resetProtocolState,
   } = useGhost();
 
   const { openConnectModal } = useConnectModal();
@@ -101,6 +103,16 @@ export const VaultPage: React.FC = () => {
         {/* Top Right Control Pills */}
         <div className="flex flex-wrap items-center justify-end gap-2 text-xs font-mono">
           
+          {/* Reset Demo State Button */}
+          <button
+            onClick={resetProtocolState}
+            className="px-3 py-1 rounded-full bg-zinc-100 hover:bg-red-50 hover:text-red-700 hover:border-red-200 border border-zinc-200 text-zinc-600 text-[11px] font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+            title="Reset round & demo state to start completely afresh"
+          >
+            <RotateCcw className="w-3 h-3 opacity-70" />
+            <span>Reset Demo</span>
+          </button>
+
           {/* Quick Faucet Mint Button */}
           <button
             onClick={() => onMint(1000)}
@@ -214,7 +226,7 @@ export const VaultPage: React.FC = () => {
           <div>
             <div className="text-2xl font-bold text-zinc-950 tracking-tight">
               {isDecrypted ? (
-                `+$${userYield.toFixed(2)}`
+                `+$${userYield.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`
               ) : (
                 <span className="font-mono text-xs sm:text-sm text-zinc-700 bg-zinc-100/90 border border-zinc-200/80 px-2 py-1 rounded-lg inline-flex items-center gap-1.5 w-fit">
                   <Lock className="w-3.5 h-3.5 text-zinc-500" />

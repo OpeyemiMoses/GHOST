@@ -166,6 +166,9 @@ interface GhostContextType {
   unclaimedPrizes: PrizeRecord[];
   claimedPrizes: PrizeRecord[];
   claimPrize: (prizeId: string) => Promise<boolean>;
+
+  // Protocol Reset & Start Afresh
+  resetProtocolState: () => void;
 }
 
 const GhostContext = createContext<GhostContextType | undefined>(undefined);
@@ -724,11 +727,49 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return count;
   }, [userBalance, address]);
 
-  // 1. Global Protocol Prize Pool Continuous Streaming Accumulator (ticks every 2s across entire network)
+  // 1. Global Protocol Prize Pool Continuous Streaming + Background Catch-Up Engine
   useEffect(() => {
+    const catchUpPool = () => {
+      const now = Date.now();
+      const lastTimeStr = localStorage.getItem('ghost_last_pool_time');
+      const lastTime = lastTimeStr ? parseInt(lastTimeStr, 10) : now;
+      const elapsedSeconds = Math.max(0, (now - lastTime) / 1000);
+
+      if (elapsedSeconds > 0 && elapsedSeconds < 3600 * 24 * 7) {
+        // Accrue ~0.0015 cUSDC per second during background elapsed time
+        const catchUpYield = +(elapsedSeconds * 0.0015).toFixed(4);
+        if (catchUpYield > 0) {
+          setCurrentPrizePool((prev) => {
+            const updated = +(prev + catchUpYield).toFixed(4);
+            try {
+              localStorage.setItem('ghost_prize_pool', updated.toString());
+            } catch {
+              // Ignore
+            }
+            return updated;
+          });
+        }
+      }
+      try {
+        localStorage.setItem('ghost_last_pool_time', now.toString());
+      } catch {
+        // Ignore
+      }
+    };
+
+    catchUpPool();
+    document.addEventListener('visibilitychange', catchUpPool);
+    window.addEventListener('focus', catchUpPool);
+
     const poolInterval = setInterval(() => {
+      const now = Date.now();
+      try {
+        localStorage.setItem('ghost_last_pool_time', now.toString());
+      } catch {
+        // Ignore
+      }
       setCurrentPrizePool((prev) => {
-        const next = +(prev + 0.0018 + Math.random() * 0.0006).toFixed(4);
+        const next = +(prev + 0.0015 + Math.random() * 0.0005).toFixed(4);
         try {
           localStorage.setItem('ghost_prize_pool', next.toString());
         } catch {
@@ -736,25 +777,79 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
         return next;
       });
-    }, 2000);
+    }, 1000);
 
-    return () => clearInterval(poolInterval);
+    return () => {
+      clearInterval(poolInterval);
+      document.removeEventListener('visibilitychange', catchUpPool);
+      window.removeEventListener('focus', catchUpPool);
+    };
   }, []);
 
-  // 2. Personal Real-Time APY Yield Accumulator for Active Depositors (8.2% APY streaming math)
+  // 2. Personal Real-Time APY Yield Accumulator for Active Depositors + Background Catch-Up Engine
   useEffect(() => {
-    if (userBalance <= 0) return;
-    
-    // Accrue personal yield every 2 seconds proportional to principal
-    const userYieldInterval = setInterval(() => {
-      // 8.2% APY / (365 days * 43200 2-second intervals)
-      const drip = (userBalance * 0.082) / (365 * 43200);
-      const yieldIncrement = Math.max(0.0001, +drip.toFixed(5));
-      setUserYield((prev) => +(prev + yieldIncrement).toFixed(4));
-    }, 2000);
+    if (!address || userBalance <= 0) return;
+    const key = address.toLowerCase();
 
-    return () => clearInterval(userYieldInterval);
-  }, [userBalance]);
+    const catchUpUserYield = () => {
+      const now = Date.now();
+      const lastTimeStr = localStorage.getItem(`ghost_last_yield_time_${key}`);
+      const lastTime = lastTimeStr ? parseInt(lastTimeStr, 10) : now;
+      const elapsedSeconds = Math.max(0, (now - lastTime) / 1000);
+
+      if (elapsedSeconds > 0 && elapsedSeconds < 3600 * 24 * 30) {
+        // 8.2% APY = (userBalance * 0.082 * elapsedSeconds) / (365 * 86400)
+        const catchUpEarned = (userBalance * 0.082 * elapsedSeconds) / (365 * 86400);
+        if (catchUpEarned > 0) {
+          setUserYield((prev) => {
+            const updated = +(prev + catchUpEarned).toFixed(4);
+            try {
+              localStorage.setItem(`ghost_yield_${key}`, updated.toString());
+            } catch {
+              // Ignore
+            }
+            return updated;
+          });
+        }
+      }
+      try {
+        localStorage.setItem(`ghost_last_yield_time_${key}`, now.toString());
+      } catch {
+        // Ignore
+      }
+    };
+
+    catchUpUserYield();
+    document.addEventListener('visibilitychange', catchUpUserYield);
+    window.addEventListener('focus', catchUpUserYield);
+
+    // Live continuous stream every 1s
+    const userYieldInterval = setInterval(() => {
+      const now = Date.now();
+      try {
+        localStorage.setItem(`ghost_last_yield_time_${key}`, now.toString());
+      } catch {
+        // Ignore
+      }
+      const secondDrip = (userBalance * 0.082) / (365 * 86400);
+      const yieldIncrement = Math.max(0.0001, +secondDrip.toFixed(5));
+      setUserYield((prev) => {
+        const next = +(prev + yieldIncrement).toFixed(4);
+        try {
+          localStorage.setItem(`ghost_yield_${key}`, next.toString());
+        } catch {
+          // Ignore
+        }
+        return next;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(userYieldInterval);
+      document.removeEventListener('visibilitychange', catchUpUserYield);
+      window.removeEventListener('focus', catchUpUserYield);
+    };
+  }, [address, userBalance]);
 
   // Sync state to local storage strictly scoped to the active connected address
   useEffect(() => {
@@ -1123,6 +1218,66 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => clearInterval(keeperInterval);
   }, [activeEvent, isComputingEvent]);
 
+  // Reset Protocol Demo State and Start Afresh
+  const resetProtocolState = () => {
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('ghost_')) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+    } catch {
+      // Ignore
+    }
+
+    const initialPool = 25.0;
+    const initialEvent: ProtocolEventRecord = {
+      eventId: 1,
+      status: 'OPEN',
+      startTime: Date.now(),
+      endTime: Date.now() + 3600000 * 24,
+      prizeAmount: initialPool,
+      encryptedPrizeHandle: generateCiphertextHandle(initialPool, 'GhostVault'),
+      winnerAddress: 'Pending Onchain Draw',
+      randomnessCommitment: '',
+      stateRoot: '',
+      txHash: '',
+      isVerified: false,
+    };
+
+    loadedAddressRef.current = null;
+    setWalletTokenBalance(0);
+    setUserBalance(0);
+    setUserYield(0);
+    setEncryptedHandle('0x7f4e8b91c2d3a4b5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9');
+    setTransactions([]);
+    setUnclaimedPrizes([]);
+    setClaimedPrizes([]);
+    setPastEvents([]);
+    setCurrentPrizePool(initialPool);
+    setActiveEvent(initialEvent);
+    setIsSessionAuthorized(false);
+    setIsDecrypted(false);
+    setDecryptionSignature(null);
+
+    try {
+      localStorage.setItem('ghost_prize_pool', initialPool.toString());
+      localStorage.setItem('ghost_past_events', '[]');
+      localStorage.setItem('ghost_last_pool_time', Date.now().toString());
+    } catch {
+      // Ignore
+    }
+
+    addToast({
+      type: 'info',
+      title: 'Round Reset (Start Afresh)',
+      message: 'Protocol state, balances, tickets, and Draw #1 have been reset to a clean start.',
+    });
+  };
+
   return (
     <GhostContext.Provider
       value={{
@@ -1167,6 +1322,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         unclaimedPrizes,
         claimedPrizes,
         claimPrize,
+        resetProtocolState,
       }}
     >
       {children}
