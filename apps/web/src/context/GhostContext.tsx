@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { useAccount, useDisconnect, useSignMessage, useWalletClient, usePublicClient, useChainId, useSwitchChain } from 'wagmi';
 import { sepolia } from 'wagmi/chains';
+import { fetchGlobalCloudState, pushGlobalCloudState } from '../services/cloudSync';
 
-export const PROTOCOL_BASELINE_TVL = 25000;
-export const PROTOCOL_BASELINE_SAVERS = 3;
+export const PROTOCOL_BASELINE_TVL = 0;
+export const PROTOCOL_BASELINE_SAVERS = 0;
 
 export const DEPLOYED_CONTRACTS = {
   MockConfidentialToken: '0x65C9020961f4fdF5E0a1fE01dC1225A096408B03' as `0x${string}`,
@@ -381,7 +382,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [decryptionSignature, setDecryptionSignature] = useState<string | null>(null);
 
-  // Authentication Actions
+  // Authentication Actions with Cloud Sync
   const registerAccount = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@')) {
@@ -409,6 +410,10 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
       localStorage.setItem('ghost_current_user_email', cleanEmail);
       setCurrentUser(newAccount);
+
+      // Broadcast new account to global cloud relay
+      pushGlobalCloudState({ accountsDb: { [cleanEmail]: newAccount } }).catch(() => {});
+
       addToast({ type: 'success', title: 'Account Created', message: `Welcome to Ghost! Enclave account created for ${cleanEmail}.` });
       return { success: true };
     } catch (e: any) {
@@ -424,8 +429,19 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, error: 'Please enter both email and password.' };
     }
     try {
-      const accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
-      const account: UserAccount | undefined = accountsDb[cleanEmail];
+      let accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+      let account: UserAccount | undefined = accountsDb[cleanEmail];
+      
+      // If not present in local storage, check global cloud relay
+      if (!account) {
+        const cloud = await fetchGlobalCloudState();
+        if (cloud?.accountsDb && cloud.accountsDb[cleanEmail]) {
+          account = cloud.accountsDb[cleanEmail];
+          accountsDb[cleanEmail] = account;
+          localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
+        }
+      }
+
       if (!account) {
         addToast({ type: 'error', title: 'Account Not Found', message: 'No account found with this email. Please create one.' });
         return { success: false, error: 'No account found with this email. Please create an account.' };
@@ -491,6 +507,9 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       accountsDb[currentUser.email.toLowerCase()] = updatedAccount;
       localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
       setCurrentUser(updatedAccount);
+
+      // Broadcast wallet binding to cloud
+      pushGlobalCloudState({ accountsDb: { [currentUser.email.toLowerCase()]: updatedAccount } }).catch(() => {});
       addToast({
         type: 'success',
         title: 'Wallet Bound (1:1)',
@@ -855,54 +874,112 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // Participant counter tracking actual unique depositors with active funds in the pool
-  const participantCount = useMemo(() => {
-    let localCount = 0;
+  // Global Cloud Synchronized Deposits Map across all devices (Desktop, Mobile, etc.)
+  const [cloudDeposits, setCloudDeposits] = useState<Record<string, number>>({});
+
+  // Continuous Cloud Synchronization Loop (Every 3.5s)
+  useEffect(() => {
+    let mounted = true;
+    const syncWithCloud = async () => {
+      const data = await fetchGlobalCloudState();
+      if (!data || !mounted) return;
+
+      // 1. Sync accounts DB
+      if (data.accountsDb && Object.keys(data.accountsDb).length > 0) {
+        try {
+          const localAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+          const merged = { ...localAccounts, ...data.accountsDb };
+          localStorage.setItem('ghost_accounts_db', JSON.stringify(merged));
+        } catch {
+          // Ignore
+        }
+      }
+
+      // 2. Sync deposits map across all devices
+      if (data.deposits && typeof data.deposits === 'object') {
+        setCloudDeposits(data.deposits);
+      }
+
+      // 3. Sync active draw event
+      if (data.activeEvent && typeof data.activeEvent.eventId === 'number') {
+        setActiveEvent((prev) => {
+          if (data.activeEvent.eventId > prev.eventId) {
+            return {
+              ...prev,
+              ...data.activeEvent,
+              prizeAmount: currentPrizePool,
+            };
+          }
+          return prev;
+        });
+      }
+
+      // 4. Sync past events
+      if (Array.isArray(data.pastEvents) && data.pastEvents.length > 0) {
+        setPastEvents(data.pastEvents);
+      }
+    };
+
+    syncWithCloud();
+    const interval = setInterval(syncWithCloud, 3500);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [currentPrizePool]);
+
+  // Total TVL calculated across ALL deposits on all devices in the cloud + local storage
+  const getVaultTotalDeposits = () => {
+    let localTotal = 0;
+    const allDeposits: Record<string, number> = { ...cloudDeposits };
     try {
-      const activeWallets = new Set<string>();
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
         if (k && k.startsWith('ghost_balance_')) {
           const val = parseFloat(localStorage.getItem(k) || '0');
           if (val > 0) {
-            const wallet = k.replace('ghost_balance_', '');
-            activeWallets.add(wallet.toLowerCase());
+            const wallet = k.replace('ghost_balance_', '').toLowerCase();
+            allDeposits[wallet] = Math.max(allDeposits[wallet] || 0, val);
           }
         }
       }
-      if (address) {
-        if (userBalance > 0) {
-          activeWallets.add(address.toLowerCase());
-        } else {
-          activeWallets.delete(address.toLowerCase());
+    } catch {
+      // Ignore
+    }
+    for (const addr in allDeposits) {
+      if (allDeposits[addr] > 0) localTotal += allDeposits[addr];
+    }
+    return localTotal;
+  };
+
+  // Participant counter tracking actual unique depositors across the global cloud + local wallet
+  const participantCount = useMemo(() => {
+    const activeWallets = new Set<string>();
+    for (const addr in cloudDeposits) {
+      if (cloudDeposits[addr] > 0) activeWallets.add(addr.toLowerCase());
+    }
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('ghost_balance_')) {
+          const val = parseFloat(localStorage.getItem(k) || '0');
+          if (val > 0) {
+            activeWallets.add(k.replace('ghost_balance_', '').toLowerCase());
+          }
         }
       }
-      localCount = activeWallets.size;
-    } catch (e) {
-      localCount = userBalance > 0 ? 1 : 0;
+    } catch {
+      // Ignore
     }
-    return PROTOCOL_BASELINE_SAVERS + localCount;
-  }, [userBalance, address]);
+    if (address && userBalance > 0) {
+      activeWallets.add(address.toLowerCase());
+    }
+    return activeWallets.size;
+  }, [cloudDeposits, userBalance, address]);
 
   // 1. Global Protocol Prize Pool Continuous Streaming + Background Catch-Up Engine
   // Accumulates 8.2% APY yield across all depositors in the protocol (TVL).
   useEffect(() => {
-    const getVaultTotalDeposits = () => {
-      let localTotal = 0;
-      try {
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith('ghost_balance_')) {
-            const val = parseFloat(localStorage.getItem(k) || '0');
-            if (val > 0) localTotal += val;
-          }
-        }
-      } catch {
-        // Ignore
-      }
-      return PROTOCOL_BASELINE_TVL + localTotal;
-    };
-
     const catchUpPool = () => {
       const totalDeposits = getVaultTotalDeposits();
       const now = Date.now();
@@ -965,7 +1042,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.removeEventListener('visibilitychange', catchUpPool);
       window.removeEventListener('focus', catchUpPool);
     };
-  }, []);
+  }, [cloudDeposits]);
 
   // 2. Personal Real-Time APY Yield Accumulator for Active Depositors + Background Catch-Up Engine
   useEffect(() => {
@@ -1176,6 +1253,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setEncryptedHandle(newHandle);
     setTransactions((prev) => [newTx, ...prev]);
 
+    // Broadcast deposit to global cloud relay so all other devices (Mobile/Desktop) see it
+    pushGlobalCloudState({
+      deposits: { [key]: newBalance },
+      lastUpdated: Date.now(),
+    }).catch(() => {});
+
     addToast({
       type: 'success',
       title: 'Deposit Confirmed',
@@ -1255,6 +1338,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setWalletTokenBalance(newWalletBalance);
     setEncryptedHandle(newHandle);
     setTransactions((prev) => [newTx, ...prev]);
+
+    // Broadcast withdrawal to global cloud relay
+    pushGlobalCloudState({
+      deposits: { [address.toLowerCase()]: newBalance },
+      lastUpdated: Date.now(),
+    }).catch(() => {});
 
     addToast({
       type: 'success',
@@ -1403,8 +1492,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
 
-    setCurrentPrizePool(0);
-    setActiveEvent({
+    const nextEvent: ProtocolEventRecord = {
       eventId: activeEvent.eventId + 1,
       status: 'OPEN',
       startTime: Date.now(),
@@ -1416,7 +1504,18 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       stateRoot: '',
       txHash: '',
       isVerified: false,
-    });
+    };
+
+    setCurrentPrizePool(0);
+    setActiveEvent(nextEvent);
+
+    // Broadcast draw settlement and new round to global cloud relay
+    pushGlobalCloudState({
+      activeEvent: nextEvent,
+      pastEvents: [finalized, ...pastEvents],
+      prizePool: 0,
+      lastUpdated: Date.now(),
+    }).catch(() => {});
 
     setIsComputingEvent(false);
     addToast({
