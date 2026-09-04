@@ -733,40 +733,38 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const savedClaimed = localStorage.getItem(`ghost_claimed_prizes_${key}`);
     const savedPool = localStorage.getItem('ghost_prize_pool');
     const savedPastEvents = localStorage.getItem('ghost_past_events');
-
     const loadedBal = savedBal !== null ? parseFloat(savedBal) : 0;
-    let loadedYield = savedYield !== null ? parseFloat(savedYield) : 0;
-
-    // Background catch-up on load for personal yield
-    const lastYieldTimeStr = localStorage.getItem(`ghost_last_yield_time_${key}`);
+    const savedAccruedYield = localStorage.getItem(`ghost_accrued_yield_${key}`);
+    const savedCheckpoint = localStorage.getItem(`ghost_yield_checkpoint_${key}`);
     const now = Date.now();
-    if (loadedBal > 0 && lastYieldTimeStr) {
-      const lastTime = parseInt(lastYieldTimeStr, 10);
-      const elapsedSeconds = Math.max(0, (now - lastTime) / 1000);
-      if (elapsedSeconds > 0 && elapsedSeconds < 3600 * 24 * 30) {
-        const catchUpEarned = (loadedBal * 0.082 * elapsedSeconds) / (365 * 86400);
-        if (catchUpEarned > 0) {
-          loadedYield = +(loadedYield + catchUpEarned).toFixed(4);
-          try {
-            localStorage.setItem(`ghost_yield_${key}`, loadedYield.toString());
-            localStorage.setItem(`ghost_last_yield_time_${key}`, now.toString());
-          } catch {
-            // Ignore
-          }
+    let loadedYield = 0;
+
+    if (savedAccruedYield !== null) {
+      loadedYield = parseFloat(savedAccruedYield) || 0;
+      if (savedCheckpoint && loadedBal > 0) {
+        const lastTime = parseInt(savedCheckpoint, 10);
+        const elapsedSeconds = Math.max(0, (now - lastTime) / 1000);
+        if (elapsedSeconds > 0 && elapsedSeconds < 3600 * 24 * 30) {
+          const catchUpEarned = (loadedBal * 0.082 * elapsedSeconds) / (365 * 86400);
+          loadedYield += catchUpEarned;
         }
       }
-    } else if (loadedBal > 0 && !lastYieldTimeStr) {
-      try {
-        localStorage.setItem(`ghost_last_yield_time_${key}`, now.toString());
-      } catch {
-        // Ignore
-      }
+    } else if (savedYield !== null) {
+      loadedYield = parseFloat(savedYield) || 0;
+    }
+
+    try {
+      localStorage.setItem(`ghost_accrued_yield_${key}`, loadedYield.toString());
+      localStorage.setItem(`ghost_yield_checkpoint_${key}`, now.toString());
+      localStorage.setItem(`ghost_yield_${key}`, loadedYield.toFixed(4));
+    } catch {
+      // Ignore
     }
 
     // Strictly apply values or clean defaults for the connected address (ZERO cross-contamination)
     setWalletTokenBalance(savedWalletTokens !== null ? parseFloat(savedWalletTokens) : 0);
     setUserBalance(loadedBal);
-    setUserYield(loadedYield);
+    setUserYield(+loadedYield.toFixed(4));
     setEncryptedHandle(savedHandle || generateCiphertextHandle(0, key));
 
     if (savedTxs) {
@@ -1213,10 +1211,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Calculates exactly 8.2% APY in total continuous lockstep with zero instant jumps on new deposits
   useEffect(() => {
     const calculateExactPool = () => {
-      const totalDeposits = getVaultTotalDeposits();
       const now = Date.now();
       const elapsed = Math.max(0, (now - poolAccumulatorRef.current.lastTime) / 1000);
-      const earnedSinceCheckpoint = (totalDeposits * 0.082 * elapsed) / (365 * 86400);
+      const tvl = poolAccumulatorRef.current.lastTvl > 0 ? poolAccumulatorRef.current.lastTvl : getVaultTotalDeposits();
+      if (poolAccumulatorRef.current.lastTvl === 0 && tvl > 0) {
+        poolAccumulatorRef.current.lastTvl = tvl;
+      }
+      const earnedSinceCheckpoint = (tvl * 0.082 * elapsed) / (365 * 86400);
       const exactYield = poolAccumulatorRef.current.accrued + earnedSinceCheckpoint;
       setCurrentPrizePool(+exactYield.toFixed(4));
     };
@@ -1257,7 +1258,19 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const checkpointStr = localStorage.getItem(`ghost_yield_checkpoint_${key}`);
       const accruedStr = localStorage.getItem(`ghost_accrued_yield_${key}`);
       const accrued = accruedStr ? parseFloat(accruedStr) : 0;
-      const checkpoint = checkpointStr ? parseInt(checkpointStr, 10) : now;
+      
+      let checkpoint = now;
+      if (checkpointStr) {
+        checkpoint = parseInt(checkpointStr, 10);
+      } else {
+        try {
+          localStorage.setItem(`ghost_yield_checkpoint_${key}`, now.toString());
+          localStorage.setItem(`ghost_accrued_yield_${key}`, accrued.toString());
+        } catch {
+          // Ignore
+        }
+      }
+
       const elapsed = Math.max(0, (now - checkpoint) / 1000);
       const earnedSinceCheckpoint = (userBalance * 0.082 * elapsed) / (365 * 86400);
       setUserYield(+(accrued + earnedSinceCheckpoint).toFixed(4));
