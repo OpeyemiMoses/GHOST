@@ -1170,19 +1170,54 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return activeWallets.size;
   }, [cloudDeposits, userBalance, address]);
 
-  // 1. Global Protocol Prize Pool Deterministic Mathematical Yield Engine
-  // Calculates exactly 8.2% APY in total lockstep sync across all devices worldwide
+  // Checkpoint-based Pool Accumulator to prevent instant jumps upon deposit / TVL changes
+  const poolAccumulatorRef = useRef<{ accrued: number; lastTime: number; lastTvl: number }>({
+    accrued: 0,
+    lastTime: Date.now(),
+    lastTvl: 0,
+  });
+
+  // Initialize pool checkpoint from storage on load
+  useEffect(() => {
+    try {
+      const savedAccrued = localStorage.getItem('ghost_pool_accrued');
+      const savedTime = localStorage.getItem('ghost_pool_checkpoint_time');
+      if (savedAccrued && savedTime) {
+        poolAccumulatorRef.current = {
+          accrued: parseFloat(savedAccrued) || 0,
+          lastTime: parseInt(savedTime, 10) || Date.now(),
+          lastTvl: getVaultTotalDeposits(),
+        };
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  const checkpointPool = (newTvl: number) => {
+    const now = Date.now();
+    const elapsed = Math.max(0, (now - poolAccumulatorRef.current.lastTime) / 1000);
+    const earned = (poolAccumulatorRef.current.lastTvl * 0.082 * elapsed) / (365 * 86400);
+    poolAccumulatorRef.current.accrued += earned;
+    poolAccumulatorRef.current.lastTime = now;
+    poolAccumulatorRef.current.lastTvl = newTvl;
+    try {
+      localStorage.setItem('ghost_pool_accrued', poolAccumulatorRef.current.accrued.toString());
+      localStorage.setItem('ghost_pool_checkpoint_time', now.toString());
+    } catch {
+      // Ignore
+    }
+  };
+
+  // 1. Global Protocol Prize Pool Continuous Mathematical Yield Engine
+  // Calculates exactly 8.2% APY in total continuous lockstep with zero instant jumps on new deposits
   useEffect(() => {
     const calculateExactPool = () => {
       const totalDeposits = getVaultTotalDeposits();
-      if (totalDeposits <= 0) {
-        setCurrentPrizePool(0);
-        return;
-      }
-      const startTime = activeEvent.startTime || 1725436800000;
-      const elapsedSeconds = Math.max(0, (Date.now() - startTime) / 1000);
-      // 8.2% APY = (TVL * 0.082 * elapsedSeconds) / (365 * 86400)
-      const exactYield = (totalDeposits * 0.082 * elapsedSeconds) / (365 * 86400);
+      const now = Date.now();
+      const elapsed = Math.max(0, (now - poolAccumulatorRef.current.lastTime) / 1000);
+      const earnedSinceCheckpoint = (totalDeposits * 0.082 * elapsed) / (365 * 86400);
+      const exactYield = poolAccumulatorRef.current.accrued + earnedSinceCheckpoint;
       setCurrentPrizePool(+exactYield.toFixed(4));
     };
 
@@ -1203,27 +1238,29 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', calculateExactPool);
     };
-  }, [cloudDeposits, activeEvent.startTime]);
+  }, [cloudDeposits]);
 
-  // 2. Personal Real-Time APY Yield Accumulator for Active Depositors
+  // 2. Personal Real-Time Continuous APY Yield Accumulator for Active Depositors
   useEffect(() => {
     if (!address || userBalance <= 0) {
       setUserYield(0);
       return;
     }
     const key = address.toLowerCase();
-    const depositTimeStr = localStorage.getItem(`ghost_deposit_time_${key}`);
-    const depositTime = depositTimeStr ? parseInt(depositTimeStr, 10) : Date.now();
 
     const calculateUserYield = () => {
       if (userBalance <= 0) {
         setUserYield(0);
         return;
       }
-      const elapsedSeconds = Math.max(0, (Date.now() - depositTime) / 1000);
-      // 8.2% APY = (Balance * 0.082 * elapsedSeconds) / (365 * 86400)
-      const exactEarned = (userBalance * 0.082 * elapsedSeconds) / (365 * 86400);
-      setUserYield(+exactEarned.toFixed(4));
+      const now = Date.now();
+      const checkpointStr = localStorage.getItem(`ghost_yield_checkpoint_${key}`);
+      const accruedStr = localStorage.getItem(`ghost_accrued_yield_${key}`);
+      const accrued = accruedStr ? parseFloat(accruedStr) : 0;
+      const checkpoint = checkpointStr ? parseInt(checkpointStr, 10) : now;
+      const elapsed = Math.max(0, (now - checkpoint) / 1000);
+      const earnedSinceCheckpoint = (userBalance * 0.082 * elapsed) / (365 * 86400);
+      setUserYield(+(accrued + earnedSinceCheckpoint).toFixed(4));
     };
 
     calculateUserYield();
@@ -1314,6 +1351,20 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       await waitForTransactionReceipt(config, { hash });
 
       const key = address.toLowerCase();
+      const now = Date.now();
+
+      // Checkpoint personal yield accrued on previous balance up to this exact second
+      const prevAccruedStr = localStorage.getItem(`ghost_accrued_yield_${key}`);
+      const prevAccrued = prevAccruedStr ? parseFloat(prevAccruedStr) : 0;
+      const prevCheckpointStr = localStorage.getItem(`ghost_yield_checkpoint_${key}`);
+      const prevCheckpoint = prevCheckpointStr ? parseInt(prevCheckpointStr, 10) : now;
+      const elapsed = Math.max(0, (now - prevCheckpoint) / 1000);
+      const earnedOnOldBalance = (userBalance * 0.082 * elapsed) / (365 * 86400);
+      const updatedAccrued = prevAccrued + earnedOnOldBalance;
+
+      // Checkpoint protocol prize pool before updating total TVL
+      checkpointPool(getVaultTotalDeposits() + amount);
+
       const newBalance = userBalance + amount;
       const newWalletBalance = Math.max(0, walletTokenBalance - amount);
       const newHandle = generateCiphertextHandle(newBalance, address);
@@ -1321,14 +1372,14 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         localStorage.setItem(`ghost_balance_${key}`, newBalance.toString());
         localStorage.setItem(`ghost_wallet_tokens_${key}`, newWalletBalance.toString());
-        if (userBalance <= 0) {
-          localStorage.setItem(`ghost_deposit_time_${key}`, Date.now().toString());
-        }
-        localStorage.setItem(`ghost_last_yield_time_${key}`, Date.now().toString());
-        localStorage.setItem('ghost_last_pool_time', Date.now().toString());
+        localStorage.setItem(`ghost_accrued_yield_${key}`, updatedAccrued.toString());
+        localStorage.setItem(`ghost_yield_checkpoint_${key}`, now.toString());
+        localStorage.setItem(`ghost_yield_${key}`, updatedAccrued.toFixed(4));
       } catch {
         // Ignore
       }
+
+      setUserYield(+updatedAccrued.toFixed(4));
 
       const newTx: TransactionRecord = {
         id: `tx_${Date.now()}`,
@@ -1407,6 +1458,20 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       await waitForTransactionReceipt(config, { hash });
 
       const key = address.toLowerCase();
+      const now = Date.now();
+
+      // Checkpoint personal yield accrued on previous balance
+      const prevAccruedStr = localStorage.getItem(`ghost_accrued_yield_${key}`);
+      const prevAccrued = prevAccruedStr ? parseFloat(prevAccruedStr) : 0;
+      const prevCheckpointStr = localStorage.getItem(`ghost_yield_checkpoint_${key}`);
+      const prevCheckpoint = prevCheckpointStr ? parseInt(prevCheckpointStr, 10) : now;
+      const elapsed = Math.max(0, (now - prevCheckpoint) / 1000);
+      const earnedOnOldBalance = (userBalance * 0.082 * elapsed) / (365 * 86400);
+      const updatedAccrued = prevAccrued + earnedOnOldBalance;
+
+      // Checkpoint protocol prize pool before reducing TVL
+      checkpointPool(Math.max(0, getVaultTotalDeposits() - amount));
+
       const newBalance = Math.max(0, userBalance - amount);
       const newWalletBalance = walletTokenBalance + amount;
       const newHandle = generateCiphertextHandle(newBalance, address);
@@ -1414,11 +1479,14 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         localStorage.setItem(`ghost_balance_${key}`, newBalance.toString());
         localStorage.setItem(`ghost_wallet_tokens_${key}`, newWalletBalance.toString());
-        localStorage.setItem(`ghost_last_yield_time_${key}`, Date.now().toString());
-        localStorage.setItem('ghost_last_pool_time', Date.now().toString());
+        localStorage.setItem(`ghost_accrued_yield_${key}`, updatedAccrued.toString());
+        localStorage.setItem(`ghost_yield_checkpoint_${key}`, now.toString());
+        localStorage.setItem(`ghost_yield_${key}`, updatedAccrued.toFixed(4));
       } catch (e) {
         // Ignore
       }
+
+      setUserYield(+updatedAccrued.toFixed(4));
 
       const newTx: TransactionRecord = {
         id: `tx_${Date.now()}`,
@@ -1765,9 +1833,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsDecrypted(false);
     setDecryptionSignature(null);
 
+    poolAccumulatorRef.current = { accrued: 0, lastTime: Date.now(), lastTvl: 0 };
+
     try {
       localStorage.setItem('ghost_prize_pool', '0.00');
       localStorage.setItem('ghost_past_events', '[]');
+      localStorage.removeItem('ghost_pool_accrued');
+      localStorage.removeItem('ghost_pool_checkpoint_time');
       localStorage.setItem('ghost_last_pool_time', Date.now().toString());
     } catch {
       // Ignore
