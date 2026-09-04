@@ -932,26 +932,43 @@ export const DocsPage: React.FC = () => {
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.5 · Yield</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                      Yield Mechanics
+                      Continuous Yield Checkpoint Engine (8.20% APY)
                     </h2>
                     <p className="text-xs text-zinc-500 mt-1">
-                      How continuous homomorphic savings yield is generated and accounted.
+                      Continuous homomorphic interest accounting with zero-jump deposit checkpointing.
                     </p>
                   </div>
 
                   <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
                     <p>
-                      In Ghost, yield originates from the collective capital pool deployed in <code>GhostPool</code>. 
-                      Torus FHE coprocessors evaluate continuous compound interest formulas over encrypted integer state.
+                      In Ghost Protocol, savings yield originates from confidential collateral deployed in <code>GhostPool</code>, accruing continuously at a benchmark rate of <strong>8.20% APY</strong>. To prevent artificial jumps or latency discrepancies when users deposit or withdraw, Ghost implements an institutional <strong>Continuous Yield Checkpoint Engine</strong>.
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200">
-                        <h3 className="font-bold text-xs text-zinc-900 mb-1">What is Public</h3>
-                        <p className="text-xs text-zinc-600">Total global yield pool accumulator and protocol draw interval timers.</p>
+
+                    {/* Mathematical Formula Card */}
+                    <div className="p-5 rounded-2xl bg-zinc-900 text-white space-y-3 font-mono">
+                      <div className="text-[10px] uppercase tracking-wider text-amber-400 font-bold">
+                        Continuous Compounding Accumulator Formula
                       </div>
-                      <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200">
-                        <h3 className="font-bold text-xs text-zinc-900 mb-1">What Remains Confidential</h3>
-                        <p className="text-xs text-zinc-600">Individual user yield share, accumulated interest amounts, and personal ticket weights.</p>
+                      <div className="text-xs sm:text-sm text-emerald-400 bg-zinc-950/80 p-3.5 rounded-xl border border-zinc-800">
+                        Yield(t) = Accrued_prev + (Balance × 0.082 × (t - t_checkpoint)) / (365 × 86400)
+                      </div>
+                      <p className="text-[11px] text-zinc-300 font-sans leading-relaxed">
+                        Whenever a user performs a deposit or withdrawal, the exact yield accumulated on their previous balance is locked into <code>Accrued_prev</code>, and <code>t_checkpoint</code> resets to the current millisecond. From that exact instant, the new balance accrues at the updated rate with zero artificial bonus or yield jumps.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                      <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
+                        <h3 className="font-bold text-xs text-zinc-900">What is Public</h3>
+                        <p className="text-xs text-zinc-600">
+                          Total protocol prize pool accumulator, 24-hour cycle timer, and verifiable state transition proofs.
+                        </p>
+                      </div>
+                      <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
+                        <h3 className="font-bold text-xs text-zinc-900">What Remains Confidential</h3>
+                        <p className="text-xs text-zinc-600">
+                          Individual user balances, personal accrued yield, and confidential lottery ticket handles sealed under <code>euint64</code>.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -964,22 +981,37 @@ export const DocsPage: React.FC = () => {
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.6 · Events</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                      Events & Zero-Loss Prize Draws
+                      Zero-Loss Blind Draws & $25 Jackpot Rollover
                     </h2>
                     <p className="text-xs text-zinc-500 mt-1">
-                      Verifiable cryptographic prize distribution mechanism.
+                      Verifiable cryptographic prize distribution and 24-hour jackpot compounding threshold.
                     </p>
                   </div>
 
                   <div className="space-y-4 text-xs text-zinc-600 leading-relaxed">
                     <p>
-                      Ghost prize draws are funded entirely by the yield generated from the collective pool. 
-                      No participant principal is ever wagered or lost. 
+                      Ghost prize draws are funded entirely by pooled yield without risking depositor principal. 
+                      To guarantee substantial prize distributions, Ghost enforces a <strong>$25.00 Minimum Prize Threshold</strong> rule.
                     </p>
-                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
-                      <h3 className="font-bold text-xs text-zinc-900">Event Execution Pipeline</h3>
-                      <div className="font-mono text-[11px] text-zinc-700">
-                        OPEN Cycle → SNAPSHOT (Root Hash) → FHE Randomness Generation → Blind Winner Selection → VERIFICATION (Proof Written Onchain) → SETTLEMENT (Prize Added to Winner Vault)
+
+                    {/* Jackpot Rollover Mechanism */}
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
+                      <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">★</span>
+                        <span>$25.00 Jackpot Rollover Mechanism</span>
+                      </h3>
+                      <ul className="list-disc pl-5 space-y-1.5 text-xs text-zinc-600">
+                        <li><strong>24-Hour Cycle Timer:</strong> Draws run on a continuous 24-hour evaluation window.</li>
+                        <li><strong>Threshold Guard:</strong> If the accumulated prize pool is under <strong>$25.00 cUSDC</strong> when the 24h timer reaches 00:00:00, the autonomous keeper does <em>not</em> trigger execution and the round does <em>not</em> increment.</li>
+                        <li><strong>Compounding Rollover:</strong> The round automatically rolls over into an extended 24-hour cycle, continuously compounding yield into the jackpot.</li>
+                        <li><strong>Autonomous Execution:</strong> As soon as the yield reaches $\ge \$25.00$ at cycle expiration, the keeper broadcasts onchain execution with Zama FHE randomness.</li>
+                      </ul>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-zinc-900 text-white space-y-2">
+                      <h3 className="font-bold text-xs text-amber-400">Event Execution Pipeline</h3>
+                      <div className="font-mono text-[11px] text-zinc-300">
+                        OPEN (24h Window) → THRESHOLD CHECK (≥ $25.00) → ONCHAIN FHE RANDOMNESS → BLIND WINNER SELECTION → VERIFIED MERKLE SETTLEMENT → CLAIM CARD ONCHAIN
                       </div>
                     </div>
                   </div>
@@ -2025,14 +2057,31 @@ export const DocsPage: React.FC = () => {
                       Smart Contract Function Reference
                     </h2>
                     <p className="text-xs text-zinc-500 mt-1">
-                      ABI signatures for all public protocol entry points.
+                      ABI signatures and access specifications for all protocol entry points.
                     </p>
                   </div>
 
-                  <div className="space-y-2 text-xs font-mono">
-                    <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900">function deposit(bytes calldata encryptedAmount) external</div>
-                    <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900">function withdraw(uint256 amount) external</div>
-                    <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl font-bold text-zinc-900">function executeDraw() external</div>
+                  <div className="space-y-3 text-xs font-mono">
+                    <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
+                      <div className="font-bold text-zinc-950">function openDraw() external onlyOwner</div>
+                      <div className="text-[11px] text-zinc-500 font-sans">Bootstraps and opens round #1 on GhostDraw. Subsequent rounds are automatically scheduled.</div>
+                    </div>
+                    <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
+                      <div className="font-bold text-zinc-950">function executeDraw() external</div>
+                      <div className="text-[11px] text-zinc-500 font-sans">Permissionless draw execution called by keeper bot when round expires and prize pool satisfies $\ge \$25.00$ threshold. Uses Zama FHE randomness.</div>
+                    </div>
+                    <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
+                      <div className="font-bold text-zinc-950">function claimPrize(uint256 eventId) external</div>
+                      <div className="text-[11px] text-zinc-500 font-sans">Verifies winner status and transfers accumulated cUSDC jackpot directly to the caller's Sepolia wallet.</div>
+                    </div>
+                    <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
+                      <div className="font-bold text-zinc-950">function depositPlaintext(uint256 amount) external</div>
+                      <div className="text-[11px] text-zinc-500 font-sans">Enters non-custodial capital into GhostPool and locks in continuous yield checkpoints.</div>
+                    </div>
+                    <div className="p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
+                      <div className="font-bold text-zinc-950">function mintPlaintext(address to, uint256 amount) external</div>
+                      <div className="text-[11px] text-zinc-500 font-sans">Testnet faucet function to mint cUSDC directly to any Sepolia address.</div>
+                    </div>
                   </div>
                 </section>
 </ScrollReveal>

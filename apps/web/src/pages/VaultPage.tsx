@@ -17,7 +17,8 @@ import {
   Check,
   Coins,
   RefreshCw,
-  LogOut
+  LogOut,
+  RotateCcw
 } from 'lucide-react';
 
 export const VaultPage: React.FC = () => {
@@ -47,6 +48,7 @@ export const VaultPage: React.FC = () => {
     participantCount,
     isWrongNetwork,
     switchToSepolia,
+    resetProtocolState,
   } = useGhost();
 
   const { openConnectModal } = useConnectModal();
@@ -164,7 +166,7 @@ export const VaultPage: React.FC = () => {
             <button
               onClick={disconnectWallet}
               title="Click to disconnect wallet"
-              className="group px-3 py-1 rounded-full bg-white border border-zinc-200 text-zinc-900 font-semibold shadow-2xs hover:border-red-200 hover:bg-red-50 hover:text-red-700 transition-all cursor-pointer flex items-center gap-1.5"
+              className="group px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-zinc-900 font-semibold shadow-2xs hover:border-red-200 hover:bg-red-50 hover:text-red-700 transition-all cursor-pointer flex items-center gap-1.5 text-xs"
             >
               <span>{userAddress}</span>
               <LogOut className="w-3 h-3 text-zinc-400 group-hover:text-red-600 transition-colors" />
@@ -172,11 +174,25 @@ export const VaultPage: React.FC = () => {
           ) : (
             <button
               onClick={() => setCurrentView('connect')}
-              className="px-3.5 py-1 rounded-full bg-black text-white font-semibold shadow-xs hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl bg-black text-white font-semibold shadow-xs hover:bg-zinc-800 transition-colors cursor-pointer text-xs"
             >
               Connect Wallet
             </button>
           )}
+
+          {/* Clean Slate Reset Button */}
+          <button
+            onClick={() => {
+              if (window.confirm('Reset all demo state, vault balances, and prize draws to start completely fresh?')) {
+                resetProtocolState();
+              }
+            }}
+            title="Reset demo state to start afresh"
+            className="px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-semibold border border-zinc-200 shadow-2xs transition-all cursor-pointer flex items-center gap-1.5 text-xs"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-zinc-500" />
+            <span className="hidden sm:inline">Reset State</span>
+          </button>
 
         </div>
 
