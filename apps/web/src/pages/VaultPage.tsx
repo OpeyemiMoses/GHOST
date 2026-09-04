@@ -190,7 +190,14 @@ export const VaultPage: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-zinc-950 tracking-tight">
-              {isDecrypted ? `$${userBalance.toFixed(2)}` : '••••••••'}
+              {isDecrypted ? (
+                `$${userBalance.toFixed(2)}`
+              ) : (
+                <span className="font-mono text-xs sm:text-sm text-zinc-700 bg-zinc-100/90 border border-zinc-200/80 px-2 py-1 rounded-lg inline-flex items-center gap-1.5 w-fit">
+                  <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>{encryptedHandle ? `${encryptedHandle.slice(0, 8)}...${encryptedHandle.slice(-6)}` : '0x7f4e...9b12'}</span>
+                </span>
+              )}
             </div>
             <div className="text-[11px] text-zinc-500 mt-0.5">
               Confidential Vault Balance (cUSDC)
@@ -206,7 +213,14 @@ export const VaultPage: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-zinc-950 tracking-tight">
-              {isDecrypted ? `+$${userYield.toFixed(2)}` : '••••••••'}
+              {isDecrypted ? (
+                `+$${userYield.toFixed(2)}`
+              ) : (
+                <span className="font-mono text-xs sm:text-sm text-zinc-700 bg-zinc-100/90 border border-zinc-200/80 px-2 py-1 rounded-lg inline-flex items-center gap-1.5 w-fit">
+                  <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>{encryptedHandle ? `0x${encryptedHandle.slice(10, 18)}...${encryptedHandle.slice(-6)}` : '0x3c2a...4d8e'}</span>
+                </span>
+              )}
             </div>
             <div className="text-[11px] text-zinc-500 mt-0.5">
               Accrued Homomorphic Yield
@@ -282,7 +296,7 @@ export const VaultPage: React.FC = () => {
 
               <p className="text-xs text-zinc-500 leading-relaxed">
                 {userBalance > 0
-                  ? `Your encrypted deposit of ${isDecrypted ? `$${userBalance.toFixed(2)} cUSDC` : '••••••••'} is generating auto-compounded yield and generating encrypted prize draw entries in the background.`
+                  ? `Your encrypted deposit of ${isDecrypted ? `$${userBalance.toFixed(2)} cUSDC` : (encryptedHandle ? `${encryptedHandle.slice(0, 8)}...${encryptedHandle.slice(-6)} (Sealed Ciphertext)` : '0x7f4e...9b12 (Sealed Ciphertext)')} is generating auto-compounded yield and generating encrypted prize draw entries in the background.`
                   : 'Deposit testnet cUSDC to start earning confidential savings yield and automatically enter zero-loss prize draws.'}
               </p>
 
@@ -433,7 +447,7 @@ export const VaultPage: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between text-xs text-zinc-500 mb-1.5">
                     <label className="font-medium text-zinc-700">Amount to deposit</label>
-                    <span className="font-mono">In your wallet: {isDecrypted ? `$${walletTokenBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '••••••••'}</span>
+                    <span className="font-mono">In your wallet: {isDecrypted ? `$${walletTokenBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '0x65c9...8b03 (Sealed)'}</span>
                   </div>
 
                   <div className="relative">
@@ -450,7 +464,7 @@ export const VaultPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 mt-1">
-                    <span>{isDecrypted ? `${walletTokenBalance.toLocaleString()} cUSDC available to deposit.` : '•••••••• cUSDC sealed'}</span>
+                    <span>{isDecrypted ? `${walletTokenBalance.toLocaleString()} cUSDC available to deposit.` : '0x65c9...8b03 (euint64 Sealed)'}</span>
                     <button
                       type="button"
                       onClick={() => setDepositAmount(walletTokenBalance.toString())}
@@ -492,7 +506,7 @@ export const VaultPage: React.FC = () => {
                       onClick={() => setWithdrawAmount(userBalance.toString())}
                       className="font-mono text-zinc-700 hover:text-black underline cursor-pointer"
                     >
-                      Max ({isDecrypted ? `$${userBalance.toFixed(2)}` : '••••••••'})
+                      Max ({isDecrypted ? `$${userBalance.toFixed(2)}` : (encryptedHandle ? `${encryptedHandle.slice(0, 8)}...${encryptedHandle.slice(-6)}` : '0x7f4e...9b12')})
                     </button>
                   </div>
 
