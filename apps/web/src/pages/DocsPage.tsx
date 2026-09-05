@@ -981,10 +981,10 @@ export const DocsPage: React.FC = () => {
                   <div>
                     <div className="text-[10px] font-mono text-zinc-400 uppercase font-semibold mb-1">02.6 · Events</div>
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                      Zero-Loss Blind Draws & $500 Jackpot Rollover
+                      Zero-Loss Blind Draws, Encrypted TWAB & $500 Rollovers
                     </h2>
                     <p className="text-xs text-zinc-500 mt-1">
-                      Verifiable cryptographic prize distribution and 24-hour jackpot compounding threshold.
+                      Verifiable cryptographic prize distribution, time-weighted odds accounting, and 24-hour jackpot compounding threshold.
                     </p>
                   </div>
 
@@ -994,18 +994,53 @@ export const DocsPage: React.FC = () => {
                       To guarantee substantial prize distributions, Ghost enforces a <strong>$500.00 Minimum Prize Threshold</strong> rule.
                     </p>
 
-                    {/* Jackpot Rollover Mechanism */}
+                    {/* Encrypted Time-Weighted Average Balance (TWAB) vs Snapshot */}
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
+                      <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">⚖</span>
+                        <span>Encrypted Time-Weighted Average Balance (TWAB)</span>
+                      </h3>
+                      <p className="text-zinc-600">
+                        Traditional prize-savings protocols calculate winning odds using a final-balance snapshot at draw close. This creates a severe fairness flaw: a deposit made moments before draw close receives the exact same winning odds as an equal deposit that provided liquidity for the entire 24 hours.
+                      </p>
+                      <p className="font-semibold text-zinc-950">
+                        Ghost strictly rejects final snapshots and computes draw weight as:
+                      </p>
+                      <div className="p-3 bg-zinc-900 text-amber-400 font-mono text-[11px] rounded-xl text-center">
+                        Draw Weight = ∑ (Capital_i × Time Held_i) &nbsp;≠&nbsp; Balance at Draw Close
+                      </div>
+                      <ul className="list-disc pl-5 space-y-1.5 text-xs text-zinc-600">
+                        <li><strong>Continuous Accounting:</strong> Every deposit tranche accumulates weight continuously from the exact second it enters the pool.</li>
+                        <li><strong>Anti-Sniping Invariant:</strong> Late deposits only accrue weight for the brief fraction of the cycle they were present. A $1,000 deposit held for 24h accumulates 24× more weight than a $1,000 deposit made 1 hour before the draw.</li>
+                        <li><strong>Tranche Isolation on Top-Ups:</strong> When a saver increases their deposit, the new funds are treated as an independent tranche with their own timestamp. New deposits cannot backdate or dilute earlier savers unfairly.</li>
+                        <li><strong>Homomorphic Evaluation:</strong> The entire time-weight calculation executes directly over encrypted balance history, preserving privacy while guaranteeing strict mathematical fairness.</li>
+                      </ul>
+                    </div>
+
+                    {/* Jackpot Rollover Mechanism & Odds Convergence */}
                     <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-3">
                       <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
                         <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">★</span>
-                        <span>$500.00 Jackpot Rollover Mechanism</span>
+                        <span>$500.00 Jackpot Rollover & Odds Convergence</span>
                       </h3>
                       <ul className="list-disc pl-5 space-y-1.5 text-xs text-zinc-600">
                         <li><strong>24-Hour Cycle Timer:</strong> Draws run on a continuous 24-hour evaluation window.</li>
                         <li><strong>Threshold Guard:</strong> If the accumulated prize pool is under <strong>$500.00 cUSDC</strong> when the 24h timer reaches 00:00:00, the autonomous keeper does <em>not</em> trigger execution and the round does <em>not</em> increment.</li>
-                        <li><strong>Compounding Rollover:</strong> The round automatically rolls over into an extended 24-hour cycle, continuously compounding yield into the jackpot.</li>
+                        <li><strong>Compounding Rollover:</strong> The round automatically rolls over into an extended 24-hour cycle (48h, 72h, etc.), continuously compounding yield into the jackpot.</li>
+                        <li><strong>Continuous Time-Weight Progression:</strong> During rollovers, savers who deposited earlier continue holding their accumulated time-weight advantage over the full multi-day duration, while later depositors gradually catch up over elapsed time.</li>
                         <li><strong>Autonomous Execution:</strong> When the 24h cycle timer reaches 00:00:00 and yield reaches $\ge \$500.00$, the keeper broadcasts onchain execution with Zama FHE randomness.</li>
                       </ul>
+                    </div>
+
+                    {/* Onchain Blind Winner Privacy */}
+                    <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
+                      <h3 className="font-bold text-xs text-zinc-900 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-zinc-900 text-white flex items-center justify-center font-mono text-[10px]">🔒</span>
+                        <span>Onchain Blind Winner Privacy Guarantee</span>
+                      </h3>
+                      <p className="text-xs text-zinc-600">
+                        When the autonomous keeper executes a draw onchain, the broadcasted transaction records encrypted winner ticket handles (<code>euint64</code>) and Merkle state roots. Observers on public block explorers cannot inspect or identify the winning wallet address. Only the winning saver with their cryptographic private key can unmask and claim their prize.
+                      </p>
                     </div>
 
                     <div className="p-5 rounded-2xl bg-zinc-900 text-white space-y-2">

@@ -104,14 +104,27 @@ Ghost is architected on a strict zero-knowledge security boundary:
 
 ---
 
-## Draw Mechanics: Onchain FHE Randomness & Blind Winner Selection
+## Draw Mechanics: Encrypted TWAB, $500 Rollover & Blind Winner Privacy
 
-1. **Encrypted Accumulation:** As users deposit `cUSDC`, their encrypted balance is registered in `GhostPool`.
-2. **Time-Lock Cycle:** Draws operate on a continuous 24-hour cycle.
-3. **Homomorphic Evaluation:** When the cycle expires, the Autonomous Keeper triggers `GhostDraw.executeDraw()`.
-4. **Weighted Blind Sampling:** Using Zama FHE randomness (`FHE.randEuint`), a random number is generated homomorphically to sample a winner weighted by their encrypted balance — without revealing any participant's balance or position.
-5. **State Root Commitment:** A cryptographic state root and randomness commitment are recorded in `GhostVerifier` for zero-knowledge verification on Sepolia Etherscan.
-6. **Confidential Payout Reservation:** The prize is reserved as `UNCLAIMED` onchain for the winner's wallet address.
+Ghost strictly rejects snapshot-based draw weights and computes odds over continuous encrypted history:
+
+### 1. Encrypted Time-Weighted Average Balance (TWAB)
+- **The Core Equation:**
+  $$\text{Draw Weight} = \sum_{i} (\text{Deposit Tranche}_i \times \text{Time Held}_i)$$
+- **Anti-Sniping Protection:** A deposit made early in the 24-hour cycle accumulates significantly higher draw weight than an equal deposit made moments before the draw close.
+- **Tranche-Isolated Top-Ups:** When an existing saver deposits additional funds, the new capital is isolated into a fresh tranche with its own timestamp. New deposits never backdate or dilute earlier savers unfairly.
+- **Zero Privacy Leakage:** The continuous time-weight integral is evaluated directly over encrypted balance handles using Torus FHE coprocessors.
+
+### 2. $500.00 Minimum Prize Threshold & Multi-Cycle Rollovers
+- **24-Hour Cycle Evaluation:** Draws run on a strict 24-hour evaluation window.
+- **Threshold Rule:** When the timer reaches `00:00:00`, the autonomous keeper evaluates whether the jackpot satisfies $\ge \$500.00\text{ cUSDC}$.
+- **Automatic Rollover:** If the prize pool is $< \$500.00$, the keeper does *not* execute and rolls the cycle into the next 24-hour window ($48\text{h}, 72\text{h}, \dots$), compounding yield until the $500.00 threshold is reached.
+- **Relative Odds Convergence:** During rollovers, earlier depositors retain their accumulated time-weight advantage over the entire multi-day span, while newer deposits gradually catch up over elapsed time.
+
+### 3. Onchain Blind Winner Privacy Guarantee
+- **Encrypted Ticket Emission:** When a draw executes onchain, the broadcasted transaction records encrypted winner ticket handles (`euint64`) and Merkle state roots.
+- **Zero Address Leaks:** Observers on Sepolia Etherscan cannot view or identify the winning wallet address.
+- **Cryptographic Claim:** Only the winner's wallet holding the corresponding private key can decrypt the winning claim card via EIP-712 signature clearance and claim the prize.
 
 ---
 

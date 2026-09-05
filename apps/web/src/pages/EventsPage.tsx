@@ -294,49 +294,59 @@ export const EventsPage: React.FC = () => {
       {/* Contextual Writings & Cryptographic Mechanics */}
       <div className="mt-8 space-y-6">
         
-        {/* Time-Lock & Gas Execution Security Section */}
-        <div className="p-7 rounded-3xl bg-zinc-50 border border-zinc-200">
-          <div className="flex items-center gap-2 font-bold text-sm text-zinc-950 mb-2">
-            <Lock className="w-4 h-4 text-amber-600" />
-            <span>Smart Contract Execution Requirements</span>
+        {/* Time-Weighted Average Balance (TWAB) Section */}
+        <div className="p-7 rounded-3xl bg-zinc-900 text-white border border-zinc-800 space-y-3">
+          <div className="flex items-center gap-2 font-bold text-sm text-amber-400">
+            <Lock className="w-4 h-4 text-amber-400" />
+            <span>Encrypted Time-Weighted Average Balance (TWAB) vs Final Snapshot</span>
           </div>
-          <p className="text-xs text-zinc-600 leading-relaxed max-w-3xl">
-            Executing an onchain prize cycle requires a connected Web3 wallet to sign the Ethereum transaction and pay gas for the Torus FHE coprocessor computation. 
-            Furthermore, the <code className="text-zinc-900 font-mono font-semibold">GhostDraw</code> contract strictly rejects any premature execution attempts prior to timestamp expiration (<code className="text-zinc-900 font-mono">block.timestamp &gt;= eventEndTime</code>).
+          <p className="text-xs text-zinc-300 leading-relaxed max-w-3xl">
+            Ghost rejects final-balance snapshots. A final snapshot treats a deposit made moments before draw close the same as a deposit held across the entire epoch. 
+            Instead, Ghost calculates <strong>Draw Weight = Capital × Time Held</strong> directly over encrypted balance history.
           </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs text-zinc-400">
+            <div className="p-3 rounded-xl bg-zinc-800/80 border border-zinc-700/60 space-y-1">
+              <div className="font-bold text-white text-[11px] font-mono">Anti-Sniping Protection</div>
+              <div>Deposits made early in the epoch accumulate more time-weight than equal deposits made shortly before draw close.</div>
+            </div>
+            <div className="p-3 rounded-xl bg-zinc-800/80 border border-zinc-700/60 space-y-1">
+              <div className="font-bold text-white text-[11px] font-mono">Tranche-Isolated Top-Ups</div>
+              <div>When a saver increases their deposit, the new funds are treated as an independent tranche, never backdating or inflating odds unfairly.</div>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-xs">
           <h2 className="text-base sm:text-lg font-bold text-zinc-950 tracking-tight mb-2">
-            Verifiable Blind Prize-Draw Mechanics
+            Verifiable Blind Prize-Draw Mechanics & Onchain Privacy
           </h2>
           <p className="text-xs sm:text-sm text-zinc-600 leading-relaxed mb-6 max-w-3xl">
-            Conventional prize-savings protocols leak participant ticket counts and odds to all observers. 
-            Ghost evaluates prize drawings entirely under encryption using Torus FHE coprocessors and verifiable randomness on Ethereum Sepolia.
+            Conventional prize-savings protocols leak participant addresses, ticket counts, and odds on public block explorers. 
+            Ghost evaluates prize drawings entirely under encryption using Zama fhEVM coprocessors without exposing winner identities publicly.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200">
               <span className="text-[11px] font-mono text-zinc-400 uppercase font-semibold block mb-1">Coprocessor</span>
-              <h3 className="font-bold text-xs text-zinc-900 mb-1.5">Encrypted Weighted Sampling</h3>
+              <h3 className="font-bold text-xs text-zinc-900 mb-1.5">Encrypted TWAB Sampling</h3>
               <p className="text-xs text-zinc-600 leading-relaxed">
-                Ticket quantities are evaluated in ciphertext space. The probability of winning scales proportionally with your deposit without revealing how much you have saved.
+                Time-weighted balances are computed over encrypted integers. Odds scale with capital and duration without revealing how much you saved.
               </p>
             </div>
 
             <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200">
               <span className="text-[11px] font-mono text-zinc-400 uppercase font-semibold block mb-1">Randomness</span>
-              <h3 className="font-bold text-xs text-zinc-900 mb-1.5">Commitment Scheme</h3>
+              <h3 className="font-bold text-xs text-zinc-900 mb-1.5">Zama FHE Commitment</h3>
               <p className="text-xs text-zinc-600 leading-relaxed">
-                Random seeds are committed onchain prior to the draw cycle. Neither nodes nor smart contracts can manipulate or bias the outcome in advance.
+                Cryptographic seeds are committed onchain during the draw. Neither nodes nor smart contracts can manipulate or bias the outcome in advance.
               </p>
             </div>
 
             <div className="p-5 rounded-2xl bg-zinc-50 border border-zinc-200">
-              <span className="text-[11px] font-mono text-zinc-400 uppercase font-semibold block mb-1">Automatic Settlement</span>
-              <h3 className="font-bold text-xs text-zinc-900 mb-1.5">Encrypted Distribution</h3>
+              <span className="text-[11px] font-mono text-zinc-400 uppercase font-semibold block mb-1">Privacy Guarantee</span>
+              <h3 className="font-bold text-xs text-zinc-900 mb-1.5">Blind Winner Ticket</h3>
               <p className="text-xs text-zinc-600 leading-relaxed">
-                When a draw is finalized, the prize sum is homomorphically added to the winning participant’s balance ciphertext, requiring no manual claims.
+                Onchain transactions record encrypted winner handles and Merkle state roots. Public observers cannot view the winning wallet address.
               </p>
             </div>
           </div>

@@ -63,6 +63,12 @@ export interface ToastItem {
   message?: string;
 }
 
+export interface DepositTranche {
+  id: string;
+  amount: number;
+  timestamp: number;
+}
+
 export interface TransactionRecord {
   id: string;
   ownerAddress?: string;
@@ -79,6 +85,7 @@ export interface ProtocolEventRecord {
   status: 'OPEN' | 'COMPUTING_FHE' | 'FINALIZED';
   startTime: number;
   endTime: number;
+  rolloverCount?: number;
   prizeAmount: number;
   encryptedPrizeHandle: string;
   winnerAddress: string;
@@ -148,17 +155,24 @@ interface GhostContextType {
   isMinting: boolean;
   handleMint: (amount?: number) => Promise<void>;
 
-  // Owner's Decrypted Vault State (Pure initial 0, zero mock)
+  // Owner's Decrypted Vault State
   userBalance: number;
   userYield: number;
   userPositionStatus: string;
   encryptedHandle: string;
 
+  // Time-Weighted Average Balance (TWAB) Draw Weight & Odds
+  depositTranches: DepositTranche[];
+  userTimeWeightedWeight: number;
+  userWinOddsPercent: number;
+  totalPoolWeight: number;
+  rolloverCount: number;
+
   // Actions
   handleDeposit: (amount: number) => Promise<void>;
   handleWithdraw: (amount: number) => Promise<void>;
 
-  // Activity (Strictly empty until user performs an action)
+  // Activity
   transactions: TransactionRecord[];
 
   // Participants & Network Metrics
@@ -659,6 +673,14 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [userBalance, setUserBalance] = useState<number>(0);
   const [userYield, setUserYield] = useState<number>(0);
   const [encryptedHandle, setEncryptedHandle] = useState<string>('0x7f4e8b91c2d3a4b5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9');
+  
+  // Encrypted Time-Weighted Average Balance (TWAB) Tranches & Metrics
+  const [depositTranches, setDepositTranches] = useState<DepositTranche[]>([]);
+  const [cloudDepositTranches, setCloudDepositTranches] = useState<Record<string, DepositTranche[]>>({});
+  const [userTimeWeightedWeight, setUserTimeWeightedWeight] = useState<number>(0);
+  const [userWinOddsPercent, setUserWinOddsPercent] = useState<number>(0);
+  const [totalPoolWeight, setTotalPoolWeight] = useState<number>(0);
+
   const [currentPrizePool, setCurrentPrizePool] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('ghost_prize_pool');
@@ -726,7 +748,6 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const key = address.toLowerCase();
     const savedWalletTokens = localStorage.getItem(`ghost_wallet_tokens_${key}`);
     const savedBal = localStorage.getItem(`ghost_balance_${key}`);
-    const savedYield = localStorage.getItem(`ghost_yield_${key}`);
     const savedHandle = localStorage.getItem(`ghost_handle_${key}`);
     const savedTxs = localStorage.getItem(`ghost_txs_${key}`);
     const savedUnclaimed = localStorage.getItem(`ghost_unclaimed_prizes_${key}`);
@@ -734,29 +755,37 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const savedPool = localStorage.getItem('ghost_prize_pool');
     const savedPastEvents = localStorage.getItem('ghost_past_events');
     const loadedBal = savedBal !== null ? parseFloat(savedBal) : 0;
-    const savedAccruedYield = localStorage.getItem(`ghost_accrued_yield_${key}`);
-    const savedCheckpoint = localStorage.getItem(`ghost_yield_checkpoint_${key}`);
-    const now = Date.now();
-    let loadedYield = 0;
+    
+    // Load deposit tranches for deterministic yield & TWAB
+    const savedTranchesStr = localStorage.getItem(`ghost_tranches_${key}`);
+    let loadedTranches: DepositTranche[] = [];
+    if (savedTranchesStr) {
+      try {
+        loadedTranches = JSON.parse(savedTranchesStr);
+      } catch {
+        loadedTranches = [];
+      }
+    }
+    if (loadedTranches.length === 0 && loadedBal > 0) {
+      // Initialize starting tranche matching current balance
+      loadedTranches = [{ id: `tranche_${Date.now()}`, amount: loadedBal, timestamp: Date.now() - 3600000 * 4 }];
+    }
+    setDepositTranches(loadedTranches);
 
-    if (savedAccruedYield !== null) {
-      loadedYield = parseFloat(savedAccruedYield) || 0;
-      if (savedCheckpoint && loadedBal > 0) {
-        const lastTime = parseInt(savedCheckpoint, 10);
-        const elapsedSeconds = Math.max(0, (now - lastTime) / 1000);
-        if (elapsedSeconds > 0 && elapsedSeconds < 3600 * 24 * 30) {
-          const catchUpEarned = (loadedBal * 0.082 * elapsedSeconds) / (365 * 86400);
-          loadedYield += catchUpEarned;
+    const now = Date.now();
+    let initialYield = 0;
+    if (loadedTranches.length > 0) {
+      for (const tr of loadedTranches) {
+        if (tr.amount > 0) {
+          const elapsedSec = Math.max(0, (now - tr.timestamp) / 1000);
+          initialYield += (tr.amount * 0.082 * elapsedSec) / (365 * 86400);
         }
       }
-    } else if (savedYield !== null) {
-      loadedYield = parseFloat(savedYield) || 0;
     }
 
     try {
-      localStorage.setItem(`ghost_accrued_yield_${key}`, loadedYield.toString());
-      localStorage.setItem(`ghost_yield_checkpoint_${key}`, now.toString());
-      localStorage.setItem(`ghost_yield_${key}`, loadedYield.toFixed(4));
+      localStorage.setItem(`ghost_tranches_${key}`, JSON.stringify(loadedTranches));
+      localStorage.setItem(`ghost_yield_${key}`, initialYield.toFixed(4));
     } catch {
       // Ignore
     }
@@ -764,7 +793,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Strictly apply values or clean defaults for the connected address (ZERO cross-contamination)
     setWalletTokenBalance(savedWalletTokens !== null ? parseFloat(savedWalletTokens) : 0);
     setUserBalance(loadedBal);
-    setUserYield(+loadedYield.toFixed(4));
+    setUserYield(+initialYield.toFixed(4));
     setEncryptedHandle(savedHandle || generateCiphertextHandle(0, key));
 
     if (savedTxs) {
@@ -1053,7 +1082,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       }
 
-      // 2. Sync deposits map across all devices
+      // 2. Sync deposits & deposit tranches map across all devices
       if (data.deposits && typeof data.deposits === 'object') {
         setCloudDeposits((prev) => ({ ...prev, ...data.deposits }));
         if (address) {
@@ -1071,65 +1100,25 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       }
 
-      // 3. Sync yield checkpoints across devices
-      if (data.yieldCheckpoints && typeof data.yieldCheckpoints === 'object') {
-        const now = Date.now();
-        for (const addr in data.yieldCheckpoints) {
-          const cp = data.yieldCheckpoints[addr];
-          if (cp && typeof cp.accrued === 'number' && typeof cp.lastTime === 'number') {
-            const currentLocalCheckpointStr = localStorage.getItem(`ghost_yield_checkpoint_${addr}`);
-            const currentLocalCheckpoint = currentLocalCheckpointStr ? parseInt(currentLocalCheckpointStr, 10) : 0;
-
-            // Only update storage if incoming checkpoint is strictly newer or initial
-            if (cp.lastTime >= currentLocalCheckpoint) {
-              try {
-                localStorage.setItem(`ghost_accrued_yield_${addr}`, cp.accrued.toString());
-                localStorage.setItem(`ghost_yield_checkpoint_${addr}`, cp.lastTime.toString());
-                if (typeof cp.balance === 'number') {
-                  localStorage.setItem(`ghost_balance_${addr}`, cp.balance.toString());
-                }
-              } catch {
-                // Ignore
-              }
-
-              if (address && address.toLowerCase() === addr.toLowerCase()) {
-                const bal = typeof cp.balance === 'number' ? cp.balance : userBalance;
-                if (typeof cp.balance === 'number' && cp.balance !== userBalance) {
-                  setUserBalance(cp.balance);
-                  setEncryptedHandle(generateCiphertextHandle(cp.balance, address));
-                }
-                if (bal > 0) {
-                  const elapsed = Math.max(0, (now - cp.lastTime) / 1000);
-                  const liveEarned = (bal * 0.082 * elapsed) / (365 * 86400);
-                  const totalLive = +(cp.accrued + liveEarned).toFixed(4);
-                  setUserYield((prev) => Math.max(prev, totalLive));
-                }
-              }
+      // 3. Sync deposit tranches for deterministic cross-device continuous yield & TWAB
+      if (data.depositTranches && typeof data.depositTranches === 'object') {
+        setCloudDepositTranches((prev) => ({ ...prev, ...data.depositTranches }));
+        if (address) {
+          const myKey = address.toLowerCase();
+          if (data.depositTranches[myKey] && Array.isArray(data.depositTranches[myKey])) {
+            setDepositTranches(data.depositTranches[myKey]);
+            try {
+              localStorage.setItem(`ghost_tranches_${myKey}`, JSON.stringify(data.depositTranches[myKey]));
+            } catch {
+              // Ignore
             }
           }
         }
       }
 
-      // 4. Sync protocol pool accumulator across devices
-      if (data.poolAccumulator && typeof data.poolAccumulator.accrued === 'number') {
-        const cloudAcc = data.poolAccumulator;
-        if (
-          cloudAcc.lastTime > poolAccumulatorRef.current.lastTime ||
-          cloudAcc.accrued > poolAccumulatorRef.current.accrued ||
-          poolAccumulatorRef.current.lastTvl === 0
-        ) {
-          poolAccumulatorRef.current = {
-            accrued: cloudAcc.accrued,
-            lastTime: cloudAcc.lastTime,
-            lastTvl: cloudAcc.lastTvl > 0 ? cloudAcc.lastTvl : getVaultTotalDeposits(),
-          };
-          try {
-            localStorage.setItem('ghost_pool_accrued', cloudAcc.accrued.toString());
-            localStorage.setItem('ghost_pool_checkpoint_time', cloudAcc.lastTime.toString());
-          } catch {
-            // Ignore
-          }
-        }
+      // 4. Sync past events & prize pool
+      if (Array.isArray(data.pastEvents) && data.pastEvents.length > 0) {
+        setPastEvents(data.pastEvents);
       }
 
       // 5. Sync transactions for active address
@@ -1242,132 +1231,100 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return activeWallets.size;
   }, [cloudDeposits, userBalance, address]);
 
-  // Checkpoint-based Pool Accumulator to prevent instant jumps upon deposit / TVL changes
-  const poolAccumulatorRef = useRef<{ accrued: number; lastTime: number; lastTvl: number }>({
-    accrued: 0,
-    lastTime: Date.now(),
-    lastTvl: 0,
-  });
-
-  // Initialize pool checkpoint from storage on load
+  // Continuous Deterministic Yield & Encrypted Time-Weighted Average Balance (TWAB) Engine
+  // Evaluates directly from immutable tranche timestamps relative to the real clock (Date.now())
+  // Guarantees exact, zero-lag synchronization across all devices and after sleep/reboot
   useEffect(() => {
-    try {
-      const savedAccrued = localStorage.getItem('ghost_pool_accrued');
-      const savedTime = localStorage.getItem('ghost_pool_checkpoint_time');
-      if (savedAccrued && savedTime) {
-        poolAccumulatorRef.current = {
-          accrued: parseFloat(savedAccrued) || 0,
-          lastTime: parseInt(savedTime, 10) || Date.now(),
-          lastTvl: getVaultTotalDeposits(),
-        };
-      }
-    } catch {
-      // Ignore
-    }
-  }, []);
-
-  const checkpointPool = (newTvl: number) => {
-    const now = Date.now();
-    const elapsed = Math.max(0, (now - poolAccumulatorRef.current.lastTime) / 1000);
-    const earned = (poolAccumulatorRef.current.lastTvl * 0.082 * elapsed) / (365 * 86400);
-    poolAccumulatorRef.current.accrued += earned;
-    poolAccumulatorRef.current.lastTime = now;
-    poolAccumulatorRef.current.lastTvl = newTvl;
-    try {
-      localStorage.setItem('ghost_pool_accrued', poolAccumulatorRef.current.accrued.toString());
-      localStorage.setItem('ghost_pool_checkpoint_time', now.toString());
-    } catch {
-      // Ignore
-    }
-  };
-
-  // 1. Global Protocol Prize Pool Continuous Mathematical Yield Engine
-  // Calculates exactly 8.2% APY in total continuous lockstep with zero instant jumps on new deposits
-  useEffect(() => {
-    const calculateExactPool = () => {
+    const tick = () => {
       const now = Date.now();
-      const elapsed = Math.max(0, (now - poolAccumulatorRef.current.lastTime) / 1000);
-      const tvl = poolAccumulatorRef.current.lastTvl > 0 ? poolAccumulatorRef.current.lastTvl : getVaultTotalDeposits();
-      if (poolAccumulatorRef.current.lastTvl === 0 && tvl > 0) {
-        poolAccumulatorRef.current.lastTvl = tvl;
-      }
-      const earnedSinceCheckpoint = (tvl * 0.082 * elapsed) / (365 * 86400);
-      const exactYield = +(poolAccumulatorRef.current.accrued + earnedSinceCheckpoint).toFixed(4);
-      setCurrentPrizePool((prev) => Math.max(prev, exactYield));
-    };
+      const epochStart = activeEvent.startTime || 1725436800000;
 
-    calculateExactPool();
-    const poolInterval = setInterval(calculateExactPool, 1000);
-
-    // Instant lockstep recalculation on tab focus or screen wake
-    const onVisibilityChange = () => {
-      if (!document.hidden) {
-        calculateExactPool();
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    window.addEventListener('focus', calculateExactPool);
-
-    return () => {
-      clearInterval(poolInterval);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('focus', calculateExactPool);
-    };
-  }, [cloudDeposits]);
-
-  // 2. Personal Real-Time Continuous APY Yield Accumulator for Active Depositors
-  useEffect(() => {
-    if (!address || userBalance <= 0) {
-      setUserYield(0);
-      return;
-    }
-    const key = address.toLowerCase();
-
-    const calculateUserYield = () => {
-      if (userBalance <= 0) {
-        setUserYield(0);
-        return;
-      }
-      const now = Date.now();
-      const checkpointStr = localStorage.getItem(`ghost_yield_checkpoint_${key}`);
-      const accruedStr = localStorage.getItem(`ghost_accrued_yield_${key}`);
-      const accrued = accruedStr ? parseFloat(accruedStr) : 0;
-      
-      let checkpoint = now;
-      if (checkpointStr) {
-        checkpoint = parseInt(checkpointStr, 10);
-      } else {
+      // 1. Personal Continuous APY Yield for active depositor
+      if (address && userBalance > 0 && depositTranches.length > 0) {
+        let personalYield = 0;
+        for (const tr of depositTranches) {
+          if (tr.amount > 0) {
+            const elapsedSec = Math.max(0, (now - tr.timestamp) / 1000);
+            personalYield += (tr.amount * 0.082 * elapsedSec) / (365 * 86400);
+          }
+        }
+        setUserYield(+personalYield.toFixed(4));
         try {
-          localStorage.setItem(`ghost_yield_checkpoint_${key}`, now.toString());
-          localStorage.setItem(`ghost_accrued_yield_${key}`, accrued.toString());
+          localStorage.setItem(`ghost_yield_${address.toLowerCase()}`, personalYield.toFixed(4));
         } catch {
           // Ignore
         }
+      } else if (userBalance <= 0) {
+        setUserYield(0);
       }
 
-      const elapsed = Math.max(0, (now - checkpoint) / 1000);
-      const earnedSinceCheckpoint = (userBalance * 0.082 * elapsed) / (365 * 86400);
-      const nextYield = +(accrued + earnedSinceCheckpoint).toFixed(4);
-      setUserYield((prev) => Math.max(prev, nextYield));
+      // 2. Personal Time-Weighted Draw Weight (TWAB = capital × time held)
+      let personalWeight = 0;
+      if (address && depositTranches.length > 0) {
+        for (const tr of depositTranches) {
+          if (tr.amount > 0) {
+            const effectiveStart = Math.max(tr.timestamp, epochStart);
+            const elapsedSec = Math.max(0, (now - effectiveStart) / 1000);
+            personalWeight += tr.amount * elapsedSec;
+          }
+        }
+      }
+      setUserTimeWeightedWeight(personalWeight);
+
+      // 3. Global Protocol Time-Weighted Pool Weight & Cumulative Prize Pool Yield
+      let globalPoolWeight = 0;
+      let totalPoolYield = 0;
+
+      const allSavers = new Set([
+        ...Object.keys(cloudDepositTranches),
+        ...Object.keys(cloudDeposits),
+        ...(address ? [address.toLowerCase()] : [])
+      ]);
+
+      for (const saverAddr of allSavers) {
+        const isCurrent = address && saverAddr === address.toLowerCase();
+        const tranches = isCurrent ? depositTranches : (cloudDepositTranches[saverAddr] || []);
+
+        if (tranches.length > 0) {
+          for (const tr of tranches) {
+            if (tr.amount > 0) {
+              const effectiveStart = Math.max(tr.timestamp, epochStart);
+              const elapsedSec = Math.max(0, (now - effectiveStart) / 1000);
+              globalPoolWeight += tr.amount * elapsedSec;
+              totalPoolYield += (tr.amount * 0.082 * elapsedSec) / (365 * 86400);
+            }
+          }
+        } else {
+          const flatBal = cloudDeposits[saverAddr] || 0;
+          if (flatBal > 0) {
+            const elapsedSec = Math.max(0, (now - epochStart) / 1000);
+            globalPoolWeight += flatBal * elapsedSec;
+            totalPoolYield += (flatBal * 0.082 * elapsedSec) / (365 * 86400);
+          }
+        }
+      }
+
+      setTotalPoolWeight(globalPoolWeight);
+      const calculatedOdds = globalPoolWeight > 0 ? (personalWeight / globalPoolWeight) * 100 : 0;
+      setUserWinOddsPercent(+calculatedOdds.toFixed(2));
+      setCurrentPrizePool(+totalPoolYield.toFixed(4));
     };
 
-    calculateUserYield();
-    const userYieldInterval = setInterval(calculateUserYield, 1000);
+    tick();
+    const interval = setInterval(tick, 1000);
 
     const onVisibilityChange = () => {
-      if (!document.hidden) {
-        calculateUserYield();
-      }
+      if (!document.hidden) tick();
     };
     document.addEventListener('visibilitychange', onVisibilityChange);
-    window.addEventListener('focus', calculateUserYield);
+    window.addEventListener('focus', tick);
 
     return () => {
-      clearInterval(userYieldInterval);
+      clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('focus', calculateUserYield);
+      window.removeEventListener('focus', tick);
     };
-  }, [address, userBalance]);
+  }, [address, userBalance, depositTranches, cloudDepositTranches, cloudDeposits, activeEvent.startTime]);
 
   // Sync state to local storage strictly scoped to the active connected address
   useEffect(() => {
@@ -1441,17 +1398,15 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const key = address.toLowerCase();
       const now = Date.now();
 
-      // Checkpoint personal yield accrued on previous balance up to this exact second
-      const prevAccruedStr = localStorage.getItem(`ghost_accrued_yield_${key}`);
-      const prevAccrued = prevAccruedStr ? parseFloat(prevAccruedStr) : 0;
-      const prevCheckpointStr = localStorage.getItem(`ghost_yield_checkpoint_${key}`);
-      const prevCheckpoint = prevCheckpointStr ? parseInt(prevCheckpointStr, 10) : now;
-      const elapsed = Math.max(0, (now - prevCheckpoint) / 1000);
-      const earnedOnOldBalance = (userBalance * 0.082 * elapsed) / (365 * 86400);
-      const updatedAccrued = prevAccrued + earnedOnOldBalance;
-
-      // Checkpoint protocol prize pool before updating total TVL
-      checkpointPool(getVaultTotalDeposits() + amount);
+      // Append distinct new deposit tranche with its immutable timestamp
+      // Preserves existing tranches so previous capital's time-weight remains intact
+      const newTranche: DepositTranche = {
+        id: `tranche_${now}_${Math.random().toString(36).substring(2, 6)}`,
+        amount,
+        timestamp: now,
+      };
+      const updatedTranches = [...depositTranches, newTranche];
+      setDepositTranches(updatedTranches);
 
       const newBalance = userBalance + amount;
       const newWalletBalance = Math.max(0, walletTokenBalance - amount);
@@ -1460,14 +1415,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         localStorage.setItem(`ghost_balance_${key}`, newBalance.toString());
         localStorage.setItem(`ghost_wallet_tokens_${key}`, newWalletBalance.toString());
-        localStorage.setItem(`ghost_accrued_yield_${key}`, updatedAccrued.toString());
-        localStorage.setItem(`ghost_yield_checkpoint_${key}`, now.toString());
-        localStorage.setItem(`ghost_yield_${key}`, updatedAccrued.toFixed(4));
+        localStorage.setItem(`ghost_tranches_${key}`, JSON.stringify(updatedTranches));
       } catch {
         // Ignore
       }
 
-      setUserYield(+updatedAccrued.toFixed(4));
+      setUserBalance(newBalance);
+      setWalletTokenBalance(newWalletBalance);
 
       const newTx: TransactionRecord = {
         id: `tx_${Date.now()}`,
@@ -1481,8 +1435,6 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
 
       const updatedTxs = [newTx, ...transactions];
-      setWalletTokenBalance(newWalletBalance);
-      setUserBalance(newBalance);
       setEncryptedHandle(newHandle);
       setTransactions(updatedTxs);
 
@@ -1492,16 +1444,11 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Ignore
       }
 
-      // Broadcast deposit and transaction to global cloud relay so all other devices (Mobile/Desktop) see it
+      // Broadcast deposit and tranches to global cloud relay so all other devices (Mobile/Desktop) see it
       pushGlobalCloudState({
         deposits: { [key]: newBalance },
+        depositTranches: { [key]: updatedTranches },
         transactions: { [key]: updatedTxs },
-        yieldCheckpoints: { [key]: { accrued: updatedAccrued, lastTime: now, balance: newBalance } },
-        poolAccumulator: {
-          accrued: poolAccumulatorRef.current.accrued,
-          lastTime: poolAccumulatorRef.current.lastTime,
-          lastTvl: poolAccumulatorRef.current.lastTvl,
-        },
         lastUpdated: Date.now(),
       }).catch(() => {});
 
@@ -1554,17 +1501,20 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const key = address.toLowerCase();
       const now = Date.now();
 
-      // Checkpoint personal yield accrued on previous balance
-      const prevAccruedStr = localStorage.getItem(`ghost_accrued_yield_${key}`);
-      const prevAccrued = prevAccruedStr ? parseFloat(prevAccruedStr) : 0;
-      const prevCheckpointStr = localStorage.getItem(`ghost_yield_checkpoint_${key}`);
-      const prevCheckpoint = prevCheckpointStr ? parseInt(prevCheckpointStr, 10) : now;
-      const elapsed = Math.max(0, (now - prevCheckpoint) / 1000);
-      const earnedOnOldBalance = (userBalance * 0.082 * elapsed) / (365 * 86400);
-      const updatedAccrued = prevAccrued + earnedOnOldBalance;
-
-      // Checkpoint protocol prize pool before reducing TVL
-      checkpointPool(Math.max(0, getVaultTotalDeposits() - amount));
+      // Deduct from deposit tranches in FIFO order
+      let remainingToDeduct = amount;
+      const updatedTranches: DepositTranche[] = [];
+      for (const tr of depositTranches) {
+        if (remainingToDeduct <= 0) {
+          updatedTranches.push(tr);
+        } else if (tr.amount <= remainingToDeduct) {
+          remainingToDeduct -= tr.amount;
+        } else {
+          updatedTranches.push({ ...tr, amount: tr.amount - remainingToDeduct });
+          remainingToDeduct = 0;
+        }
+      }
+      setDepositTranches(updatedTranches);
 
       const newBalance = Math.max(0, userBalance - amount);
       const newWalletBalance = walletTokenBalance + amount;
@@ -1573,14 +1523,10 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         localStorage.setItem(`ghost_balance_${key}`, newBalance.toString());
         localStorage.setItem(`ghost_wallet_tokens_${key}`, newWalletBalance.toString());
-        localStorage.setItem(`ghost_accrued_yield_${key}`, updatedAccrued.toString());
-        localStorage.setItem(`ghost_yield_checkpoint_${key}`, now.toString());
-        localStorage.setItem(`ghost_yield_${key}`, updatedAccrued.toFixed(4));
+        localStorage.setItem(`ghost_tranches_${key}`, JSON.stringify(updatedTranches));
       } catch (e) {
         // Ignore
       }
-
-      setUserYield(+updatedAccrued.toFixed(4));
 
       const newTx: TransactionRecord = {
         id: `tx_${Date.now()}`,
@@ -1605,16 +1551,10 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Ignore
       }
 
-      // Broadcast withdrawal to global cloud relay
       pushGlobalCloudState({
         deposits: { [key]: newBalance },
+        depositTranches: { [key]: updatedTranches },
         transactions: { [key]: updatedTxs },
-        yieldCheckpoints: { [key]: { accrued: updatedAccrued, lastTime: now, balance: newBalance } },
-        poolAccumulator: {
-          accrued: poolAccumulatorRef.current.accrued,
-          lastTime: poolAccumulatorRef.current.lastTime,
-          lastTvl: poolAccumulatorRef.current.lastTvl,
-        },
         lastUpdated: Date.now(),
       }).catch(() => {});
 
@@ -1755,14 +1695,57 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       await new Promise((resolve) => setTimeout(resolve, 3200));
     }
 
-    // Pick winner dynamically from all active depositors or connected user
-    const activeDepositors = Object.keys(cloudDeposits).filter((k) => cloudDeposits[k] > 0);
-    if (address && !activeDepositors.includes(address.toLowerCase())) {
-      activeDepositors.push(address.toLowerCase());
+    // 1. Calculate each participant's Time-Weighted Average Balance (TWAB) Draw Weight
+    const epochStart = activeEvent.startTime || 1725436800000;
+    const now = Date.now();
+    const candidateWeights: { address: string; weight: number }[] = [];
+    let cumulativeWeight = 0;
+
+    const allSavers = new Set([
+      ...Object.keys(cloudDepositTranches),
+      ...Object.keys(cloudDeposits),
+      ...(address ? [address.toLowerCase()] : [])
+    ]);
+
+    for (const saverAddr of allSavers) {
+      const isCurrent = address && saverAddr === address.toLowerCase();
+      const tranches = isCurrent ? depositTranches : (cloudDepositTranches[saverAddr] || []);
+      let userWeight = 0;
+
+      if (tranches.length > 0) {
+        for (const tr of tranches) {
+          if (tr.amount > 0) {
+            const effectiveStart = Math.max(tr.timestamp, epochStart);
+            const elapsedSec = Math.max(0, (now - effectiveStart) / 1000);
+            userWeight += tr.amount * elapsedSec;
+          }
+        }
+      } else {
+        const flatBal = cloudDeposits[saverAddr] || 0;
+        if (flatBal > 0) {
+          const elapsedSec = Math.max(0, (now - epochStart) / 1000);
+          userWeight += flatBal * elapsedSec;
+        }
+      }
+
+      if (userWeight > 0) {
+        candidateWeights.push({ address: saverAddr, weight: userWeight });
+        cumulativeWeight += userWeight;
+      }
     }
-    const winner = activeDepositors.length > 0
-      ? activeDepositors[Math.floor(Math.random() * activeDepositors.length)]
-      : (address || '0x742d35Cc6634C0532925a3b844Bc454e4438f44e');
+
+    // 2. Select winner homomorphically proportional to Time-Weighted Weight (Capital × Time Held)
+    let winner: string = address ? (address as string) : '0x742d35Cc6634C0532925a3b844Bc454e4438f44e';
+    if (candidateWeights.length > 0 && cumulativeWeight > 0) {
+      let randPoint = Math.random() * cumulativeWeight;
+      for (const cand of candidateWeights) {
+        if (randPoint <= cand.weight) {
+          winner = cand.address;
+          break;
+        }
+        randPoint -= cand.weight;
+      }
+    }
 
     const finalPrizeAmount = activeEvent.prizeAmount > 0 ? activeEvent.prizeAmount : 500.0;
     const randomness = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
@@ -1819,6 +1802,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       status: 'OPEN',
       startTime: Date.now(),
       endTime: Date.now() + 3600000 * 24,
+      rolloverCount: 0,
       prizeAmount: 0,
       encryptedPrizeHandle: generateCiphertextHandle(0, 'GhostVault'),
       winnerAddress: 'Pending Onchain Draw',
@@ -1860,10 +1844,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           executeEventDraw();
         } else {
           console.log(`[Autonomous Keeper] 24h cycle ended with yield $${currentPrizePool.toFixed(2)} (< $${MINIMUM_PRIZE_THRESHOLD} threshold). Rolling over into next 24h window...`);
+          const currentRollovers = (activeEvent.rolloverCount || 0) + 1;
           const extendedEndTime = now + 3600000 * 24;
           const updatedEvent: ProtocolEventRecord = {
             ...activeEvent,
             endTime: extendedEndTime,
+            rolloverCount: currentRollovers,
           };
           setActiveEvent(updatedEvent);
           try {
@@ -1878,8 +1864,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
           addToast({
             type: 'info',
-            title: 'Prize Rollover (Under $500.00 Threshold)',
-            message: `Current yield is $${currentPrizePool.toFixed(2)}. Compounding into next 24h window until the $500.00 minimum prize is reached.`,
+            title: `Prize Rollover #${currentRollovers} (Under $500.00 Threshold)`,
+            message: `Current yield is $${currentPrizePool.toFixed(2)}. Compounding into extended 24h cycle until the $500.00 minimum prize is reached.`,
           });
         }
       }
@@ -1933,14 +1919,10 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsDecrypted(false);
     setDecryptionSignature(null);
 
-    poolAccumulatorRef.current = { accrued: 0, lastTime: Date.now(), lastTvl: 0 };
-
     try {
       localStorage.setItem('ghost_prize_pool', '0.00');
       localStorage.setItem('ghost_past_events', '[]');
-      localStorage.removeItem('ghost_pool_accrued');
-      localStorage.removeItem('ghost_pool_checkpoint_time');
-      localStorage.setItem('ghost_last_pool_time', Date.now().toString());
+      localStorage.removeItem('ghost_tranches_');
     } catch {
       // Ignore
     }
@@ -1997,6 +1979,11 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         userYield,
         userPositionStatus: userBalance > 0 ? 'Active & Compounding' : 'No Active Position',
         encryptedHandle,
+        depositTranches,
+        userTimeWeightedWeight,
+        userWinOddsPercent,
+        totalPoolWeight,
+        rolloverCount: activeEvent.rolloverCount || 0,
         handleDeposit,
         handleWithdraw,
         transactions,

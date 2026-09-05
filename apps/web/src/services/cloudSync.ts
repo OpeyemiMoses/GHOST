@@ -1,6 +1,12 @@
 // Universal Real-Time Cloud Synchronization Service for Ghost Protocol
 // High-speed PubSub & Server-Sent Events (SSE) relay enabling sub-second cross-device synchronization (PC <-> Mobile)
 
+export interface DepositTranche {
+  id: string;
+  amount: number;
+  timestamp: number;
+}
+
 export interface GlobalSyncPayload {
   accountsDb: Record<string, {
     email: string;
@@ -9,6 +15,7 @@ export interface GlobalSyncPayload {
     createdAt: number;
   }>;
   deposits: Record<string, number>;
+  depositTranches?: Record<string, DepositTranche[]>;
   transactions?: Record<string, any[]>;
   unclaimedPrizes?: Record<string, any[]>;
   claimedPrizes?: Record<string, any[]>;
@@ -19,6 +26,7 @@ export interface GlobalSyncPayload {
     status: 'OPEN' | 'COMPUTING_FHE' | 'FINALIZED';
     startTime: number;
     endTime: number;
+    rolloverCount?: number;
     prizeAmount: number;
     encryptedPrizeHandle: string;
     winnerAddress: string;
@@ -113,6 +121,9 @@ function processMessage(msgStr: string) {
     }
     if (parsed.deposits) {
       cachedState.deposits = { ...cachedState.deposits, ...parsed.deposits };
+    }
+    if (parsed.depositTranches && typeof parsed.depositTranches === 'object') {
+      cachedState.depositTranches = { ...(cachedState.depositTranches || {}), ...parsed.depositTranches };
     }
     if (parsed.transactions) {
       cachedState.transactions = { ...cachedState.transactions, ...parsed.transactions };

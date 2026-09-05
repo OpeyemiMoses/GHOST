@@ -33,6 +33,11 @@ export const VaultPage: React.FC = () => {
     userYield,
     userPositionStatus,
     encryptedHandle,
+    depositTranches,
+    userTimeWeightedWeight,
+    userWinOddsPercent,
+    totalPoolWeight,
+    rolloverCount,
     isSessionAuthorized,
     requestSessionAuthorization,
     isDecrypted,
@@ -352,6 +357,57 @@ export const VaultPage: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Card 1.5: Encrypted Time-Weighted Draw Weight (TWAB) */}
+          <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-zinc-200/80 shadow-xs space-y-3.5 hover-elevate">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-700 font-mono text-[10px] font-semibold mb-1">
+                  <span>★ Encrypted TWAB Architecture</span>
+                </div>
+                <h3 className="font-bold text-sm text-zinc-950">Time-Weighted Draw Weight</h3>
+                <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">
+                  Draw weight = <strong>capital × time held</strong>. Deposits earn weight continuously over the epoch rather than snapshotting balances at draw close.
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="font-mono font-bold text-base text-zinc-950">
+                  {userWinOddsPercent > 0 ? `${userWinOddsPercent}%` : '0.00%'}
+                </div>
+                <div className="text-[10px] font-mono text-zinc-400">Current Win Odds</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+              <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
+                <div className="text-[10px] font-mono text-zinc-500 uppercase">Your Time-Weight</div>
+                <div className="text-xs font-bold text-zinc-900 mt-0.5 font-mono">
+                  {(userTimeWeightedWeight / 3600).toFixed(2)} <span className="text-[10px] text-zinc-500 font-normal">cUSDC·hrs</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
+                <div className="text-[10px] font-mono text-zinc-500 uppercase">Deposit Tranches</div>
+                <div className="text-xs font-bold text-zinc-900 mt-0.5 font-mono">
+                  {depositTranches.length} <span className="text-[10px] text-zinc-500 font-normal">Active {depositTranches.length === 1 ? 'Tranche' : 'Tranches'}</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
+                <div className="text-[10px] font-mono text-zinc-500 uppercase">Rollover Cycle</div>
+                <div className="text-xs font-bold text-amber-700 mt-0.5 font-mono">
+                  {rolloverCount > 0 ? `Rollover #${rolloverCount}` : 'Cycle 1 (24h)'}
+                </div>
+              </div>
+            </div>
+
+            {rolloverCount > 0 && (
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200/60 text-[11px] text-amber-800 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                <span>Extended rollover active. Older deposits retain accumulated time-weight advantage while new deposits continuously catch up.</span>
+              </div>
+            )}
           </div>
 
           {/* Card 2: FHE Privacy & Auto-Compounding Gauge */}
