@@ -46,11 +46,12 @@ const PUBLISH_URL = `https://ntfy.sh/${TOPIC}`;
 const POLL_URL = `https://ntfy.sh/${TOPIC}/json?poll=1&since=24h`;
 const SSE_URL = `https://ntfy.sh/${TOPIC}/sse`;
 
-const getBaselineStartTime = () => Date.now() - 3600000 * 2;
+const getBaselineStartTime = () => Math.floor(Date.now() / 86400000) * 86400000;
 
 let cachedState: GlobalSyncPayload = {
   accountsDb: {},
   deposits: {},
+  depositTranches: {},
   transactions: {},
   unclaimedPrizes: {},
   claimedPrizes: {},

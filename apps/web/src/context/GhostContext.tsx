@@ -709,6 +709,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Protocol-level Active Event (Synchronized across all devices worldwide)
   const [activeEvent, setActiveEvent] = useState<ProtocolEventRecord>(() => {
     const now = Date.now();
+    const globalEpochAnchor = Math.floor(now / 86400000) * 86400000;
     try {
       const saved = localStorage.getItem('ghost_active_event');
       if (saved) {
@@ -720,12 +721,11 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {
       // Ignore
     }
-    const defaultStart = now - 3600000 * 2;
     return {
       eventId: 1,
       status: 'OPEN',
-      startTime: defaultStart,
-      endTime: defaultStart + 3600000 * 24,
+      startTime: globalEpochAnchor,
+      endTime: globalEpochAnchor + 3600000 * 24,
       rolloverCount: 0,
       prizeAmount: 0,
       encryptedPrizeHandle: generateCiphertextHandle(0, 'GhostVault'),
@@ -782,6 +782,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Load deposit tranches for deterministic yield & TWAB
     const now = Date.now();
+    const globalEpochAnchor = Math.floor(now / 86400000) * 86400000;
+    const epochStart = activeEvent.startTime && activeEvent.startTime > now - 3600000 * 24 * 7 ? activeEvent.startTime : globalEpochAnchor;
     const savedTranchesStr = localStorage.getItem(`ghost_tranches_${key}`);
     let loadedTranches: DepositTranche[] = [];
     if (savedTranchesStr) {
@@ -793,13 +795,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     if (loadedTranches.length === 0 && loadedBal > 0) {
       // Initialize starting tranche matching current balance anchored to active event start time
-      const startTimestamp = activeEvent.startTime || (now - 3600000 * 2);
-      loadedTranches = [{ id: `tranche_${Date.now()}`, amount: loadedBal, timestamp: startTimestamp }];
+      loadedTranches = [{ id: `tranche_${Date.now()}`, amount: loadedBal, timestamp: epochStart }];
     } else if (loadedTranches.length > 0) {
       // Sanitize any stale timestamps
       loadedTranches = loadedTranches.map(t => ({
         ...t,
-        timestamp: t.timestamp < now - 3600000 * 24 * 7 ? (now - 3600000 * 2) : t.timestamp
+        timestamp: t.timestamp < now - 3600000 * 24 * 7 ? epochStart : t.timestamp
       }));
     }
     setDepositTranches(loadedTranches);
@@ -808,7 +809,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (loadedTranches.length > 0) {
       for (const tr of loadedTranches) {
         if (tr.amount > 0) {
-          const elapsedSec = Math.max(0, (now - tr.timestamp) / 1000);
+          const t0 = tr.timestamp && tr.timestamp > now - 3600000 * 24 * 7 ? tr.timestamp : epochStart;
+          const elapsedSec = Math.max(0, (now - t0) / 1000);
           initialYield += (tr.amount * 0.082 * elapsedSec) / (365 * 86400);
         }
       }
@@ -819,6 +821,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       localStorage.setItem(`ghost_yield_${key}`, initialYield.toFixed(4));
     } catch {
       // Ignore
+    }
+
+    if (loadedBal > 0 && loadedTranches.length > 0) {
+      pushGlobalCloudState({
+        deposits: { [key]: loadedBal },
+        depositTranches: { [key]: loadedTranches }
+      }).catch(() => {});
     }
 
     // Strictly apply values or clean defaults for the connected address (ZERO cross-contamination)
@@ -1268,48 +1277,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const tick = () => {
       const now = Date.now();
+      const globalEpochAnchor = Math.floor(now / 86400000) * 86400000;
       const epochStart = activeEvent.startTime && activeEvent.startTime > now - 3600000 * 24 * 7
         ? activeEvent.startTime
-        : now - 3600000 * 2;
+        : globalEpochAnchor;
 
-      // 1. Personal Continuous APY Yield for active depositor
-      if (address && userBalance > 0 && depositTranches.length > 0) {
-        let personalYield = 0;
-        for (const tr of depositTranches) {
-          if (tr.amount > 0) {
-            const validTimestamp = tr.timestamp && tr.timestamp > now - 3600000 * 24 * 7 ? tr.timestamp : epochStart;
-            const elapsedSec = Math.max(0, (now - validTimestamp) / 1000);
-            personalYield += (tr.amount * 0.082 * elapsedSec) / (365 * 86400);
-          }
-        }
-        setUserYield(+personalYield.toFixed(4));
-        try {
-          localStorage.setItem(`ghost_yield_${address.toLowerCase()}`, personalYield.toFixed(4));
-        } catch {
-          // Ignore
-        }
-      } else if (userBalance <= 0) {
-        setUserYield(0);
-      }
-
-      // 2. Personal Time-Weighted Draw Weight (TWAB = capital × time held)
-      let personalWeight = 0;
-      if (address && depositTranches.length > 0) {
-        for (const tr of depositTranches) {
-          if (tr.amount > 0) {
-            const validTimestamp = tr.timestamp && tr.timestamp > now - 3600000 * 24 * 7 ? tr.timestamp : epochStart;
-            const effectiveStart = Math.max(validTimestamp, epochStart);
-            const elapsedSec = Math.max(0, (now - effectiveStart) / 1000);
-            personalWeight += tr.amount * elapsedSec;
-          }
-        }
-      }
-      setUserTimeWeightedWeight(personalWeight);
-
-      // 3. Global Protocol Time-Weighted Pool Weight & Cumulative Prize Pool Yield
-      let globalPoolWeight = 0;
-      let totalPoolYield = 0;
-
+      // Compile set of all active savers across cloud & local storage
       const allSavers = new Set<string>([
         ...Object.keys(cloudDepositTranches),
         ...Object.keys(cloudDeposits),
@@ -1331,8 +1304,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Ignore
       }
 
+      let totalPoolYield = 0;
+      let globalPoolWeight = 0;
+      let activeUserYield = 0;
+      let activeUserWeight = 0;
+
       for (const saverAddr of allSavers) {
-        const isCurrent = address && saverAddr === address.toLowerCase();
+        const isCurrent = Boolean(address && saverAddr === address.toLowerCase());
         let tranches = isCurrent ? depositTranches : (cloudDepositTranches[saverAddr] || []);
 
         if (tranches.length === 0 && !isCurrent) {
@@ -1346,18 +1324,20 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
         }
 
+        let saverYield = 0;
+        let saverWeight = 0;
+
         if (tranches.length > 0) {
           for (const tr of tranches) {
             if (tr.amount > 0) {
-              const validTimestamp = tr.timestamp && tr.timestamp > now - 3600000 * 24 * 7 ? tr.timestamp : epochStart;
-              const effectiveStart = Math.max(validTimestamp, epochStart);
-              const elapsedSec = Math.max(0, (now - effectiveStart) / 1000);
-              globalPoolWeight += tr.amount * elapsedSec;
-              totalPoolYield += (tr.amount * 0.082 * elapsedSec) / (365 * 86400);
+              const t0 = tr.timestamp && tr.timestamp > now - 3600000 * 24 * 7 ? tr.timestamp : epochStart;
+              const elapsedSec = Math.max(0, (now - t0) / 1000);
+              saverYield += (tr.amount * 0.082 * elapsedSec) / (365 * 86400);
+              saverWeight += tr.amount * elapsedSec;
             }
           }
         } else {
-          let flatBal = cloudDeposits[saverAddr] || 0;
+          let flatBal = isCurrent ? userBalance : (cloudDeposits[saverAddr] || 0);
           if (flatBal === 0 && !isCurrent) {
             try {
               flatBal = parseFloat(localStorage.getItem(`ghost_balance_${saverAddr}`) || '0');
@@ -1367,14 +1347,37 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
           if (flatBal > 0) {
             const elapsedSec = Math.max(0, (now - epochStart) / 1000);
-            globalPoolWeight += flatBal * elapsedSec;
-            totalPoolYield += (flatBal * 0.082 * elapsedSec) / (365 * 86400);
+            saverYield += (flatBal * 0.082 * elapsedSec) / (365 * 86400);
+            saverWeight += flatBal * elapsedSec;
           }
         }
+
+        if (isCurrent) {
+          activeUserYield = saverYield;
+          activeUserWeight = saverWeight;
+        }
+
+        totalPoolYield += saverYield;
+        globalPoolWeight += saverWeight;
       }
 
+      // Update active user state
+      if (address && userBalance > 0) {
+        setUserYield(+activeUserYield.toFixed(4));
+        setUserTimeWeightedWeight(activeUserWeight);
+        try {
+          localStorage.setItem(`ghost_yield_${address.toLowerCase()}`, activeUserYield.toFixed(4));
+        } catch {
+          // Ignore
+        }
+      } else {
+        setUserYield(0);
+        setUserTimeWeightedWeight(0);
+      }
+
+      // Update global pool metrics
       setTotalPoolWeight(globalPoolWeight);
-      const calculatedOdds = globalPoolWeight > 0 ? (personalWeight / globalPoolWeight) * 100 : 0;
+      const calculatedOdds = globalPoolWeight > 0 ? (activeUserWeight / globalPoolWeight) * 100 : 0;
       setUserWinOddsPercent(+calculatedOdds.toFixed(2));
       setCurrentPrizePool(+totalPoolYield.toFixed(4));
     };
