@@ -121,9 +121,19 @@ function processMessage(msgStr: string) {
     }
     if (parsed.deposits) {
       cachedState.deposits = { ...cachedState.deposits, ...parsed.deposits };
+      try {
+        localStorage.setItem('ghost_global_deposits', JSON.stringify(cachedState.deposits));
+      } catch {
+        // Ignore
+      }
     }
     if (parsed.depositTranches && typeof parsed.depositTranches === 'object') {
       cachedState.depositTranches = { ...(cachedState.depositTranches || {}), ...parsed.depositTranches };
+      try {
+        localStorage.setItem('ghost_global_tranches', JSON.stringify(cachedState.depositTranches));
+      } catch {
+        // Ignore
+      }
     }
     if (parsed.transactions) {
       cachedState.transactions = { ...cachedState.transactions, ...parsed.transactions };

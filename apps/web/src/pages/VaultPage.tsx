@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useGhost } from '../context/GhostContext';
+import { useGhost, formatCurrency } from '../context/GhostContext';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { 
   Lock, 
@@ -210,7 +210,7 @@ export const VaultPage: React.FC = () => {
           <div>
             <div className="text-2xl font-bold text-zinc-950 tracking-tight">
               {isDecrypted ? (
-                `$${userBalance.toFixed(2)}`
+                `$${formatCurrency(userBalance)}`
               ) : (
                 <span className="font-mono text-xs sm:text-sm text-zinc-700 bg-zinc-100/90 border border-zinc-200/80 px-2 py-1 rounded-lg inline-flex items-center gap-1.5 w-fit">
                   <Lock className="w-3.5 h-3.5 text-zinc-500" />
@@ -233,7 +233,7 @@ export const VaultPage: React.FC = () => {
           <div>
             <div className="text-2xl font-bold text-zinc-950 tracking-tight">
               {isDecrypted ? (
-                `+$${userYield.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`
+                `+$${formatCurrency(userYield, 4)}`
               ) : (
                 <span className="font-mono text-xs sm:text-sm text-zinc-700 bg-zinc-100/90 border border-zinc-200/80 px-2 py-1 rounded-lg inline-flex items-center gap-1.5 w-fit">
                   <Lock className="w-3.5 h-3.5 text-zinc-500" />
@@ -258,7 +258,7 @@ export const VaultPage: React.FC = () => {
           </div>
           <div>
             <div className="text-2xl font-bold text-zinc-950 tracking-tight">
-              ${currentPrizePool.toFixed(2)}
+              ${formatCurrency(currentPrizePool)}
             </div>
             <div className="text-[11px] text-zinc-500 mt-0.5 flex items-center justify-between">
               <span>Accumulated Prize Pool</span>
@@ -315,7 +315,7 @@ export const VaultPage: React.FC = () => {
 
               <p className="text-xs text-zinc-500 leading-relaxed">
                 {userBalance > 0
-                  ? `Your encrypted deposit of ${isDecrypted ? `$${userBalance.toFixed(2)} cUSDC` : (encryptedHandle ? `${encryptedHandle.slice(0, 8)}...${encryptedHandle.slice(-6)} (Sealed Ciphertext)` : '0x7f4e...9b12 (Sealed Ciphertext)')} is generating auto-compounded yield and generating encrypted prize draw entries in the background.`
+                  ? `Your encrypted deposit of ${isDecrypted ? `$${formatCurrency(userBalance)} cUSDC` : (encryptedHandle ? `${encryptedHandle.slice(0, 8)}...${encryptedHandle.slice(-6)} (Sealed Ciphertext)` : '0x7f4e...9b12 (Sealed Ciphertext)')} is generating auto-compounded yield and generating encrypted prize draw entries in the background.`
                   : 'Deposit testnet cUSDC to start earning confidential savings yield and automatically enter zero-loss prize draws.'}
               </p>
 
@@ -383,7 +383,7 @@ export const VaultPage: React.FC = () => {
               <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
                 <div className="text-[10px] font-mono text-zinc-500 uppercase">Your Time-Weight</div>
                 <div className="text-xs font-bold text-zinc-900 mt-0.5 font-mono">
-                  {(userTimeWeightedWeight / 3600).toFixed(2)} <span className="text-[10px] text-zinc-500 font-normal">cUSDC·hrs</span>
+                  {formatCurrency(userTimeWeightedWeight / 3600)} <span className="text-[10px] text-zinc-500 font-normal">cUSDC·hrs</span>
                 </div>
               </div>
 
@@ -420,7 +420,7 @@ export const VaultPage: React.FC = () => {
                 </p>
               </div>
               <div className="text-right font-mono font-bold text-sm text-zinc-950">
-                {isDecrypted ? `+$${userYield.toFixed(2)}` : (encryptedHandle ? `0x${encryptedHandle.slice(10, 18)}...${encryptedHandle.slice(-6)}` : '0x3c2a...4d8e')}
+                {isDecrypted ? `+$${formatCurrency(userYield, 4)}` : (encryptedHandle ? `0x${encryptedHandle.slice(10, 18)}...${encryptedHandle.slice(-6)}` : '0x3c2a...4d8e')}
               </div>
             </div>
 
@@ -517,7 +517,7 @@ export const VaultPage: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between text-xs text-zinc-500 mb-1.5">
                     <label className="font-medium text-zinc-700">Amount to deposit</label>
-                    <span className="font-mono">In your wallet: {isDecrypted ? `$${walletTokenBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '0x65c9...8b03 (Sealed)'}</span>
+                    <span className="font-mono">In your wallet: {isDecrypted ? `$${formatCurrency(walletTokenBalance)}` : '0x65c9...8b03 (Sealed)'}</span>
                   </div>
 
                   <div className="relative">
@@ -534,7 +534,7 @@ export const VaultPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 mt-1">
-                    <span>{isDecrypted ? `${walletTokenBalance.toLocaleString()} cUSDC available to deposit.` : '0x65c9...8b03 (euint64 Sealed)'}</span>
+                    <span>{isDecrypted ? `${formatCurrency(walletTokenBalance)} cUSDC available to deposit.` : '0x65c9...8b03 (euint64 Sealed)'}</span>
                     <button
                       type="button"
                       onClick={() => setDepositAmount(walletTokenBalance.toString())}
@@ -546,7 +546,7 @@ export const VaultPage: React.FC = () => {
 
                   {depositAmount && parseFloat(depositAmount) > walletTokenBalance && (
                     <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] flex items-center justify-between mt-2">
-                      <span>Insufficient wallet balance (${walletTokenBalance.toFixed(2)} cUSDC).</span>
+                      <span>Insufficient wallet balance (${formatCurrency(walletTokenBalance)} cUSDC).</span>
                       <button
                         type="button"
                         onClick={() => setActiveAction('faucet')}
@@ -576,7 +576,7 @@ export const VaultPage: React.FC = () => {
                       onClick={() => setWithdrawAmount(userBalance.toString())}
                       className="font-mono text-zinc-700 hover:text-black underline cursor-pointer"
                     >
-                      Max ({isDecrypted ? `$${userBalance.toFixed(2)}` : (encryptedHandle ? `${encryptedHandle.slice(0, 8)}...${encryptedHandle.slice(-6)}` : '0x7f4e...9b12')})
+                      Max ({isDecrypted ? `$${formatCurrency(userBalance)}` : (encryptedHandle ? `${encryptedHandle.slice(0, 8)}...${encryptedHandle.slice(-6)}` : '0x7f4e...9b12')})
                     </button>
                   </div>
 
@@ -596,7 +596,7 @@ export const VaultPage: React.FC = () => {
 
                   {withdrawAmount && parseFloat(withdrawAmount) > userBalance && (
                     <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] flex items-center justify-between mt-2">
-                      <span>Exceeds active vault balance (${userBalance.toFixed(2)} cUSDC).</span>
+                      <span>Exceeds active vault balance (${formatCurrency(userBalance)} cUSDC).</span>
                     </div>
                   )}
                 </div>

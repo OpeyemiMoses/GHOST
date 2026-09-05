@@ -207,6 +207,11 @@ export const generateCiphertextHandle = (val: number, addr: string): string => {
   return `0x${hexPart}e8f9a2b41c6d830f57e2a9b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3`;
 };
 
+export const formatCurrency = (val: number, decimals: number = 2): string => {
+  if (isNaN(val) || val === null || val === undefined) return '0.00';
+  return val.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+};
+
 async function hashPassword(password: string): Promise<string> {
   const enc = new TextEncoder();
   const data = enc.encode(password + ':ghost_secure_auth_salt_v1');
@@ -676,7 +681,15 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   
   // Encrypted Time-Weighted Average Balance (TWAB) Tranches & Metrics
   const [depositTranches, setDepositTranches] = useState<DepositTranche[]>([]);
-  const [cloudDepositTranches, setCloudDepositTranches] = useState<Record<string, DepositTranche[]>>({});
+  const [cloudDepositTranches, setCloudDepositTranches] = useState<Record<string, DepositTranche[]>>(() => {
+    try {
+      const saved = localStorage.getItem('ghost_global_tranches');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // Ignore
+    }
+    return {};
+  });
   const [userTimeWeightedWeight, setUserTimeWeightedWeight] = useState<number>(0);
   const [userWinOddsPercent, setUserWinOddsPercent] = useState<number>(0);
   const [totalPoolWeight, setTotalPoolWeight] = useState<number>(0);
@@ -722,7 +735,15 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   // Global Cloud Synchronized Deposits Map across all devices (Desktop, Mobile, etc.)
-  const [cloudDeposits, setCloudDeposits] = useState<Record<string, number>>({});
+  const [cloudDeposits, setCloudDeposits] = useState<Record<string, number>>(() => {
+    try {
+      const saved = localStorage.getItem('ghost_global_deposits');
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // Ignore
+    }
+    return {};
+  });
 
   // Unclaimed & Claimed Prize System strictly isolated per wallet
   const [unclaimedPrizes, setUnclaimedPrizes] = useState<PrizeRecord[]>([]);
@@ -767,8 +788,9 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     }
     if (loadedTranches.length === 0 && loadedBal > 0) {
-      // Initialize starting tranche matching current balance
-      loadedTranches = [{ id: `tranche_${Date.now()}`, amount: loadedBal, timestamp: Date.now() - 3600000 * 4 }];
+      // Initialize starting tranche matching current balance anchored to active event start time
+      const startTimestamp = activeEvent.startTime || Date.now();
+      loadedTranches = [{ id: `tranche_${Date.now()}`, amount: loadedBal, timestamp: startTimestamp }];
     }
     setDepositTranches(loadedTranches);
 
@@ -1275,15 +1297,41 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       let globalPoolWeight = 0;
       let totalPoolYield = 0;
 
-      const allSavers = new Set([
+      const allSavers = new Set<string>([
         ...Object.keys(cloudDepositTranches),
         ...Object.keys(cloudDeposits),
         ...(address ? [address.toLowerCase()] : [])
       ]);
 
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('ghost_balance_')) {
+            const val = parseFloat(localStorage.getItem(k) || '0');
+            if (val > 0) {
+              const wallet = k.replace('ghost_balance_', '').toLowerCase();
+              allSavers.add(wallet);
+            }
+          }
+        }
+      } catch {
+        // Ignore
+      }
+
       for (const saverAddr of allSavers) {
         const isCurrent = address && saverAddr === address.toLowerCase();
-        const tranches = isCurrent ? depositTranches : (cloudDepositTranches[saverAddr] || []);
+        let tranches = isCurrent ? depositTranches : (cloudDepositTranches[saverAddr] || []);
+
+        if (tranches.length === 0 && !isCurrent) {
+          try {
+            const savedTranches = localStorage.getItem(`ghost_tranches_${saverAddr}`);
+            if (savedTranches) {
+              tranches = JSON.parse(savedTranches);
+            }
+          } catch {
+            // Ignore
+          }
+        }
 
         if (tranches.length > 0) {
           for (const tr of tranches) {
@@ -1295,7 +1343,14 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
           }
         } else {
-          const flatBal = cloudDeposits[saverAddr] || 0;
+          let flatBal = cloudDeposits[saverAddr] || 0;
+          if (flatBal === 0 && !isCurrent) {
+            try {
+              flatBal = parseFloat(localStorage.getItem(`ghost_balance_${saverAddr}`) || '0');
+            } catch {
+              // Ignore
+            }
+          }
           if (flatBal > 0) {
             const elapsedSec = Math.max(0, (now - epochStart) / 1000);
             globalPoolWeight += flatBal * elapsedSec;
@@ -1438,16 +1493,22 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setEncryptedHandle(newHandle);
       setTransactions(updatedTxs);
 
+      const newGlobalDeposits = { ...cloudDeposits, [key]: newBalance };
+      const newGlobalTranches = { ...cloudDepositTranches, [key]: updatedTranches };
+      setCloudDeposits(newGlobalDeposits);
+      setCloudDepositTranches(newGlobalTranches);
       try {
         localStorage.setItem(`ghost_txs_${key}`, JSON.stringify(updatedTxs));
+        localStorage.setItem('ghost_global_deposits', JSON.stringify(newGlobalDeposits));
+        localStorage.setItem('ghost_global_tranches', JSON.stringify(newGlobalTranches));
       } catch {
         // Ignore
       }
 
       // Broadcast deposit and tranches to global cloud relay so all other devices (Mobile/Desktop) see it
       pushGlobalCloudState({
-        deposits: { [key]: newBalance },
-        depositTranches: { [key]: updatedTranches },
+        deposits: newGlobalDeposits,
+        depositTranches: newGlobalTranches,
         transactions: { [key]: updatedTxs },
         lastUpdated: Date.now(),
       }).catch(() => {});
@@ -1545,15 +1606,22 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setEncryptedHandle(newHandle);
       setTransactions(updatedTxs);
 
+      const newGlobalDeposits = { ...cloudDeposits, [key]: newBalance };
+      const newGlobalTranches = { ...cloudDepositTranches, [key]: updatedTranches };
+      setCloudDeposits(newGlobalDeposits);
+      setCloudDepositTranches(newGlobalTranches);
+
       try {
         localStorage.setItem(`ghost_txs_${key}`, JSON.stringify(updatedTxs));
+        localStorage.setItem('ghost_global_deposits', JSON.stringify(newGlobalDeposits));
+        localStorage.setItem('ghost_global_tranches', JSON.stringify(newGlobalTranches));
       } catch {
         // Ignore
       }
 
       pushGlobalCloudState({
-        deposits: { [key]: newBalance },
-        depositTranches: { [key]: updatedTranches },
+        deposits: newGlobalDeposits,
+        depositTranches: newGlobalTranches,
         transactions: { [key]: updatedTxs },
         lastUpdated: Date.now(),
       }).catch(() => {});
@@ -1701,17 +1769,43 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const candidateWeights: { address: string; weight: number }[] = [];
     let cumulativeWeight = 0;
 
-    const allSavers = new Set([
+    const allSavers = new Set<string>([
       ...Object.keys(cloudDepositTranches),
       ...Object.keys(cloudDeposits),
       ...(address ? [address.toLowerCase()] : [])
     ]);
 
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('ghost_balance_')) {
+          const val = parseFloat(localStorage.getItem(k) || '0');
+          if (val > 0) {
+            const wallet = k.replace('ghost_balance_', '').toLowerCase();
+            allSavers.add(wallet);
+          }
+        }
+      }
+    } catch {
+      // Ignore
+    }
+
     for (const saverAddr of allSavers) {
       const isCurrent = address && saverAddr === address.toLowerCase();
-      const tranches = isCurrent ? depositTranches : (cloudDepositTranches[saverAddr] || []);
-      let userWeight = 0;
+      let tranches = isCurrent ? depositTranches : (cloudDepositTranches[saverAddr] || []);
 
+      if (tranches.length === 0 && !isCurrent) {
+        try {
+          const savedTranches = localStorage.getItem(`ghost_tranches_${saverAddr}`);
+          if (savedTranches) {
+            tranches = JSON.parse(savedTranches);
+          }
+        } catch {
+          // Ignore
+        }
+      }
+
+      let userWeight = 0;
       if (tranches.length > 0) {
         for (const tr of tranches) {
           if (tr.amount > 0) {
@@ -1721,7 +1815,14 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
         }
       } else {
-        const flatBal = cloudDeposits[saverAddr] || 0;
+        let flatBal = cloudDeposits[saverAddr] || 0;
+        if (flatBal === 0 && !isCurrent) {
+          try {
+            flatBal = parseFloat(localStorage.getItem(`ghost_balance_${saverAddr}`) || '0');
+          } catch {
+            // Ignore
+          }
+        }
         if (flatBal > 0) {
           const elapsedSec = Math.max(0, (now - epochStart) / 1000);
           userWeight += flatBal * elapsedSec;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useGhost, PrizeRecord } from '../context/GhostContext';
+import { useGhost, PrizeRecord, formatCurrency } from '../context/GhostContext';
 import { 
   Trophy, 
   Sparkles, 
@@ -85,7 +85,7 @@ export const ClaimPage: React.FC = () => {
           <div className="flex items-baseline gap-2">
             {isDecrypted ? (
               <span className="text-2xl sm:text-3xl font-bold text-amber-600">
-                ${totalUnclaimedAmount.toFixed(2)}
+                ${formatCurrency(totalUnclaimedAmount)}
               </span>
             ) : (
               <span className="font-mono text-sm sm:text-base font-semibold text-amber-700 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg inline-flex items-center gap-1.5">
@@ -109,7 +109,7 @@ export const ClaimPage: React.FC = () => {
           <div className="flex items-baseline gap-2">
             {isDecrypted ? (
               <span className="text-2xl sm:text-3xl font-bold text-zinc-900">
-                ${totalClaimedAmount.toFixed(2)}
+                ${formatCurrency(totalClaimedAmount)}
               </span>
             ) : (
               <span className="font-mono text-sm sm:text-base font-semibold text-zinc-700 bg-zinc-100 border border-zinc-200 px-2 py-0.5 rounded-lg inline-flex items-center gap-1.5">
@@ -186,7 +186,7 @@ export const ClaimPage: React.FC = () => {
 
                     {isDecrypted ? (
                       <h3 className="text-2xl sm:text-3xl font-bold text-zinc-950 flex items-center gap-2">
-                        <span>${prize.amount.toFixed(2)}</span>
+                        <span>${formatCurrency(prize.amount)}</span>
                         <span className="text-base text-zinc-500 font-normal">cUSDC</span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold flex items-center gap-1">
                           <ShieldCheck className="w-3 h-3" /> Unmasked
@@ -244,7 +244,7 @@ export const ClaimPage: React.FC = () => {
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4 text-amber-400" />
-                          <span>Claim ${prize.amount.toFixed(2)} to Wallet</span>
+                          <span>Claim ${formatCurrency(prize.amount)} to Wallet</span>
                           <ArrowRight className="w-4 h-4" />
                         </>
                       )}
@@ -299,7 +299,7 @@ export const ClaimPage: React.FC = () => {
                 {claimedPrizes.map((p) => (
                   <tr key={p.id} className="hover:bg-zinc-50/50">
                     <td className="py-3 px-4 font-bold text-zinc-900">Event #{p.eventId}</td>
-                    <td className="py-3 px-4 font-bold text-emerald-600">${p.amount.toFixed(2)} cUSDC</td>
+                    <td className="py-3 px-4 font-bold text-emerald-600">${formatCurrency(p.amount)} cUSDC</td>
                     <td className="py-3 px-4">
                       <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold">
                         Claimed to Wallet

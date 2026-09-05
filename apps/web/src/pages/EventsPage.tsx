@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useGhost } from '../context/GhostContext';
+import { useGhost, formatCurrency } from '../context/GhostContext';
 import { RefreshCw, Sparkles, ExternalLink, Clock, Lock, Wallet, AlertCircle, Users, Gift, Trophy } from 'lucide-react';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 
@@ -80,7 +80,7 @@ export const EventsPage: React.FC = () => {
             </div>
             <div>
               <h3 className="text-sm font-bold text-zinc-950">
-                🎉 You have {unclaimedPrizes.length} unclaimed prize{unclaimedPrizes.length === 1 ? '' : 's'} (${totalUnclaimed.toFixed(2)} cUSDC)!
+                🎉 You have {unclaimedPrizes.length} unclaimed prize{unclaimedPrizes.length === 1 ? '' : 's'} (${formatCurrency(totalUnclaimed)} cUSDC)!
               </h3>
               <p className="text-xs text-zinc-600">
                 Winnings are reserved onchain. Click below to claim the funds directly to your wallet.
@@ -105,7 +105,7 @@ export const EventsPage: React.FC = () => {
               <span>Active Event · #{activeEvent.eventId}</span>
             </div>
             <div className="text-4xl sm:text-5xl font-bold text-white tracking-tight">
-              ${activeEvent.prizeAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{' '}
+              ${formatCurrency(activeEvent.prizeAmount)}{' '}
               <span className="text-base font-normal text-zinc-400">cUSDC</span>
             </div>
             <p className="text-zinc-400 text-xs sm:text-sm mt-2 max-w-md">
@@ -117,7 +117,7 @@ export const EventsPage: React.FC = () => {
               <div className="flex items-center justify-between text-[11px] font-mono mb-1.5 text-zinc-400">
                 <span>Jackpot Threshold Progress</span>
                 <span className={activeEvent.prizeAmount >= 500 ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
-                  ${activeEvent.prizeAmount.toFixed(2)} / $500.00
+                  ${formatCurrency(activeEvent.prizeAmount)} / $500.00
                 </span>
               </div>
               <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden">
@@ -246,9 +246,9 @@ export const EventsPage: React.FC = () => {
                     <td className="py-3.5 font-semibold text-zinc-900">#{e.eventId}</td>
                     <td className="py-3.5 font-semibold text-zinc-900">
                       {isDecrypted && rawAddress && e.winnerAddress.toLowerCase() === rawAddress.toLowerCase() ? (
-                        <span className="text-amber-600 font-bold">${e.prizeAmount.toLocaleString()} cUSDC</span>
+                        <span className="text-amber-600 font-bold">${formatCurrency(e.prizeAmount)} cUSDC</span>
                       ) : isDecrypted ? (
-                        <span>${e.prizeAmount.toLocaleString()} cUSDC</span>
+                        <span>${formatCurrency(e.prizeAmount)} cUSDC</span>
                       ) : (
                         <span className="font-mono text-[11px] text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-md">0x7f4e...9b12 (Sealed)</span>
                       )}
