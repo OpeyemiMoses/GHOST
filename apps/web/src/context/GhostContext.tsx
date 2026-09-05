@@ -708,22 +708,25 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Protocol-level Active Event (Synchronized across all devices worldwide)
   const [activeEvent, setActiveEvent] = useState<ProtocolEventRecord>(() => {
+    const now = Date.now();
     try {
       const saved = localStorage.getItem('ghost_active_event');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed.eventId === 'number') {
+        if (parsed && typeof parsed.eventId === 'number' && parsed.startTime > now - 3600000 * 24 * 3 && parsed.endTime > now - 3600000 * 24) {
           return parsed;
         }
       }
     } catch {
       // Ignore
     }
+    const defaultStart = now - 3600000 * 2;
     return {
       eventId: 1,
       status: 'OPEN',
-      startTime: 1725436800000, // Fixed baseline epoch so every device starts at identical point
-      endTime: 1725436800000 + 3600000 * 24,
+      startTime: defaultStart,
+      endTime: defaultStart + 3600000 * 24,
+      rolloverCount: 0,
       prizeAmount: 0,
       encryptedPrizeHandle: generateCiphertextHandle(0, 'GhostVault'),
       winnerAddress: 'Pending Onchain Draw',
@@ -778,6 +781,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const loadedBal = savedBal !== null ? parseFloat(savedBal) : 0;
     
     // Load deposit tranches for deterministic yield & TWAB
+    const now = Date.now();
     const savedTranchesStr = localStorage.getItem(`ghost_tranches_${key}`);
     let loadedTranches: DepositTranche[] = [];
     if (savedTranchesStr) {
@@ -789,12 +793,17 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     if (loadedTranches.length === 0 && loadedBal > 0) {
       // Initialize starting tranche matching current balance anchored to active event start time
-      const startTimestamp = activeEvent.startTime || Date.now();
+      const startTimestamp = activeEvent.startTime || (now - 3600000 * 2);
       loadedTranches = [{ id: `tranche_${Date.now()}`, amount: loadedBal, timestamp: startTimestamp }];
+    } else if (loadedTranches.length > 0) {
+      // Sanitize any stale timestamps
+      loadedTranches = loadedTranches.map(t => ({
+        ...t,
+        timestamp: t.timestamp < now - 3600000 * 24 * 7 ? (now - 3600000 * 2) : t.timestamp
+      }));
     }
     setDepositTranches(loadedTranches);
 
-    const now = Date.now();
     let initialYield = 0;
     if (loadedTranches.length > 0) {
       for (const tr of loadedTranches) {
@@ -1259,14 +1268,17 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const tick = () => {
       const now = Date.now();
-      const epochStart = activeEvent.startTime || 1725436800000;
+      const epochStart = activeEvent.startTime && activeEvent.startTime > now - 3600000 * 24 * 7
+        ? activeEvent.startTime
+        : now - 3600000 * 2;
 
       // 1. Personal Continuous APY Yield for active depositor
       if (address && userBalance > 0 && depositTranches.length > 0) {
         let personalYield = 0;
         for (const tr of depositTranches) {
           if (tr.amount > 0) {
-            const elapsedSec = Math.max(0, (now - tr.timestamp) / 1000);
+            const validTimestamp = tr.timestamp && tr.timestamp > now - 3600000 * 24 * 7 ? tr.timestamp : epochStart;
+            const elapsedSec = Math.max(0, (now - validTimestamp) / 1000);
             personalYield += (tr.amount * 0.082 * elapsedSec) / (365 * 86400);
           }
         }
@@ -1285,7 +1297,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (address && depositTranches.length > 0) {
         for (const tr of depositTranches) {
           if (tr.amount > 0) {
-            const effectiveStart = Math.max(tr.timestamp, epochStart);
+            const validTimestamp = tr.timestamp && tr.timestamp > now - 3600000 * 24 * 7 ? tr.timestamp : epochStart;
+            const effectiveStart = Math.max(validTimestamp, epochStart);
             const elapsedSec = Math.max(0, (now - effectiveStart) / 1000);
             personalWeight += tr.amount * elapsedSec;
           }
@@ -1336,7 +1349,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (tranches.length > 0) {
           for (const tr of tranches) {
             if (tr.amount > 0) {
-              const effectiveStart = Math.max(tr.timestamp, epochStart);
+              const validTimestamp = tr.timestamp && tr.timestamp > now - 3600000 * 24 * 7 ? tr.timestamp : epochStart;
+              const effectiveStart = Math.max(validTimestamp, epochStart);
               const elapsedSec = Math.max(0, (now - effectiveStart) / 1000);
               globalPoolWeight += tr.amount * elapsedSec;
               totalPoolYield += (tr.amount * 0.082 * elapsedSec) / (365 * 86400);
@@ -1764,8 +1778,10 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     // 1. Calculate each participant's Time-Weighted Average Balance (TWAB) Draw Weight
-    const epochStart = activeEvent.startTime || 1725436800000;
     const now = Date.now();
+    const epochStart = activeEvent.startTime && activeEvent.startTime > now - 3600000 * 24 * 7
+      ? activeEvent.startTime
+      : now - 3600000 * 2;
     const candidateWeights: { address: string; weight: number }[] = [];
     let cumulativeWeight = 0;
 
@@ -1809,7 +1825,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (tranches.length > 0) {
         for (const tr of tranches) {
           if (tr.amount > 0) {
-            const effectiveStart = Math.max(tr.timestamp, epochStart);
+            const validTimestamp = tr.timestamp && tr.timestamp > now - 3600000 * 24 * 7 ? tr.timestamp : epochStart;
+            const effectiveStart = Math.max(validTimestamp, epochStart);
             const elapsedSec = Math.max(0, (now - effectiveStart) / 1000);
             userWeight += tr.amount * elapsedSec;
           }

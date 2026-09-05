@@ -41,12 +41,12 @@ export interface GlobalSyncPayload {
   lastUpdated: number;
 }
 
-const TOPIC = 'ghost_protocol_global_sync_v4';
+const TOPIC = 'ghost_protocol_global_sync_v6';
 const PUBLISH_URL = `https://ntfy.sh/${TOPIC}`;
 const POLL_URL = `https://ntfy.sh/${TOPIC}/json?poll=1&since=24h`;
 const SSE_URL = `https://ntfy.sh/${TOPIC}/sse`;
 
-const DEFAULT_START_TIME = 1725436800000;
+const getBaselineStartTime = () => Date.now() - 3600000 * 2;
 
 let cachedState: GlobalSyncPayload = {
   accountsDb: {},
@@ -59,8 +59,8 @@ let cachedState: GlobalSyncPayload = {
   activeEvent: {
     eventId: 1,
     status: 'OPEN',
-    startTime: DEFAULT_START_TIME,
-    endTime: DEFAULT_START_TIME + 3600000 * 24,
+    startTime: getBaselineStartTime(),
+    endTime: getBaselineStartTime() + 3600000 * 24,
     prizeAmount: 0,
     encryptedPrizeHandle: '0x0000000000000000000000000000000000000000000000000000000000000000',
     winnerAddress: 'Pending Onchain Draw',

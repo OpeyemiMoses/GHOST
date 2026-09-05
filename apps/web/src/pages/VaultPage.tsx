@@ -372,18 +372,21 @@ export const VaultPage: React.FC = () => {
                 </p>
               </div>
               <div className="text-right">
-                <div className="font-mono font-bold text-base text-zinc-950">
-                  {userWinOddsPercent > 0 ? `${userWinOddsPercent}%` : '0.00%'}
+                <div className="font-mono text-xs font-semibold text-zinc-700 bg-zinc-100/90 border border-zinc-200/80 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 w-fit">
+                  <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>{encryptedHandle ? `0x${encryptedHandle.slice(6, 14)}...${encryptedHandle.slice(-4)}` : '0x7f4e...9b12'}</span>
                 </div>
-                <div className="text-[10px] font-mono text-zinc-400">Current Win Odds</div>
+                <div className="text-[10px] font-mono text-zinc-400 mt-0.5">Encrypted Win Odds (FHE)</div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
               <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-200/70">
                 <div className="text-[10px] font-mono text-zinc-500 uppercase">Your Time-Weight</div>
-                <div className="text-xs font-bold text-zinc-900 mt-0.5 font-mono">
-                  {formatCurrency(userTimeWeightedWeight / 3600)} <span className="text-[10px] text-zinc-500 font-normal">cUSDC·hrs</span>
+                <div className="text-xs font-bold text-zinc-900 mt-0.5 font-mono flex items-center gap-1.5">
+                  <Lock className="w-3 h-3 text-zinc-500 shrink-0" />
+                  <span className="truncate">{encryptedHandle ? `0x${encryptedHandle.slice(14, 22)}...${encryptedHandle.slice(-4)}` : '0x3c2a...4d8e'}</span>
+                  <span className="text-[10px] text-zinc-400 font-normal">(Sealed)</span>
                 </div>
               </div>
 
