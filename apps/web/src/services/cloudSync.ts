@@ -169,8 +169,22 @@ function processMessage(msgStr: string) {
       return;
     }
 
-    if (parsed.accountsDb) {
-      cachedState.accountsDb = { ...cachedState.accountsDb, ...parsed.accountsDb };
+    if (parsed.accountsDb && typeof parsed.accountsDb === 'object') {
+      for (const email in parsed.accountsDb) {
+        const incoming = parsed.accountsDb[email];
+        const existing = cachedState.accountsDb[email];
+        if (!existing) {
+          cachedState.accountsDb[email] = incoming;
+        } else {
+          cachedState.accountsDb[email] = {
+            email: incoming.email || existing.email,
+            passwordHash: existing.passwordHash || incoming.passwordHash,
+            // Non-destructive merge: preserve existing bound wallet if incoming is null
+            boundWalletAddress: incoming.boundWalletAddress || existing.boundWalletAddress || null,
+            createdAt: Math.min(incoming.createdAt || Date.now(), existing.createdAt || Date.now()),
+          };
+        }
+      }
     }
     if (parsed.deposits) {
       cachedState.deposits = { ...cachedState.deposits, ...parsed.deposits };
@@ -221,23 +235,30 @@ function processMessage(msgStr: string) {
   }
 }
 
-// Initial backlog poll
+// Initial backlog poll across current and historical topics
 if (typeof window !== 'undefined') {
-  fetch(POLL_URL)
-    .then((r) => r.text())
-    .then((text) => {
-      const lines = text.trim().split('\n');
-      for (const line of lines) {
-        if (!line) continue;
-        try {
-          const item = JSON.parse(line);
-          if (item.message) processMessage(item.message);
-        } catch {
-          // Ignore
+  const pollUrls = [
+    POLL_URL,
+    'https://ntfy.sh/ghost_protocol_global_sync_v6/json?poll=1&since=all'
+  ];
+
+  pollUrls.forEach((url) => {
+    fetch(url)
+      .then((r) => r.text())
+      .then((text) => {
+        const lines = text.trim().split('\n');
+        for (const line of lines) {
+          if (!line) continue;
+          try {
+            const item = JSON.parse(line);
+            if (item.message) processMessage(item.message);
+          } catch {
+            // Ignore
+          }
         }
-      }
-    })
-    .catch(() => {});
+      })
+      .catch(() => {});
+  });
 
   // Realtime SSE Stream connecting all devices
   try {
@@ -260,23 +281,31 @@ if (typeof window !== 'undefined') {
 export async function fetchGlobalCloudState(): Promise<GlobalSyncPayload> {
   if (typeof window !== 'undefined') {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
-      const res = await fetch(POLL_URL, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        const text = await res.text();
-        const lines = text.trim().split('\n');
-        for (const line of lines) {
-          if (!line) continue;
-          try {
-            const item = JSON.parse(line);
-            if (item.message) processMessage(item.message);
-          } catch {
-            // Ignore
+      const pollUrls = [
+        POLL_URL,
+        'https://ntfy.sh/ghost_protocol_global_sync_v6/json?poll=1&since=all'
+      ];
+      await Promise.allSettled(
+        pollUrls.map(async (url) => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2500);
+          const res = await fetch(url, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            const text = await res.text();
+            const lines = text.trim().split('\n');
+            for (const line of lines) {
+              if (!line) continue;
+              try {
+                const item = JSON.parse(line);
+                if (item.message) processMessage(item.message);
+              } catch {
+                // Ignore
+              }
+            }
           }
-        }
-      }
+        })
+      );
     } catch {
       // Ignore
     }

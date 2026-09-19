@@ -229,6 +229,30 @@ async function hashPassword(password: string): Promise<string> {
 
 
 
+export function mergeAccountsDb(
+  local: Record<string, UserAccount>,
+  incoming: Record<string, UserAccount>
+): Record<string, UserAccount> {
+  const merged: Record<string, UserAccount> = { ...local };
+  for (const email in incoming) {
+    const cleanEmail = email.toLowerCase();
+    const inc = incoming[email];
+    const loc = merged[cleanEmail];
+    if (!loc) {
+      merged[cleanEmail] = inc;
+    } else {
+      merged[cleanEmail] = {
+        email: cleanEmail,
+        passwordHash: loc.passwordHash || inc.passwordHash,
+        // Non-destructive: preserve whichever holds the bound wallet
+        boundWalletAddress: loc.boundWalletAddress || inc.boundWalletAddress || null,
+        createdAt: Math.min(loc.createdAt || Date.now(), inc.createdAt || Date.now()),
+      };
+    }
+  }
+  return merged;
+}
+
 export function enforceUniqueWalletBindings(
   accountsDb: Record<string, UserAccount>,
   priorityEmail?: string | null
@@ -462,7 +486,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const cloud = await fetchGlobalCloudState();
       let rawAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
       if (cloud?.accountsDb) {
-        rawAccounts = { ...rawAccounts, ...cloud.accountsDb };
+        rawAccounts = mergeAccountsDb(rawAccounts, cloud.accountsDb);
       }
       const { sanitized: accountsDb } = enforceUniqueWalletBindings(rawAccounts, cleanEmail);
 
@@ -527,7 +551,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const cloud = await fetchGlobalCloudState();
       let rawAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
       if (cloud?.accountsDb) {
-        rawAccounts = { ...rawAccounts, ...cloud.accountsDb };
+        rawAccounts = mergeAccountsDb(rawAccounts, cloud.accountsDb);
       }
       const { sanitized: accountsDb, hasChanges } = enforceUniqueWalletBindings(rawAccounts, cleanEmail);
       if (hasChanges) {
@@ -594,7 +618,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       let rawAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
       const cloud = await fetchGlobalCloudState();
       if (cloud?.accountsDb) {
-        rawAccounts = { ...rawAccounts, ...cloud.accountsDb };
+        rawAccounts = mergeAccountsDb(rawAccounts, cloud.accountsDb);
       }
 
       // Unbind this wallet from ANY other account to enforce strict 1:1 binding
@@ -645,7 +669,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       let rawAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
       const cloud = await fetchGlobalCloudState();
       if (cloud?.accountsDb) {
-        rawAccounts = { ...rawAccounts, ...cloud.accountsDb };
+        rawAccounts = mergeAccountsDb(rawAccounts, cloud.accountsDb);
       }
 
       const updatedAccount: UserAccount = {
@@ -1287,7 +1311,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (data.accountsDb && Object.keys(data.accountsDb).length > 0) {
         try {
           const localAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
-          const merged = { ...localAccounts, ...data.accountsDb };
+          const merged = mergeAccountsDb(localAccounts, data.accountsDb);
           const savedEmail = localStorage.getItem('ghost_current_user_email');
           const { sanitized, hasChanges } = enforceUniqueWalletBindings(merged, savedEmail);
           localStorage.setItem('ghost_accounts_db', JSON.stringify(sanitized));
