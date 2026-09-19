@@ -129,11 +129,13 @@ export const ConnectGatewayPage: React.FC = () => {
         <div className="relative z-20 flex items-center justify-between pb-6 sm:pb-8">
           <button
             onClick={() => setCurrentView('landing')}
-            className="flex items-center gap-2 group cursor-pointer"
+            className="flex items-center gap-2.5 group cursor-pointer"
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-bold text-base shadow-md">
-              G
-            </div>
+            <img 
+              src="/assets/ghost-emblem-white.png" 
+              alt="Ghost Protocol Emblem" 
+              className="w-8 h-8 object-contain drop-shadow-md group-hover:scale-105 transition-transform" 
+            />
             <div className="flex flex-col text-left">
               <span className="font-bold text-sm tracking-tight text-white group-hover:text-amber-300 transition-colors">
                 GHOST
@@ -192,7 +194,7 @@ export const ConnectGatewayPage: React.FC = () => {
             className="relative w-full max-w-sm rounded-3xl p-1 bg-gradient-to-br from-white/15 via-white/5 to-white/0 backdrop-blur-2xl border border-white/15 shadow-2xl shadow-black/80 aspect-[4/3] group overflow-hidden"
           >
             <img
-              src="/artifacts/hero_security_vault_mockup.png"
+              src="/assets/connect-vault-cinematic.jpg"
               alt="Ghost Confidential Dual Auth Gateway"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
             />
