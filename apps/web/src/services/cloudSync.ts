@@ -41,9 +41,9 @@ export interface GlobalSyncPayload {
   lastUpdated: number;
 }
 
-const TOPIC = 'ghost_protocol_global_sync_v6';
+const TOPIC = 'ghost_protocol_global_sync_v7';
 const PUBLISH_URL = `https://ntfy.sh/${TOPIC}`;
-const POLL_URL = `https://ntfy.sh/${TOPIC}/json?poll=1&since=24h`;
+const POLL_URL = `https://ntfy.sh/${TOPIC}/json?poll=1&since=all`;
 const SSE_URL = `https://ntfy.sh/${TOPIC}/sse`;
 
 const getBaselineStartTime = () => Math.floor(Date.now() / 86400000) * 86400000;
@@ -260,7 +260,10 @@ if (typeof window !== 'undefined') {
 export async function fetchGlobalCloudState(): Promise<GlobalSyncPayload> {
   if (typeof window !== 'undefined') {
     try {
-      const res = await fetch(POLL_URL);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const res = await fetch(POLL_URL, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const text = await res.text();
         const lines = text.trim().split('\n');

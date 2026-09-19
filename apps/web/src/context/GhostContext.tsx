@@ -1130,6 +1130,18 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // On mount, immediately broadcast local accounts so all devices receive existing accounts
+  useEffect(() => {
+    try {
+      const localAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+      if (Object.keys(localAccounts).length > 0) {
+        pushGlobalCloudState({ accountsDb: localAccounts }).catch(() => {});
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
   // Instant Real-Time Cross-Device Synchronization via PubSub & Server-Sent Events (SSE)
   useEffect(() => {
     const unsubscribe = subscribeToGlobalState((data) => {
