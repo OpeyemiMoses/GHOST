@@ -130,6 +130,10 @@ let cachedState: GlobalSyncPayload = {
 type StateListener = (state: GlobalSyncPayload) => void;
 const listeners: Set<StateListener> = new Set();
 
+export function getCachedAccounts(): Record<string, any> {
+  return cachedState.accountsDb || {};
+}
+
 export function subscribeToGlobalState(callback: StateListener): () => void {
   listeners.add(callback);
   callback(cachedState);

@@ -21,7 +21,6 @@ export const ConnectGatewayPage: React.FC = () => {
     loginAccount,
     logoutAccount,
     bindWalletToAccount,
-    unbindWalletFromAccount,
     getWalletBindingStatus,
     isWalletMatchingBound,
     isWrongNetwork,
@@ -89,30 +88,17 @@ export const ConnectGatewayPage: React.FC = () => {
     }
   };
 
-  const handleBindWallet = async (override: boolean = false) => {
+  const handleBindWallet = async () => {
     if (!rawAddress) return;
     setBindLoading(true);
     setAuthError(null);
     try {
-      const res = await bindWalletToAccount(rawAddress, override);
+      const res = await bindWalletToAccount(rawAddress);
       if (!res.success) {
         setAuthError(res.error || 'Failed to bind wallet.');
       } else {
         setBindSuccessMessage(`Wallet ${rawAddress.slice(0, 6)}...${rawAddress.slice(-4)} successfully bound!`);
         setTimeout(() => setBindSuccessMessage(null), 4000);
-      }
-    } finally {
-      setBindLoading(false);
-    }
-  };
-
-  const handleUnbindWallet = async () => {
-    setBindLoading(true);
-    setAuthError(null);
-    try {
-      const res = await unbindWalletFromAccount();
-      if (!res.success) {
-        setAuthError(res.error || 'Failed to unbind wallet.');
       }
     } finally {
       setBindLoading(false);
@@ -420,10 +406,10 @@ export const ConnectGatewayPage: React.FC = () => {
                   <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl space-y-1.5 text-xs text-amber-900">
                     <div className="font-bold flex items-center gap-1.5">
                       <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
-                      <span>Wallet Already Bound to Another Account</span>
+                      <span>Wallet Already Bound to Another User</span>
                     </div>
                     <p className="text-[11px] text-amber-800 leading-relaxed">
-                      Address <strong>{rawAddress.slice(0, 6)}...{rawAddress.slice(-4)}</strong> is already locked to <strong>{connectedBindingStatus.boundToEmail}</strong>. Please switch to a different wallet in your extension.
+                      Address <strong>{rawAddress.slice(0, 6)}...{rawAddress.slice(-4)}</strong> is already bound to another user account. Each enclave account requires its own unique Web3 wallet. Please switch to an unused account in your wallet extension.
                     </p>
                   </div>
                 )}
@@ -445,25 +431,16 @@ export const ConnectGatewayPage: React.FC = () => {
                     <span>Connect Wallet to Bind</span>
                   </button>
                 ) : isConnectedWalletClaimedByOther ? (
-                  <div className="space-y-2">
-                    <button
-                      onClick={openConnectModal}
-                      className="w-full btn-pill-secondary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span>Switch to an Unused Wallet in Extension</span>
-                    </button>
-                    <button
-                      onClick={() => handleBindWallet(true)}
-                      disabled={bindLoading}
-                      className="w-full py-2 text-[11px] text-zinc-500 hover:text-amber-700 font-medium underline text-center transition-colors cursor-pointer"
-                    >
-                      {bindLoading ? 'Transferring...' : `Transfer wallet to this account (releases from ${connectedBindingStatus.boundToEmail})`}
-                    </button>
-                  </div>
+                  <button
+                    onClick={openConnectModal}
+                    className="w-full btn-pill-secondary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Switch to an Unused Wallet in Extension</span>
+                  </button>
                 ) : (
                   <button
-                    onClick={() => handleBindWallet(false)}
+                    onClick={handleBindWallet}
                     disabled={bindLoading}
                     className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
                   >
@@ -533,29 +510,15 @@ export const ConnectGatewayPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Status Indicator: Mismatched & Owned by another account */}
-                {rawAddress && !isWalletMatchingBound && isConnectedWalletClaimedByOther && (
+                {/* Status Indicator: Mismatched */}
+                {rawAddress && !isWalletMatchingBound && (
                   <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl space-y-1.5 text-xs text-amber-900">
                     <div className="font-bold flex items-center gap-1.5">
                       <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
-                      <span>Connected Wallet Belongs to Another Account</span>
-                    </div>
-                    <p className="text-[11px] text-amber-800 leading-relaxed">
-                      Connected wallet <strong>{rawAddress.slice(0, 6)}...</strong> is bound to <strong>{connectedBindingStatus.boundToEmail}</strong>. 
-                      Please switch back to this account's bound address <strong>{currentUser.boundWalletAddress.slice(0, 6)}...</strong> in MetaMask.
-                    </p>
-                  </div>
-                )}
-
-                {/* Status Indicator: Mismatched & Unused */}
-                {rawAddress && !isWalletMatchingBound && !isConnectedWalletClaimedByOther && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1 text-xs text-amber-900">
-                    <div className="font-bold flex items-center gap-1.5">
-                      <ShieldAlert className="w-4 h-4 text-amber-700" />
                       <span>Wallet Mismatch Detected</span>
                     </div>
-                    <p className="text-[11px] text-amber-800">
-                      This account is locked to <strong>{currentUser.boundWalletAddress.slice(0, 8)}...</strong>. Please switch accounts in your extension or re-bind to this new wallet.
+                    <p className="text-[11px] text-amber-800 leading-relaxed">
+                      This enclave account is permanently bound to <strong>{currentUser.boundWalletAddress.slice(0, 6)}...{currentUser.boundWalletAddress.slice(-4)}</strong>. Please switch to this bound address in your wallet extension.
                     </p>
                   </div>
                 )}
@@ -571,74 +534,24 @@ export const ConnectGatewayPage: React.FC = () => {
                   <span>Connect Wallet ({currentUser.boundWalletAddress.slice(0, 6)}...)</span>
                 </button>
               ) : isWalletMatchingBound ? (
-                <div className="space-y-3">
-                  <button
-                    onClick={handleAuthorizeAndEnter}
-                    disabled={isSigning}
-                    className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
-                  >
-                    {isSigning && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                    <KeyRound className="w-3.5 h-3.5" />
-                    <span>Authorize Session & Enter Vault</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={handleUnbindWallet}
-                    disabled={bindLoading}
-                    className="w-full py-2.5 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-950 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {bindLoading && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Unbind Wallet from this Account</span>
-                  </button>
-                </div>
-              ) : isConnectedWalletClaimedByOther ? (
-                <div className="space-y-2.5">
-                  <button
-                    onClick={openConnectModal}
-                    className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Switch to Bound Wallet ({currentUser.boundWalletAddress.slice(0, 6)}...)</span>
-                  </button>
-                  <button
-                    onClick={handleUnbindWallet}
-                    disabled={bindLoading}
-                    className="w-full py-2.5 px-3 rounded-xl bg-zinc-100 hover:bg-red-50 text-zinc-600 hover:text-red-700 border border-transparent hover:border-red-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                    <span>Unbind Account from {currentUser.boundWalletAddress.slice(0, 6)}...</span>
-                  </button>
-                </div>
+                <button
+                  onClick={handleAuthorizeAndEnter}
+                  disabled={isSigning}
+                  className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  {isSigning && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                  <KeyRound className="w-3.5 h-3.5" />
+                  <span>Authorize Session & Enter Vault</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               ) : (
-                <div className="space-y-2.5">
-                  <button
-                    onClick={() => handleBindWallet(false)}
-                    disabled={bindLoading}
-                    className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
-                  >
-                    {bindLoading && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Re-bind Account to This Wallet ({rawAddress.slice(0, 6)}...{rawAddress.slice(-4)})</span>
-                  </button>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={openConnectModal}
-                      className="py-2.5 px-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 hover:text-zinc-950 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span>Switch in Wallet</span>
-                    </button>
-                    <button
-                      onClick={handleUnbindWallet}
-                      disabled={bindLoading}
-                      className="py-2.5 px-3 rounded-xl bg-zinc-100 hover:bg-red-50 text-zinc-600 hover:text-red-700 border border-transparent hover:border-red-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                      <span>Unbind Current</span>
-                    </button>
-                  </div>
-                </div>
+                <button
+                  onClick={openConnectModal}
+                  className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Switch to Bound Wallet ({currentUser.boundWalletAddress.slice(0, 6)}...{currentUser.boundWalletAddress.slice(-4)})</span>
+                </button>
               )}
 
               <div className="flex items-center justify-between pt-2">

@@ -7,6 +7,7 @@ import {
   fetchGlobalCloudState,
   pushGlobalCloudState,
   subscribeToGlobalState,
+  getCachedAccounts,
   DEFAULT_BASE_DEPOSITS,
   DEFAULT_BASE_TRANCHES,
   DEFAULT_PAST_EVENTS,
@@ -137,9 +138,9 @@ interface GhostContextType {
   registerAccount: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginAccount: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logoutAccount: () => void;
-  bindWalletToAccount: (walletAddress: string, allowOverride?: boolean) => Promise<{ success: boolean; error?: string }>;
+  bindWalletToAccount: (walletAddress: string) => Promise<{ success: boolean; error?: string }>;
   unbindWalletFromAccount: () => Promise<{ success: boolean; error?: string }>;
-  getWalletBindingStatus: (walletAddress?: string) => { isBound: boolean; boundToEmail: string | null; isBoundToCurrent: boolean };
+  getWalletBindingStatus: (walletAddress?: string) => { isBound: boolean; isBoundToCurrent: boolean };
   isWalletMatchingBound: boolean;
 
   // Real Wallet State from RainbowKit / wagmi
@@ -259,7 +260,7 @@ export function mergeAccountsDb(
 
 export function enforceUniqueWalletBindings(
   accountsDb: Record<string, UserAccount> | null | undefined,
-  priorityEmail?: string | null
+  _ignoredPriorityEmail?: string | null
 ): { sanitized: Record<string, UserAccount>; hasChanges: boolean } {
   if (!accountsDb || typeof accountsDb !== 'object') {
     return { sanitized: {}, hasChanges: false };
@@ -268,20 +269,19 @@ export function enforceUniqueWalletBindings(
   const walletToEmail: Record<string, string> = {};
   let hasChanges = false;
 
+  // Sort by createdAt ASCENDING so the first/oldest account that claimed the wallet permanently keeps it!
   const emailKeys = Object.keys(accountsDb)
     .filter((k) => k && accountsDb[k] && typeof accountsDb[k] === 'object')
     .sort((a, b) => {
-      if (priorityEmail && a.toLowerCase() === priorityEmail.toLowerCase()) return -1;
-      if (priorityEmail && b.toLowerCase() === priorityEmail.toLowerCase()) return 1;
-      return (accountsDb[b]?.createdAt || 0) - (accountsDb[a]?.createdAt || 0);
+      return (accountsDb[a]?.createdAt || 0) - (accountsDb[b]?.createdAt || 0);
     });
 
   for (const email of emailKeys) {
     const acc = { ...accountsDb[email] };
     if (acc.boundWalletAddress) {
       const cleanWallet = acc.boundWalletAddress.toLowerCase();
-      if (walletToEmail[cleanWallet]) {
-        // Multi-binding collision detected! Unbind duplicate
+      if (walletToEmail[cleanWallet] && walletToEmail[cleanWallet] !== email.toLowerCase()) {
+        // Multi-binding collision detected! The newer account cannot steal an already-bound wallet.
         acc.boundWalletAddress = null;
         hasChanges = true;
       } else {
@@ -612,25 +612,27 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addToast({ type: 'info', title: 'Signed Out', message: 'You have been securely signed out of your enclave account.' });
   };
 
-  const getWalletBindingStatus = (targetAddress?: string): { isBound: boolean; boundToEmail: string | null; isBoundToCurrent: boolean } => {
+  const getWalletBindingStatus = (targetAddress?: string): { isBound: boolean; isBoundToCurrent: boolean } => {
     const addr = (targetAddress || address || '').toLowerCase();
-    if (!addr) return { isBound: false, boundToEmail: null, isBoundToCurrent: false };
+    if (!addr) return { isBound: false, isBoundToCurrent: false };
     try {
       const rawAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
-      for (const email in rawAccounts) {
-        const acc = rawAccounts[email];
+      const cloudAccounts = getCachedAccounts();
+      const allAccounts = mergeAccountsDb(rawAccounts, cloudAccounts);
+      for (const email in allAccounts) {
+        const acc = allAccounts[email];
         if (acc?.boundWalletAddress && acc.boundWalletAddress.toLowerCase() === addr) {
           const isCurrent = Boolean(currentUser && email.toLowerCase() === currentUser.email.toLowerCase());
-          return { isBound: true, boundToEmail: email, isBoundToCurrent: isCurrent };
+          return { isBound: true, isBoundToCurrent: isCurrent };
         }
       }
     } catch {
       // Ignore
     }
-    return { isBound: false, boundToEmail: null, isBoundToCurrent: false };
+    return { isBound: false, isBoundToCurrent: false };
   };
 
-  const bindWalletToAccount = async (walletAddress: string, allowOverride: boolean = false): Promise<{ success: boolean; error?: string }> => {
+  const bindWalletToAccount = async (walletAddress: string): Promise<{ success: boolean; error?: string }> => {
     if (!currentUser) {
       addToast({ type: 'warning', title: 'Auth Required', message: 'You must be logged into an email account to bind a wallet.' });
       return { success: false, error: 'You must be logged into an email account to bind a wallet.' };
@@ -648,30 +650,15 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         rawAccounts = mergeAccountsDb(rawAccounts, cloud.accountsDb);
       }
 
-      // Detect if wallet is already claimed by another account
-      if (!allowOverride) {
-        for (const emailKey in rawAccounts) {
-          if (
-            emailKey.toLowerCase() !== myEmail &&
-            rawAccounts[emailKey]?.boundWalletAddress?.toLowerCase() === cleanWallet
-          ) {
-            const errMsg = `This wallet (${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}) is already bound to ${emailKey}. Please switch accounts in your wallet extension.`;
-            addToast({ type: 'error', title: 'Wallet Already Claimed', message: errMsg });
-            return { success: false, error: errMsg };
-          }
-        }
-      }
-
-      // Unbind this wallet from ANY other account to enforce strict 1:1 binding
+      // Detect if wallet is already bound to another account (Privacy: never leak other emails)
       for (const emailKey in rawAccounts) {
         if (
           emailKey.toLowerCase() !== myEmail &&
           rawAccounts[emailKey]?.boundWalletAddress?.toLowerCase() === cleanWallet
         ) {
-          rawAccounts[emailKey] = {
-            ...rawAccounts[emailKey],
-            boundWalletAddress: null,
-          };
+          const errMsg = `This wallet is already bound to another user account. Each enclave account requires its own unique Web3 wallet.`;
+          addToast({ type: 'error', title: 'Wallet Already Bound', message: errMsg });
+          return { success: false, error: errMsg };
         }
       }
 
@@ -690,8 +677,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       await pushGlobalCloudState({ accountsDb: finalAccounts });
       addToast({
         type: 'success',
-        title: 'Wallet Bound (Strict 1:1)',
-        message: `Bound ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} exclusively to ${myEmail}.`,
+        title: 'Wallet Permanently Bound (1:1)',
+        message: `Bound ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} to your account.`,
       });
       return { success: true };
     } catch (e: any) {
