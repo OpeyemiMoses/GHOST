@@ -22,6 +22,7 @@ export const ConnectGatewayPage: React.FC = () => {
     logoutAccount,
     bindWalletToAccount,
     unbindWalletFromAccount,
+    getWalletBindingStatus,
     isWalletMatchingBound,
     isWrongNetwork,
     switchToSepolia,
@@ -38,6 +39,10 @@ export const ConnectGatewayPage: React.FC = () => {
   const [authLoading, setAuthLoading] = useState<boolean>(false);
   const [bindLoading, setBindLoading] = useState<boolean>(false);
   const [bindSuccessMessage, setBindSuccessMessage] = useState<string | null>(null);
+
+  // Binding status detection
+  const connectedBindingStatus = getWalletBindingStatus(rawAddress);
+  const isConnectedWalletClaimedByOther = Boolean(connectedBindingStatus.isBound && !connectedBindingStatus.isBoundToCurrent);
 
   // Interactive 3D Card Tilt State
   const [rotate, setRotate] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -84,12 +89,12 @@ export const ConnectGatewayPage: React.FC = () => {
     }
   };
 
-  const handleBindWallet = async () => {
+  const handleBindWallet = async (override: boolean = false) => {
     if (!rawAddress) return;
     setBindLoading(true);
     setAuthError(null);
     try {
-      const res = await bindWalletToAccount(rawAddress);
+      const res = await bindWalletToAccount(rawAddress, override);
       if (!res.success) {
         setAuthError(res.error || 'Failed to bind wallet.');
       } else {
@@ -124,7 +129,7 @@ export const ConnectGatewayPage: React.FC = () => {
   return (
     <div className="min-h-screen w-full bg-white text-zinc-900 flex flex-col lg:flex-row selection:bg-zinc-200">
       
-      {/* LEFT HALF: Dark Cinematic Showcase (Bottom on mobile, Left on desktop) */}
+      {/* LEFT HALF: Dark Cinematic Showcase */}
       <div className="order-2 lg:order-1 relative w-full lg:w-[48%] min-h-[480px] lg:min-h-screen bg-black text-white p-6 sm:p-12 lg:p-16 flex flex-col justify-between overflow-hidden">
         
         {/* Ambient Volumetric Lighting Effects */}
@@ -138,13 +143,19 @@ export const ConnectGatewayPage: React.FC = () => {
         <div className="relative z-20 flex items-center justify-between pb-6 sm:pb-8">
           <button
             onClick={() => setCurrentView('landing')}
-            className="flex items-center gap-2 group transition-transform hover:scale-102 cursor-pointer"
+            className="flex items-center gap-2 group cursor-pointer"
           >
-            <img
-              src="/assets/ghost-logo-lockup-white.png"
-              alt="Ghost"
-              className="h-5 sm:h-6 w-auto object-contain"
-            />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-bold text-base shadow-md">
+              G
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="font-bold text-sm tracking-tight text-white group-hover:text-amber-300 transition-colors">
+                GHOST
+              </span>
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                Protocol
+              </span>
+            </div>
           </button>
           
           {isWrongNetwork ? (
@@ -157,16 +168,16 @@ export const ConnectGatewayPage: React.FC = () => {
               <span>Switch to Sepolia</span>
             </button>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-[10px] sm:text-[11px] font-mono text-zinc-400 shadow-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Sepolia Testnet</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] font-mono text-zinc-300">
+              <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+              <span>FHE Testnet Active</span>
             </div>
           )}
         </div>
 
-        {/* Center Visual Photograph / 3D Animated Vault Stage */}
-        <div
-          className="relative z-10 my-auto py-8 sm:py-10 flex flex-col items-center justify-center [perspective:1200px]"
+        {/* Center 3D Interactive Terminal Card Showcase */}
+        <div 
+          className="relative z-20 my-auto py-6 sm:py-10 flex items-center justify-center [perspective:1000px]"
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         >
@@ -190,13 +201,13 @@ export const ConnectGatewayPage: React.FC = () => {
             ref={cardRef}
             style={{
               transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
-              transition: rotate.x === 0 ? 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
+              transition: rotate.x === 0 ? 'transform 0.5s ease-out' : 'none',
             }}
-            className="relative w-full max-w-[340px] sm:max-w-[380px] aspect-square rounded-[2.5rem] overflow-hidden shadow-[0_30px_90px_-20px_rgba(0,0,0,0.95)] border border-zinc-700/80 group cursor-grab active:cursor-grabbing"
+            className="relative w-full max-w-sm rounded-3xl p-1 bg-gradient-to-br from-white/15 via-white/5 to-white/0 backdrop-blur-2xl border border-white/15 shadow-2xl shadow-black/80 aspect-[4/3] group overflow-hidden"
           >
             <img
-              src="/assets/connect-vault-cinematic.jpg"
-              alt="Ghost Confidential Hardware Vault"
+              src="/artifacts/hero_security_vault_mockup.png"
+              alt="Ghost Confidential Dual Auth Gateway"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/25 pointer-events-none" />
@@ -228,7 +239,7 @@ export const ConnectGatewayPage: React.FC = () => {
 
       </div>
 
-      {/* RIGHT HALF: Clean Auth Gateway & Wallet Binding Portal (Top on mobile, Right on desktop) */}
+      {/* RIGHT HALF: Clean Auth Gateway & Wallet Binding Portal */}
       <div className="order-1 lg:order-2 w-full lg:w-[52%] min-h-screen bg-white p-6 sm:p-10 lg:p-16 flex flex-col justify-between overflow-y-auto">
         
         {/* Top Navigation */}
@@ -374,7 +385,7 @@ export const ConnectGatewayPage: React.FC = () => {
                   Bind Your Web3 Wallet
                 </h1>
                 <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
-                  Link your Ethereum Sepolia wallet to this email account. Once bound, this account will strictly only authorize sessions from this address.
+                  Link your Ethereum Sepolia wallet to this email account. Each email account requires its own unique wallet address for strict enclave isolation.
                 </p>
               </div>
 
@@ -404,6 +415,27 @@ export const ConnectGatewayPage: React.FC = () => {
                   )}
                 </div>
 
+                {/* Conflict Alert: Connected wallet is already claimed by another account */}
+                {rawAddress && isConnectedWalletClaimedByOther && (
+                  <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl space-y-1.5 text-xs text-amber-900">
+                    <div className="font-bold flex items-center gap-1.5">
+                      <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
+                      <span>Wallet Already Bound to Another Account</span>
+                    </div>
+                    <p className="text-[11px] text-amber-800 leading-relaxed">
+                      Address <strong>{rawAddress.slice(0, 6)}...{rawAddress.slice(-4)}</strong> is already locked to <strong>{connectedBindingStatus.boundToEmail}</strong>. Please switch to a different wallet in your extension.
+                    </p>
+                  </div>
+                )}
+
+                {/* Clean State: Wallet is available */}
+                {rawAddress && !isConnectedWalletClaimedByOther && (
+                  <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center gap-2 text-xs text-emerald-900">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Wallet is available and ready for exclusive 1:1 binding.</span>
+                  </div>
+                )}
+
                 {!rawAddress ? (
                   <button
                     onClick={openConnectModal}
@@ -412,9 +444,26 @@ export const ConnectGatewayPage: React.FC = () => {
                     <Wallet className="w-4 h-4" />
                     <span>Connect Wallet to Bind</span>
                   </button>
+                ) : isConnectedWalletClaimedByOther ? (
+                  <div className="space-y-2">
+                    <button
+                      onClick={openConnectModal}
+                      className="w-full btn-pill-secondary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Switch to an Unused Wallet in Extension</span>
+                    </button>
+                    <button
+                      onClick={() => handleBindWallet(true)}
+                      disabled={bindLoading}
+                      className="w-full py-2 text-[11px] text-zinc-500 hover:text-amber-700 font-medium underline text-center transition-colors cursor-pointer"
+                    >
+                      {bindLoading ? 'Transferring...' : `Transfer wallet to this account (releases from ${connectedBindingStatus.boundToEmail})`}
+                    </button>
+                  </div>
                 ) : (
                   <button
-                    onClick={handleBindWallet}
+                    onClick={() => handleBindWallet(false)}
                     disabled={bindLoading}
                     className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
                   >
@@ -476,7 +525,7 @@ export const ConnectGatewayPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Status Indicator */}
+                {/* Status Indicator: Matched */}
                 {rawAddress && isWalletMatchingBound && (
                   <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center gap-2 text-xs text-emerald-900">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -484,14 +533,29 @@ export const ConnectGatewayPage: React.FC = () => {
                   </div>
                 )}
 
-                {rawAddress && !isWalletMatchingBound && (
+                {/* Status Indicator: Mismatched & Owned by another account */}
+                {rawAddress && !isWalletMatchingBound && isConnectedWalletClaimedByOther && (
+                  <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl space-y-1.5 text-xs text-amber-900">
+                    <div className="font-bold flex items-center gap-1.5">
+                      <ShieldAlert className="w-4 h-4 text-amber-700 shrink-0" />
+                      <span>Connected Wallet Belongs to Another Account</span>
+                    </div>
+                    <p className="text-[11px] text-amber-800 leading-relaxed">
+                      Connected wallet <strong>{rawAddress.slice(0, 6)}...</strong> is bound to <strong>{connectedBindingStatus.boundToEmail}</strong>. 
+                      Please switch back to this account's bound address <strong>{currentUser.boundWalletAddress.slice(0, 6)}...</strong> in MetaMask.
+                    </p>
+                  </div>
+                )}
+
+                {/* Status Indicator: Mismatched & Unused */}
+                {rawAddress && !isWalletMatchingBound && !isConnectedWalletClaimedByOther && (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1 text-xs text-amber-900">
                     <div className="font-bold flex items-center gap-1.5">
                       <ShieldAlert className="w-4 h-4 text-amber-700" />
                       <span>Wallet Mismatch Detected</span>
                     </div>
                     <p className="text-[11px] text-amber-800">
-                      This account is locked to <strong>{currentUser.boundWalletAddress.slice(0, 8)}...</strong>. Please switch accounts in your MetaMask/Rainbow extension to continue.
+                      This account is locked to <strong>{currentUser.boundWalletAddress.slice(0, 8)}...</strong>. Please switch accounts in your extension or re-bind to this new wallet.
                     </p>
                   </div>
                 )}
@@ -528,10 +592,28 @@ export const ConnectGatewayPage: React.FC = () => {
                     <span>Unbind Wallet from this Account</span>
                   </button>
                 </div>
+              ) : isConnectedWalletClaimedByOther ? (
+                <div className="space-y-2.5">
+                  <button
+                    onClick={openConnectModal}
+                    className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Switch to Bound Wallet ({currentUser.boundWalletAddress.slice(0, 6)}...)</span>
+                  </button>
+                  <button
+                    onClick={handleUnbindWallet}
+                    disabled={bindLoading}
+                    className="w-full py-2.5 px-3 rounded-xl bg-zinc-100 hover:bg-red-50 text-zinc-600 hover:text-red-700 border border-transparent hover:border-red-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Unbind Account from {currentUser.boundWalletAddress.slice(0, 6)}...</span>
+                  </button>
+                </div>
               ) : (
                 <div className="space-y-2.5">
                   <button
-                    onClick={handleBindWallet}
+                    onClick={() => handleBindWallet(false)}
                     disabled={bindLoading}
                     className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
                   >

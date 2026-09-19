@@ -137,8 +137,9 @@ interface GhostContextType {
   registerAccount: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginAccount: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logoutAccount: () => void;
-  bindWalletToAccount: (walletAddress: string) => Promise<{ success: boolean; error?: string }>;
+  bindWalletToAccount: (walletAddress: string, allowOverride?: boolean) => Promise<{ success: boolean; error?: string }>;
   unbindWalletFromAccount: () => Promise<{ success: boolean; error?: string }>;
+  getWalletBindingStatus: (walletAddress?: string) => { isBound: boolean; boundToEmail: string | null; isBoundToCurrent: boolean };
   isWalletMatchingBound: boolean;
 
   // Real Wallet State from RainbowKit / wagmi
@@ -611,7 +612,25 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addToast({ type: 'info', title: 'Signed Out', message: 'You have been securely signed out of your enclave account.' });
   };
 
-  const bindWalletToAccount = async (walletAddress: string): Promise<{ success: boolean; error?: string }> => {
+  const getWalletBindingStatus = (targetAddress?: string): { isBound: boolean; boundToEmail: string | null; isBoundToCurrent: boolean } => {
+    const addr = (targetAddress || address || '').toLowerCase();
+    if (!addr) return { isBound: false, boundToEmail: null, isBoundToCurrent: false };
+    try {
+      const rawAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+      for (const email in rawAccounts) {
+        const acc = rawAccounts[email];
+        if (acc?.boundWalletAddress && acc.boundWalletAddress.toLowerCase() === addr) {
+          const isCurrent = Boolean(currentUser && email.toLowerCase() === currentUser.email.toLowerCase());
+          return { isBound: true, boundToEmail: email, isBoundToCurrent: isCurrent };
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    return { isBound: false, boundToEmail: null, isBoundToCurrent: false };
+  };
+
+  const bindWalletToAccount = async (walletAddress: string, allowOverride: boolean = false): Promise<{ success: boolean; error?: string }> => {
     if (!currentUser) {
       addToast({ type: 'warning', title: 'Auth Required', message: 'You must be logged into an email account to bind a wallet.' });
       return { success: false, error: 'You must be logged into an email account to bind a wallet.' };
@@ -629,11 +648,25 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         rawAccounts = mergeAccountsDb(rawAccounts, cloud.accountsDb);
       }
 
+      // Detect if wallet is already claimed by another account
+      if (!allowOverride) {
+        for (const emailKey in rawAccounts) {
+          if (
+            emailKey.toLowerCase() !== myEmail &&
+            rawAccounts[emailKey]?.boundWalletAddress?.toLowerCase() === cleanWallet
+          ) {
+            const errMsg = `This wallet (${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}) is already bound to ${emailKey}. Please switch accounts in your wallet extension.`;
+            addToast({ type: 'error', title: 'Wallet Already Claimed', message: errMsg });
+            return { success: false, error: errMsg };
+          }
+        }
+      }
+
       // Unbind this wallet from ANY other account to enforce strict 1:1 binding
       for (const emailKey in rawAccounts) {
         if (
           emailKey.toLowerCase() !== myEmail &&
-          rawAccounts[emailKey].boundWalletAddress?.toLowerCase() === cleanWallet
+          rawAccounts[emailKey]?.boundWalletAddress?.toLowerCase() === cleanWallet
         ) {
           rawAccounts[emailKey] = {
             ...rawAccounts[emailKey],
@@ -2240,6 +2273,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         logoutAccount,
         bindWalletToAccount,
         unbindWalletFromAccount,
+        getWalletBindingStatus,
         isWalletMatchingBound,
         walletConnected: isConnected,
         userAddress: formattedAddress,
