@@ -230,13 +230,16 @@ async function hashPassword(password: string): Promise<string> {
 
 
 export function mergeAccountsDb(
-  local: Record<string, UserAccount>,
-  incoming: Record<string, UserAccount>
+  local: Record<string, UserAccount> | null | undefined,
+  incoming: Record<string, UserAccount> | null | undefined
 ): Record<string, UserAccount> {
-  const merged: Record<string, UserAccount> = { ...local };
-  for (const email in incoming) {
+  const safeLocal = local && typeof local === 'object' ? local : {};
+  const safeIncoming = incoming && typeof incoming === 'object' ? incoming : {};
+  const merged: Record<string, UserAccount> = { ...safeLocal };
+  for (const email in safeIncoming) {
+    if (!email || !safeIncoming[email]) continue;
     const cleanEmail = email.toLowerCase();
-    const inc = incoming[email];
+    const inc = safeIncoming[email];
     const loc = merged[cleanEmail];
     if (!loc) {
       merged[cleanEmail] = inc;
@@ -254,18 +257,23 @@ export function mergeAccountsDb(
 }
 
 export function enforceUniqueWalletBindings(
-  accountsDb: Record<string, UserAccount>,
+  accountsDb: Record<string, UserAccount> | null | undefined,
   priorityEmail?: string | null
 ): { sanitized: Record<string, UserAccount>; hasChanges: boolean } {
+  if (!accountsDb || typeof accountsDb !== 'object') {
+    return { sanitized: {}, hasChanges: false };
+  }
   const sanitized: Record<string, UserAccount> = {};
   const walletToEmail: Record<string, string> = {};
   let hasChanges = false;
 
-  const emailKeys = Object.keys(accountsDb).sort((a, b) => {
-    if (priorityEmail && a.toLowerCase() === priorityEmail.toLowerCase()) return -1;
-    if (priorityEmail && b.toLowerCase() === priorityEmail.toLowerCase()) return 1;
-    return (accountsDb[b]?.createdAt || 0) - (accountsDb[a]?.createdAt || 0);
-  });
+  const emailKeys = Object.keys(accountsDb)
+    .filter((k) => k && accountsDb[k] && typeof accountsDb[k] === 'object')
+    .sort((a, b) => {
+      if (priorityEmail && a.toLowerCase() === priorityEmail.toLowerCase()) return -1;
+      if (priorityEmail && b.toLowerCase() === priorityEmail.toLowerCase()) return 1;
+      return (accountsDb[b]?.createdAt || 0) - (accountsDb[a]?.createdAt || 0);
+    });
 
   for (const email of emailKeys) {
     const acc = { ...accountsDb[email] };

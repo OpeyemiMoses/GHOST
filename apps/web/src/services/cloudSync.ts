@@ -138,18 +138,23 @@ export function subscribeToGlobalState(callback: StateListener): () => void {
   };
 }
 
+let notifyTimeout: any = null;
 function notifyListeners() {
-  for (const cb of listeners) {
-    try {
-      cb(cachedState);
-    } catch {
-      // Ignore
+  if (notifyTimeout) return;
+  notifyTimeout = setTimeout(() => {
+    notifyTimeout = null;
+    for (const cb of listeners) {
+      try {
+        cb(cachedState);
+      } catch {
+        // Ignore
+      }
     }
-  }
+  }, 40);
 }
 
 // Ingest and merge message into cachedState
-function processMessage(msgStr: string) {
+function processMessage(msgStr: string, shouldNotify: boolean = true) {
   try {
     const parsed = JSON.parse(msgStr);
     if (!parsed || typeof parsed !== 'object') return;
@@ -165,12 +170,13 @@ function processMessage(msgStr: string) {
       cachedState.pastEvents = parsed.pastEvents || [];
       cachedState.prizePool = 0;
       cachedState.lastUpdated = parsed.lastUpdated || Date.now();
-      notifyListeners();
+      if (shouldNotify) notifyListeners();
       return;
     }
 
     if (parsed.accountsDb && typeof parsed.accountsDb === 'object') {
       for (const email in parsed.accountsDb) {
+        if (!email) continue;
         const incoming = parsed.accountsDb[email];
         const existing = cachedState.accountsDb[email];
         if (!existing) {
@@ -229,7 +235,7 @@ function processMessage(msgStr: string) {
       cachedState.prizePool = Math.max(cachedState.prizePool, parsed.prizePool);
     }
     cachedState.lastUpdated = parsed.lastUpdated || Date.now();
-    notifyListeners();
+    if (shouldNotify) notifyListeners();
   } catch {
     // Ignore
   }
@@ -251,11 +257,12 @@ if (typeof window !== 'undefined') {
           if (!line) continue;
           try {
             const item = JSON.parse(line);
-            if (item.message) processMessage(item.message);
+            if (item.message) processMessage(item.message, false);
           } catch {
             // Ignore
           }
         }
+        notifyListeners();
       })
       .catch(() => {});
   });
@@ -267,7 +274,7 @@ if (typeof window !== 'undefined') {
       try {
         const item = JSON.parse(event.data);
         if (item.message) {
-          processMessage(item.message);
+          processMessage(item.message, true);
         }
       } catch {
         // Ignore
@@ -281,31 +288,24 @@ if (typeof window !== 'undefined') {
 export async function fetchGlobalCloudState(): Promise<GlobalSyncPayload> {
   if (typeof window !== 'undefined') {
     try {
-      const pollUrls = [
-        POLL_URL,
-        'https://ntfy.sh/ghost_protocol_global_sync_v6/json?poll=1&since=all'
-      ];
-      await Promise.allSettled(
-        pollUrls.map(async (url) => {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2500);
-          const res = await fetch(url, { signal: controller.signal });
-          clearTimeout(timeoutId);
-          if (res.ok) {
-            const text = await res.text();
-            const lines = text.trim().split('\n');
-            for (const line of lines) {
-              if (!line) continue;
-              try {
-                const item = JSON.parse(line);
-                if (item.message) processMessage(item.message);
-              } catch {
-                // Ignore
-              }
-            }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
+      const res = await fetch(POLL_URL, { signal: controller.signal }).catch(() => null);
+      clearTimeout(timeoutId);
+      if (res && res.ok) {
+        const text = await res.text().catch(() => '');
+        const lines = text.trim().split('\n');
+        for (const line of lines) {
+          if (!line) continue;
+          try {
+            const item = JSON.parse(line);
+            if (item.message) processMessage(item.message, false);
+          } catch {
+            // Ignore
           }
-        })
-      );
+        }
+        notifyListeners();
+      }
     } catch {
       // Ignore
     }
