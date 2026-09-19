@@ -244,12 +244,12 @@ export const getViewFromHash = (): string | null => {
 // One-time automatic clean slate purge across all clients and wallets
 if (typeof window !== 'undefined') {
   try {
-    const CLEAN_SLATE_KEY = 'ghost_clean_slate_v9_full_wipe';
+    const CLEAN_SLATE_KEY = 'ghost_clean_slate_v10_sync';
     if (!localStorage.getItem(CLEAN_SLATE_KEY)) {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k && (k.startsWith('ghost_') || k.startsWith('wagmi') || k.startsWith('rk-'))) {
+        if (k && (k.startsWith('ghost_balance_0x') || k.startsWith('ghost_tranches_0x') || k.startsWith('ghost_yield_0x'))) {
           keysToRemove.push(k);
         }
       }
@@ -1276,19 +1276,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const getVaultTotalDeposits = () => {
     let localTotal = 0;
     const allDeposits: Record<string, number> = { ...DEFAULT_BASE_DEPOSITS, ...cloudDeposits };
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('ghost_balance_')) {
-          const val = parseFloat(localStorage.getItem(k) || '0');
-          if (val > 0) {
-            const wallet = k.replace('ghost_balance_', '').toLowerCase();
-            allDeposits[wallet] = Math.max(allDeposits[wallet] || 0, val);
-          }
-        }
-      }
-    } catch {
-      // Ignore
+    if (address && userBalance > 0) {
+      allDeposits[address.toLowerCase()] = Math.max(allDeposits[address.toLowerCase()] || 0, userBalance);
     }
     for (const addr in allDeposits) {
       if (allDeposits[addr] > 0) localTotal += allDeposits[addr];
@@ -1304,19 +1293,6 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     for (const addr in cloudDeposits) {
       if (cloudDeposits[addr] > 0) activeWallets.add(addr.toLowerCase());
-    }
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('ghost_balance_')) {
-          const val = parseFloat(localStorage.getItem(k) || '0');
-          if (val > 0) {
-            activeWallets.add(k.replace('ghost_balance_', '').toLowerCase());
-          }
-        }
-      }
-    } catch {
-      // Ignore
     }
     if (address && userBalance > 0) {
       activeWallets.add(address.toLowerCase());
@@ -1340,23 +1316,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ...Object.keys(DEFAULT_BASE_DEPOSITS),
         ...Object.keys(cloudDepositTranches),
         ...Object.keys(cloudDeposits),
-        ...(address ? [address.toLowerCase()] : [])
+        ...(address && userBalance > 0 ? [address.toLowerCase()] : [])
       ]);
-
-      try {
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith('ghost_balance_')) {
-            const val = parseFloat(localStorage.getItem(k) || '0');
-            if (val > 0) {
-              const wallet = k.replace('ghost_balance_', '').toLowerCase();
-              allSavers.add(wallet);
-            }
-          }
-        }
-      } catch {
-        // Ignore
-      }
 
       let totalPoolYield = 0;
       let globalPoolWeight = 0;
@@ -1846,23 +1807,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ...Object.keys(DEFAULT_BASE_DEPOSITS),
       ...Object.keys(cloudDepositTranches),
       ...Object.keys(cloudDeposits),
-      ...(address ? [address.toLowerCase()] : [])
+      ...(address && userBalance > 0 ? [address.toLowerCase()] : [])
     ]);
-
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('ghost_balance_')) {
-          const val = parseFloat(localStorage.getItem(k) || '0');
-          if (val > 0) {
-            const wallet = k.replace('ghost_balance_', '').toLowerCase();
-            allSavers.add(wallet);
-          }
-        }
-      }
-    } catch {
-      // Ignore
-    }
 
     for (const saverAddr of allSavers) {
       const isCurrent = address && saverAddr === address.toLowerCase();
