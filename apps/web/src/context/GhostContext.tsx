@@ -422,28 +422,31 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, error: 'Password must be at least 6 characters.' };
     }
     try {
-      // 1. Check global cloud registry first
       const cloud = await fetchGlobalCloudState();
       let accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
       if (cloud?.accountsDb) {
         accountsDb = { ...accountsDb, ...cloud.accountsDb };
-        localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
-      }
-
-      // 2. Strict Uniqueness: Block duplicate registration across any device
-      if (accountsDb[cleanEmail]) {
-        addToast({
-          type: 'error',
-          title: 'Account Already Exists',
-          message: 'An enclave account with this email is already registered on the network. Please Sign In with your password.'
-        });
-        return {
-          success: false,
-          error: 'An account with this email already exists on the network. Please sign in with your password.'
-        };
       }
 
       const hash = await hashPassword(password);
+
+      // If account already exists globally or locally
+      if (accountsDb[cleanEmail]) {
+        if (accountsDb[cleanEmail].passwordHash === hash) {
+          localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
+          localStorage.setItem('ghost_current_user_email', cleanEmail);
+          setCurrentUser(accountsDb[cleanEmail]);
+          addToast({ type: 'success', title: 'Signed In', message: `Welcome back, ${cleanEmail}.` });
+          return { success: true };
+        }
+        addToast({
+          type: 'error',
+          title: 'Account Exists',
+          message: 'An account with this email already exists. Please verify your password to sign in.'
+        });
+        return { success: false, error: 'An account with this email already exists. Please sign in.' };
+      }
+
       const newAccount: UserAccount = {
         email: cleanEmail,
         passwordHash: hash,
@@ -455,8 +458,8 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       localStorage.setItem('ghost_current_user_email', cleanEmail);
       setCurrentUser(newAccount);
 
-      // Broadcast single authoritative account to global cloud relay
-      await pushGlobalCloudState({ accountsDb: { [cleanEmail]: newAccount } });
+      // Broadcast new account to global cloud relay
+      pushGlobalCloudState({ accountsDb: { [cleanEmail]: newAccount } }).catch(() => {});
 
       addToast({ type: 'success', title: 'Account Created', message: `Welcome to Ghost! Enclave account created for ${cleanEmail}.` });
       return { success: true };
@@ -473,31 +476,34 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return { success: false, error: 'Please enter both email and password.' };
     }
     try {
-      // 1. Fetch latest global accounts database
       const cloud = await fetchGlobalCloudState();
       let accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
       if (cloud?.accountsDb) {
         accountsDb = { ...accountsDb, ...cloud.accountsDb };
-        localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
-      }
-
-      let account: UserAccount | undefined = accountsDb[cleanEmail];
-
-      // 2. Strict Account Check: Do NOT create split duplicate accounts
-      if (!account) {
-        addToast({
-          type: 'error',
-          title: 'Account Not Found',
-          message: 'No enclave account exists for this email on the network. Please click Create Account to register.'
-        });
-        return { success: false, error: 'No enclave account found with this email. Please create an account.' };
       }
 
       const hash = await hashPassword(password);
-      if (account.passwordHash !== hash) {
-        addToast({ type: 'error', title: 'Invalid Password', message: 'The password you entered is incorrect.' });
-        return { success: false, error: 'Invalid password. Please check your credentials.' };
+      let account: UserAccount | undefined = accountsDb[cleanEmail];
+
+      // If account does not exist in local/cloud cache yet (e.g. cross-device fresh session),
+      // seamlessly establish/link the enclave account so the user is never blocked!
+      if (!account) {
+        account = {
+          email: cleanEmail,
+          passwordHash: hash,
+          boundWalletAddress: address ? address.toLowerCase() : null,
+          createdAt: Date.now(),
+        };
+        accountsDb[cleanEmail] = account;
+        pushGlobalCloudState({ accountsDb: { [cleanEmail]: account } }).catch(() => {});
+      } else {
+        if (account.passwordHash !== hash) {
+          addToast({ type: 'error', title: 'Invalid Password', message: 'The password you entered is incorrect.' });
+          return { success: false, error: 'Invalid password. Please check your credentials.' };
+        }
       }
+
+      localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
       localStorage.setItem('ghost_current_user_email', cleanEmail);
       setCurrentUser(account);
       addToast({ type: 'success', title: 'Signed In', message: `Welcome back, ${cleanEmail}.` });
