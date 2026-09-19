@@ -258,6 +258,26 @@ if (typeof window !== 'undefined') {
 }
 
 export async function fetchGlobalCloudState(): Promise<GlobalSyncPayload> {
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch(POLL_URL);
+      if (res.ok) {
+        const text = await res.text();
+        const lines = text.trim().split('\n');
+        for (const line of lines) {
+          if (!line) continue;
+          try {
+            const item = JSON.parse(line);
+            if (item.message) processMessage(item.message);
+          } catch {
+            // Ignore
+          }
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  }
   return cachedState;
 }
 
