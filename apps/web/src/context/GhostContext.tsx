@@ -138,6 +138,7 @@ interface GhostContextType {
   loginAccount: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logoutAccount: () => void;
   bindWalletToAccount: (walletAddress: string) => Promise<{ success: boolean; error?: string }>;
+  unbindWalletFromAccount: () => Promise<{ success: boolean; error?: string }>;
   isWalletMatchingBound: boolean;
 
   // Real Wallet State from RainbowKit / wagmi
@@ -227,6 +228,38 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 
+
+export function enforceUniqueWalletBindings(
+  accountsDb: Record<string, UserAccount>,
+  priorityEmail?: string | null
+): { sanitized: Record<string, UserAccount>; hasChanges: boolean } {
+  const sanitized: Record<string, UserAccount> = {};
+  const walletToEmail: Record<string, string> = {};
+  let hasChanges = false;
+
+  const emailKeys = Object.keys(accountsDb).sort((a, b) => {
+    if (priorityEmail && a.toLowerCase() === priorityEmail.toLowerCase()) return -1;
+    if (priorityEmail && b.toLowerCase() === priorityEmail.toLowerCase()) return 1;
+    return (accountsDb[b]?.createdAt || 0) - (accountsDb[a]?.createdAt || 0);
+  });
+
+  for (const email of emailKeys) {
+    const acc = { ...accountsDb[email] };
+    if (acc.boundWalletAddress) {
+      const cleanWallet = acc.boundWalletAddress.toLowerCase();
+      if (walletToEmail[cleanWallet]) {
+        // Multi-binding collision detected! Unbind duplicate
+        acc.boundWalletAddress = null;
+        hasChanges = true;
+      } else {
+        walletToEmail[cleanWallet] = email.toLowerCase();
+      }
+    }
+    sanitized[email.toLowerCase()] = acc;
+  }
+
+  return { sanitized, hasChanges };
+}
 
 export const getViewFromHash = (): string | null => {
   if (typeof window === 'undefined') return null;
@@ -336,9 +369,13 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
     try {
       const savedEmail = localStorage.getItem('ghost_current_user_email');
+      const rawAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+      const { sanitized, hasChanges } = enforceUniqueWalletBindings(rawAccounts, savedEmail);
+      if (hasChanges) {
+        localStorage.setItem('ghost_accounts_db', JSON.stringify(sanitized));
+      }
       if (savedEmail) {
-        const accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
-        return accountsDb[savedEmail.toLowerCase()] || null;
+        return sanitized[savedEmail.toLowerCase()] || null;
       }
     } catch (e) {
       // Ignore
@@ -410,7 +447,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isSigning, setIsSigning] = useState<boolean>(false);
   const [decryptionSignature, setDecryptionSignature] = useState<string | null>(null);
 
-  // Authentication Actions with Cloud Sync
+  // Authentication Actions with Cloud Sync & 1:1 Wallet Binding Enforcement
   const registerAccount = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@')) {
@@ -423,11 +460,11 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     try {
       const cloud = await fetchGlobalCloudState();
-      let accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+      let rawAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
       if (cloud?.accountsDb) {
-        accountsDb = { ...accountsDb, ...cloud.accountsDb };
-        localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
+        rawAccounts = { ...rawAccounts, ...cloud.accountsDb };
       }
+      const { sanitized: accountsDb } = enforceUniqueWalletBindings(rawAccounts, cleanEmail);
 
       // Check if account already exists
       if (accountsDb[cleanEmail]) {
@@ -439,20 +476,38 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return { success: false, error: 'An account with this email already exists. Please Sign In.' };
       }
 
+      // Check if current connected wallet is already bound to another account
+      let initialBoundWallet: string | null = null;
+      if (address) {
+        const cleanWallet = address.toLowerCase();
+        let isAlreadyBound = false;
+        for (const emailKey in accountsDb) {
+          if (accountsDb[emailKey].boundWalletAddress?.toLowerCase() === cleanWallet) {
+            isAlreadyBound = true;
+            break;
+          }
+        }
+        if (!isAlreadyBound) {
+          initialBoundWallet = cleanWallet;
+        }
+      }
+
       const hash = await hashPassword(password);
       const newAccount: UserAccount = {
         email: cleanEmail,
         passwordHash: hash,
-        boundWalletAddress: address ? address.toLowerCase() : null,
+        boundWalletAddress: initialBoundWallet,
         createdAt: Date.now(),
       };
       accountsDb[cleanEmail] = newAccount;
-      localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
+      
+      const { sanitized: finalAccounts } = enforceUniqueWalletBindings(accountsDb, cleanEmail);
+      localStorage.setItem('ghost_accounts_db', JSON.stringify(finalAccounts));
       localStorage.setItem('ghost_current_user_email', cleanEmail);
-      setCurrentUser(newAccount);
+      setCurrentUser(finalAccounts[cleanEmail]);
 
-      // Broadcast new account to global cloud relay
-      await pushGlobalCloudState({ accountsDb: { [cleanEmail]: newAccount } });
+      // Broadcast new account and sanitized state to global cloud relay
+      await pushGlobalCloudState({ accountsDb: finalAccounts });
 
       addToast({ type: 'success', title: 'Account Created', message: `Enclave account created for ${cleanEmail}.` });
       return { success: true };
@@ -470,9 +525,12 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     try {
       const cloud = await fetchGlobalCloudState();
-      let accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+      let rawAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
       if (cloud?.accountsDb) {
-        accountsDb = { ...accountsDb, ...cloud.accountsDb };
+        rawAccounts = { ...rawAccounts, ...cloud.accountsDb };
+      }
+      const { sanitized: accountsDb, hasChanges } = enforceUniqueWalletBindings(rawAccounts, cleanEmail);
+      if (hasChanges) {
         localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
       }
 
@@ -532,42 +590,87 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     try {
       const cleanWallet = walletAddress.toLowerCase();
-      let accountsDb = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+      const myEmail = currentUser.email.toLowerCase();
+      let rawAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
       const cloud = await fetchGlobalCloudState();
       if (cloud?.accountsDb) {
-        accountsDb = { ...accountsDb, ...cloud.accountsDb };
+        rawAccounts = { ...rawAccounts, ...cloud.accountsDb };
       }
 
-      for (const emailKey in accountsDb) {
+      // Unbind this wallet from ANY other account to enforce strict 1:1 binding
+      for (const emailKey in rawAccounts) {
         if (
-          emailKey !== currentUser.email.toLowerCase() &&
-          accountsDb[emailKey].boundWalletAddress?.toLowerCase() === cleanWallet
+          emailKey.toLowerCase() !== myEmail &&
+          rawAccounts[emailKey].boundWalletAddress?.toLowerCase() === cleanWallet
         ) {
-          const errMsg = `This wallet is already bound to another account (${emailKey}).`;
-          addToast({ type: 'error', title: 'Wallet Already Bound', message: errMsg });
-          return { success: false, error: errMsg };
+          rawAccounts[emailKey] = {
+            ...rawAccounts[emailKey],
+            boundWalletAddress: null,
+          };
         }
       }
 
       const updatedAccount: UserAccount = {
-        ...currentUser,
+        ...(rawAccounts[myEmail] || currentUser),
+        email: myEmail,
         boundWalletAddress: cleanWallet,
       };
-      accountsDb[currentUser.email.toLowerCase()] = updatedAccount;
-      localStorage.setItem('ghost_accounts_db', JSON.stringify(accountsDb));
-      setCurrentUser(updatedAccount);
+      rawAccounts[myEmail] = updatedAccount;
 
-      // Broadcast wallet binding to cloud
-      await pushGlobalCloudState({ accountsDb: { [currentUser.email.toLowerCase()]: updatedAccount } });
+      const { sanitized: finalAccounts } = enforceUniqueWalletBindings(rawAccounts, myEmail);
+      localStorage.setItem('ghost_accounts_db', JSON.stringify(finalAccounts));
+      setCurrentUser(finalAccounts[myEmail]);
+
+      // Broadcast full sanitized accounts to cloud relay so all clients update
+      await pushGlobalCloudState({ accountsDb: finalAccounts });
       addToast({
         type: 'success',
-        title: 'Wallet Bound (1:1)',
-        message: `Bound ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} exclusively to your account.`,
+        title: 'Wallet Bound (Strict 1:1)',
+        message: `Bound ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)} exclusively to ${myEmail}.`,
       });
       return { success: true };
     } catch (e: any) {
       addToast({ type: 'error', title: 'Binding Failed', message: e.message || 'Failed to bind wallet.' });
       return { success: false, error: e.message || 'Failed to bind wallet.' };
+    }
+  };
+
+  const unbindWalletFromAccount = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!currentUser) {
+      addToast({ type: 'warning', title: 'Auth Required', message: 'You must be logged into an email account to unbind a wallet.' });
+      return { success: false, error: 'You must be logged into an email account.' };
+    }
+    try {
+      const myEmail = currentUser.email.toLowerCase();
+      let rawAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
+      const cloud = await fetchGlobalCloudState();
+      if (cloud?.accountsDb) {
+        rawAccounts = { ...rawAccounts, ...cloud.accountsDb };
+      }
+
+      const updatedAccount: UserAccount = {
+        ...(rawAccounts[myEmail] || currentUser),
+        boundWalletAddress: null,
+      };
+      rawAccounts[myEmail] = updatedAccount;
+
+      const { sanitized: finalAccounts } = enforceUniqueWalletBindings(rawAccounts, myEmail);
+      localStorage.setItem('ghost_accounts_db', JSON.stringify(finalAccounts));
+      setCurrentUser(finalAccounts[myEmail]);
+      setIsSessionAuthorized(false);
+      setIsDecrypted(false);
+      setDecryptionSignature(null);
+
+      await pushGlobalCloudState({ accountsDb: finalAccounts });
+      addToast({
+        type: 'info',
+        title: 'Wallet Unbound',
+        message: 'Your wallet has been unbound from this account. You can now bind any wallet you choose.',
+      });
+      return { success: true };
+    } catch (e: any) {
+      addToast({ type: 'error', title: 'Unbind Failed', message: e.message || 'Failed to unbind wallet.' });
+      return { success: false, error: e.message || 'Failed to unbind wallet.' };
     }
   };
 
@@ -1126,12 +1229,20 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  // On mount, immediately broadcast local accounts so all devices receive existing accounts
+  // On mount, sanitize local accounts to strictly enforce 1:1 wallet binding, and broadcast to network
   useEffect(() => {
     try {
       const localAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
-      if (Object.keys(localAccounts).length > 0) {
-        pushGlobalCloudState({ accountsDb: localAccounts }).catch(() => {});
+      const savedEmail = localStorage.getItem('ghost_current_user_email');
+      const { sanitized, hasChanges } = enforceUniqueWalletBindings(localAccounts, savedEmail);
+      if (hasChanges) {
+        localStorage.setItem('ghost_accounts_db', JSON.stringify(sanitized));
+        if (savedEmail && sanitized[savedEmail.toLowerCase()]) {
+          setCurrentUser(sanitized[savedEmail.toLowerCase()]);
+        }
+      }
+      if (Object.keys(sanitized).length > 0) {
+        pushGlobalCloudState({ accountsDb: sanitized }).catch(() => {});
       }
     } catch {
       // Ignore
@@ -1172,12 +1283,17 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return;
       }
 
-      // 1. Sync accounts DB
+      // 1. Sync accounts DB with strict 1:1 wallet binding deduplication
       if (data.accountsDb && Object.keys(data.accountsDb).length > 0) {
         try {
           const localAccounts = JSON.parse(localStorage.getItem('ghost_accounts_db') || '{}');
           const merged = { ...localAccounts, ...data.accountsDb };
-          localStorage.setItem('ghost_accounts_db', JSON.stringify(merged));
+          const savedEmail = localStorage.getItem('ghost_current_user_email');
+          const { sanitized, hasChanges } = enforceUniqueWalletBindings(merged, savedEmail);
+          localStorage.setItem('ghost_accounts_db', JSON.stringify(sanitized));
+          if (savedEmail && sanitized[savedEmail.toLowerCase()]) {
+            setCurrentUser(sanitized[savedEmail.toLowerCase()]);
+          }
         } catch {
           // Ignore
         }
@@ -2091,6 +2207,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         loginAccount,
         logoutAccount,
         bindWalletToAccount,
+        unbindWalletFromAccount,
         isWalletMatchingBound,
         walletConnected: isConnected,
         userAddress: formattedAddress,

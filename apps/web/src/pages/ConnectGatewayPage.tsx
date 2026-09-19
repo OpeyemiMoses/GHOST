@@ -21,6 +21,7 @@ export const ConnectGatewayPage: React.FC = () => {
     loginAccount,
     logoutAccount,
     bindWalletToAccount,
+    unbindWalletFromAccount,
     isWalletMatchingBound,
     isWrongNetwork,
     switchToSepolia,
@@ -94,6 +95,19 @@ export const ConnectGatewayPage: React.FC = () => {
       } else {
         setBindSuccessMessage(`Wallet ${rawAddress.slice(0, 6)}...${rawAddress.slice(-4)} successfully bound!`);
         setTimeout(() => setBindSuccessMessage(null), 4000);
+      }
+    } finally {
+      setBindLoading(false);
+    }
+  };
+
+  const handleUnbindWallet = async () => {
+    setBindLoading(true);
+    setAuthError(null);
+    try {
+      const res = await unbindWalletFromAccount();
+      if (!res.success) {
+        setAuthError(res.error || 'Failed to unbind wallet.');
       }
     } finally {
       setBindLoading(false);
@@ -493,24 +507,56 @@ export const ConnectGatewayPage: React.FC = () => {
                   <span>Connect Wallet ({currentUser.boundWalletAddress.slice(0, 6)}...)</span>
                 </button>
               ) : isWalletMatchingBound ? (
-                <button
-                  onClick={handleAuthorizeAndEnter}
-                  disabled={isSigning}
-                  className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
-                >
-                  {isSigning && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                  <KeyRound className="w-3.5 h-3.5" />
-                  <span>Authorize Session & Enter Vault</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={handleAuthorizeAndEnter}
+                    disabled={isSigning}
+                    className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    {isSigning && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>Authorize Session & Enter Vault</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={handleUnbindWallet}
+                    disabled={bindLoading}
+                    className="w-full py-2.5 px-4 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-zinc-950 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {bindLoading && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Unbind Wallet from this Account</span>
+                  </button>
+                </div>
               ) : (
-                <button
-                  onClick={openConnectModal}
-                  className="w-full btn-pill-secondary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Switch Connected Account</span>
-                </button>
+                <div className="space-y-2.5">
+                  <button
+                    onClick={handleBindWallet}
+                    disabled={bindLoading}
+                    className="w-full btn-pill-primary py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    {bindLoading && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Re-bind Account to This Wallet ({rawAddress.slice(0, 6)}...{rawAddress.slice(-4)})</span>
+                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={openConnectModal}
+                      className="py-2.5 px-3 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 hover:text-zinc-950 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Switch in Wallet</span>
+                    </button>
+                    <button
+                      onClick={handleUnbindWallet}
+                      disabled={bindLoading}
+                      className="py-2.5 px-3 rounded-xl bg-zinc-100 hover:bg-red-50 text-zinc-600 hover:text-red-700 border border-transparent hover:border-red-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Unbind Current</span>
+                    </button>
+                  </div>
+                </div>
               )}
 
               <div className="flex items-center justify-between pt-2">
