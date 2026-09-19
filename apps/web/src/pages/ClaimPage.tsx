@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useGhost, PrizeRecord, formatCurrency } from '../context/GhostContext';
+import { useGhost, PrizeRecord, formatCurrency, DEPLOYED_CONTRACTS } from '../context/GhostContext';
 import { 
   Trophy, 
   Sparkles, 
@@ -206,15 +206,27 @@ export const ClaimPage: React.FC = () => {
 
                     <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-zinc-500">
                       <span>Draw Tx:</span>
-                      <a
-                        href={`https://sepolia.etherscan.io/tx/${prize.drawTxHash}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-mono text-zinc-700 hover:text-black underline flex items-center gap-1"
-                      >
-                        <span>{prize.drawTxHash.slice(0, 10)}...{prize.drawTxHash.slice(-8)}</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                      {prize.drawTxHash && prize.drawTxHash.startsWith('0x') && prize.drawTxHash.length === 66 ? (
+                        <a
+                          href={`https://sepolia.etherscan.io/tx/${prize.drawTxHash}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-mono text-zinc-700 hover:text-black underline flex items-center gap-1"
+                        >
+                          <span>{prize.drawTxHash.slice(0, 10)}...{prize.drawTxHash.slice(-8)}</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        <a
+                          href={`https://sepolia.etherscan.io/address/${DEPLOYED_CONTRACTS.GhostDraw}#events`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-mono text-zinc-700 hover:text-black underline flex items-center gap-1"
+                        >
+                          <span>Sepolia GhostDraw Contract</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>

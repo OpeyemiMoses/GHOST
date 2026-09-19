@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useGhost, formatCurrency } from '../context/GhostContext';
+import { useGhost, formatCurrency, DEPLOYED_CONTRACTS } from '../context/GhostContext';
 import { RefreshCw, Sparkles, ExternalLink, Clock, Lock, Wallet, AlertCircle, Users, Gift, Trophy } from 'lucide-react';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 
@@ -268,15 +268,27 @@ export const EventsPage: React.FC = () => {
                       )}
                     </td>
                     <td className="py-3.5 font-mono text-zinc-500">
-                      <a
-                        href={`https://sepolia.etherscan.io/tx/${e.txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-black flex items-center gap-1"
-                      >
-                        <span>{e.txHash}</span>
-                        <ExternalLink className="w-3 h-3 opacity-60" />
-                      </a>
+                      {e.txHash && e.txHash.startsWith('0x') && e.txHash.length === 66 ? (
+                        <a
+                          href={`https://sepolia.etherscan.io/tx/${e.txHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-black flex items-center gap-1 font-mono text-zinc-700 hover:underline"
+                        >
+                          <span>{e.txHash.slice(0, 10)}...{e.txHash.slice(-8)}</span>
+                          <ExternalLink className="w-3 h-3 opacity-60 shrink-0" />
+                        </a>
+                      ) : (
+                        <a
+                          href={`https://sepolia.etherscan.io/address/${DEPLOYED_CONTRACTS.GhostDraw}#events`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-black flex items-center gap-1 font-mono text-zinc-700 hover:underline"
+                        >
+                          <span>Sepolia Draw Contract</span>
+                          <ExternalLink className="w-3 h-3 opacity-60 shrink-0" />
+                        </a>
+                      )}
                     </td>
                     <td className="py-3.5 text-right">
                       <span className="inline-flex items-center gap-1.5 text-zinc-700 font-medium text-xs font-mono">
